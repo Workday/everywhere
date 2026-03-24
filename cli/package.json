@@ -1,0 +1,41 @@
+{
+  "name": "@workday/wdcli-plugin-everywhere",
+  "description": "wdcli plugin for managing Workday Everywhere plugins",
+  "version": "0.1.0",
+  "author": "Workday",
+  "license": "UNLICENSED",
+  "type": "commonjs",
+  "main": "lib/index.js",
+  "engines": {
+    "node": ">=20.11.1"
+  },
+  "files": [
+    "lib",
+    "oclif.manifest.json"
+  ],
+  "keywords": [
+    "oclif-plugin",
+    "wdcli-plugin",
+    "everywhere"
+  ],
+  "oclif": {
+    "commands": "./lib/commands",
+    "topicSeparator": " ",
+    "topics": {
+      "everywhere": {
+        "description": "Manage Workday Everywhere plugins."
+      }
+    }
+  },
+  "scripts": {
+    "prepack": "tsc && npx oclif manifest"
+  },
+  "dependencies": {
+    "@oclif/core": "4.8.0"
+  },
+  "devDependencies": {
+    "@types/node": "^24",
+    "typescript": "^5",
+    "vitest": "^4.1.1"
+  }
+}
