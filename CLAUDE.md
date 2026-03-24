@@ -43,10 +43,11 @@ squash-merged, so the PR title becomes the merge commit message.
 
 ## Import Conventions
 
-All imports must include `.ts` file extensions:
+All imports must use `.js` file extensions (the standard for npm packages that emit JS):
 
 ```typescript
-import { Something } from './module.ts'; // Correct
+import { Something } from './module.js'; // Correct
+import { Something } from './module.ts'; // Incorrect
 import { Something } from './module'; // Incorrect
 ```
 
