@@ -4,14 +4,14 @@
 setup:
     npm install
 
-# Format source files (placeholder until formatter chosen)
+# Format source files
 tidy:
-    @echo "TODO: configure formatter"
+    npx prettier --write src/ '**/*.md'
 
-# Lint and typecheck (placeholder until linter chosen)
+# Lint and typecheck
 check:
     npx tsc --noEmit
-    @echo "TODO: configure linter"
+    npx eslint src/
 
 # Run tests (placeholder until test runner chosen)
 test:
