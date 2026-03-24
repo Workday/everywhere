@@ -24,11 +24,22 @@ This SDK is consumed by external users. Treat every exported symbol as a public 
 - **Linter:** [ESLint](https://eslint.org/) with typescript-eslint (strict config)
 - **Formatter:** [Prettier](https://prettier.io/) — see `.prettierrc.json` for settings
 - **Task runner:** [just](https://github.com/casey/just) — see `.justfile` for available targets
-- **Common commands:**
-  - `just setup` — install dependencies
-  - `just check` — typecheck + lint
-  - `just test` — run tests
-  - `just tidy` — format source files
+
+### Common Commands
+
+- `just setup` — install dependencies
+- `just check` — typecheck + lint
+- `just test` — run tests
+- `just tidy` — format source files
+
+## Conventional Commits
+
+This project uses [conventional commits](https://www.conventionalcommits.org/). PRs are
+squash-merged, so the PR title becomes the merge commit message.
+
+- **Branch names:** use a conventional commit prefix (e.g., `feat/add-auth`, `fix/null-check`)
+- **PR titles:** use conventional commit format (e.g., `feat: add auth module`,
+  `fix: handle null response`)
 
 ## Import Conventions
 
