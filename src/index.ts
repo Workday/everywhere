@@ -1,1 +1,2 @@
-// Entry point for @workday/everywhere SDK
+export type { PluginConfig, PluginDefinition } from './types.js';
+export { plugin } from './plugin.js';
