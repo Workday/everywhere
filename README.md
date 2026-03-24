@@ -19,9 +19,9 @@ just setup
 
 ### Development Workflow
 
-| Command | Description |
-|---------|-------------|
+| Command      | Description          |
+| ------------ | -------------------- |
 | `just setup` | Install dependencies |
-| `just check` | Typecheck and lint |
-| `just test` | Run tests |
-| `just tidy` | Format source files |
+| `just check` | Typecheck and lint   |
+| `just test`  | Run tests            |
+| `just tidy`  | Format source files  |
