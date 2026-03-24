@@ -9,6 +9,7 @@ export default class InfoCommand extends EverywhereBaseCommand {
 
   async run(): Promise<void> {
     const pluginDir = await this.parsePluginDir();
-    this.log(`Plugin directory: ${pluginDir}`);
+    const { info } = await import('@workday/everywhere');
+    info({ pluginDir });
   }
 }

@@ -2,6 +2,38 @@
 
 Core libraries and framework for building Workday Everywhere platform integrations.
 
+## Getting Started
+
+### 1. Create a plugin
+
+Create a new directory for your Workday Everywhere plugin and install the SDK:
+
+```sh
+mkdir my-plugin && cd my-plugin
+npm init -y
+npm install @workday/everywhere
+```
+
+Define your plugin in a `plugin.ts` file:
+
+```typescript
+import { plugin } from '@workday/everywhere';
+
+export default plugin({
+  name: 'my-plugin',
+  version: '1.0.0',
+  description: 'My first Workday Everywhere plugin.',
+});
+```
+
+### 2. Verify
+
+From your plugin directory, run:
+
+```sh
+npx @workday/everywhere info
+```
+
 ## Contributing
 
 ### Prerequisites
