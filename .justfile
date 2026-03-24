@@ -1,5 +1,9 @@
 # Workflow targets for Workday Everywhere SDK
 
+# Install dependencies
+setup:
+    npm install
+
 # Format source files (placeholder until formatter chosen)
 tidy:
     @echo "TODO: configure formatter"
