@@ -13,6 +13,16 @@ This SDK is consumed by external users. Treat every exported symbol as a public 
 - Additions are safe; removals and signature changes require careful migration support.
 - Review all changes for backwards compatibility before committing.
 
+## Toolchain
+
+- **Package manager:** npm
+- **Type checking:** `npx tsc --noEmit`
+- **Task runner:** [just](https://github.com/casey/just) — see `.justfile` for available targets
+- **Common commands:**
+  - `just check` — typecheck + lint
+  - `just test` — run tests
+  - `just tidy` — format source files
+
 ## Import Conventions
 
 All imports must include `.ts` file extensions:

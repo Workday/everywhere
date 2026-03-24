@@ -1,0 +1,11 @@
+{
+  "name": "@workday/everywhere",
+  "version": "0.1.0",
+  "private": false,
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "devDependencies": {
+    "typescript": "^5"
+  }
+}
