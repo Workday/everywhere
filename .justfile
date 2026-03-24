@@ -17,9 +17,9 @@ check:
 build: setup
     npx tsc -p tsconfig.build.json
 
-# Run tests (placeholder until test runner chosen)
-test:
-    @echo "TODO: configure test runner"
+# Run tests
+test: check
+    npx vitest run
 
 # Remove build artifacts
 clean:
