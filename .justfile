@@ -18,7 +18,7 @@ build: setup
     npx tsc -p tsconfig.build.json
 
 # Run tests
-test:
+test: check
     npx vitest run
 
 # Remove build artifacts
