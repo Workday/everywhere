@@ -1,0 +1,16 @@
+{
+  "name": "@workday/everywhere",
+  "version": "0.1.0",
+  "private": false,
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "devDependencies": {
+    "@eslint/js": "^10.0.1",
+    "eslint": "^10.1.0",
+    "prettier": "^3.8.1",
+    "typescript": "^5",
+    "typescript-eslint": "^8.57.2",
+    "vitest": "^4.1.1"
+  }
+}
