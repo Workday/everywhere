@@ -23,5 +23,24 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      - name: Build SDK
+        run: npx tsc -p tsconfig.build.json
+
+      - name: Install CLI dependencies
+        run: npm ci
+        working-directory: cli
+
+      - name: Build CLI
+        run: npx tsc
+        working-directory: cli
+
+      - name: Generate CLI manifest
+        run: npx oclif manifest
+        working-directory: cli
+
+      - name: Install example plugins
+        run: npm install
+        working-directory: examples/hello
+
       - name: Test
         run: npx vitest run
