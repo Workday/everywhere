@@ -4,6 +4,7 @@ import { resolve } from 'node:path';
 
 const bin = resolve(import.meta.dirname, '../../bin/everywhere.js');
 const root = resolve(import.meta.dirname, '../..');
+const helloPlugin = resolve(root, 'examples/hello');
 
 function run(...args: string[]): string {
   return execFileSync('node', [bin, ...args], {
@@ -29,21 +30,27 @@ function runExpectError(...args: string[]): string {
 describe('bin/everywhere.js', () => {
   describe('info command', () => {
     it('prints the plugin directory', () => {
-      const output = run('info', '-D', root);
+      const output = run('info', '-D', helloPlugin);
 
-      expect(output).toContain(root);
+      expect(output).toContain(helloPlugin);
     });
 
-    it('prints the package name', () => {
-      const output = run('info', '-D', root);
+    it('prints the plugin name', () => {
+      const output = run('info', '-D', helloPlugin);
 
-      expect(output).toContain('@workday/everywhere');
+      expect(output).toContain('hello-world');
     });
 
-    it('prints the package version', () => {
-      const output = run('info', '-D', root);
+    it('prints the plugin version', () => {
+      const output = run('info', '-D', helloPlugin);
 
-      expect(output).toContain('0.1.0');
+      expect(output).toContain('1.0.0');
+    });
+
+    it('prints the plugin description', () => {
+      const output = run('info', '-D', helloPlugin);
+
+      expect(output).toContain('A simple Hello World plugin for Workday Everywhere.');
     });
   });
 

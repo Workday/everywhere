@@ -31,7 +31,8 @@
     "prepack": "tsc && npx oclif manifest"
   },
   "dependencies": {
-    "@oclif/core": "4.8.0"
+    "@oclif/core": "4.8.0",
+    "jiti": "^2.6.1"
   },
   "devDependencies": {
     "@types/node": "^24",
