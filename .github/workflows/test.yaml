@@ -24,7 +24,10 @@ jobs:
         run: npm ci
 
       - name: Build CLI
-        run: cd cli && npx tsc && npx oclif manifest
+        run: cd cli && npm ci && npx tsc && npx oclif manifest
+
+      - name: Install example plugins
+        run: cd examples/hello && npm install
 
       - name: Test
         run: npx vitest run
