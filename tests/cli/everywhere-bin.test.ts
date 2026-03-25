@@ -33,6 +33,18 @@ describe('bin/everywhere.js', () => {
 
       expect(output).toContain(root);
     });
+
+    it('prints the package name', () => {
+      const output = run('info', '-D', root);
+
+      expect(output).toContain('@workday/everywhere');
+    });
+
+    it('prints the package version', () => {
+      const output = run('info', '-D', root);
+
+      expect(output).toContain('0.1.0');
+    });
   });
 
   describe('unknown command', () => {
@@ -44,10 +56,10 @@ describe('bin/everywhere.js', () => {
   });
 
   describe('no command', () => {
-    it('prints available commands', () => {
+    it('prints usage information', () => {
       const output = run('--help');
 
-      expect(output).toContain('info');
+      expect(output).toContain('USAGE');
     });
   });
 });

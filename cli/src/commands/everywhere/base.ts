@@ -2,6 +2,8 @@ import { Command, Flags } from '@oclif/core';
 import * as path from 'node:path';
 
 export default abstract class EverywhereBaseCommand extends Command {
+  static hidden = true;
+
   static baseFlags = {
     'plugin-dir': Flags.directory({
       char: 'D',
