@@ -9,17 +9,13 @@ describe('everywhere info', () => {
 
   describe('description', () => {
     it('describes showing plugin details', () => {
-      expect(InfoCommand.description).toBe(
-        'Show details for a Workday Everywhere plugin.',
-      );
+      expect(InfoCommand.description).toBe('Show details for a Workday Everywhere plugin.');
     });
   });
 
   describe('flags', () => {
     it('inherits the plugin-dir flag from the base command', () => {
-      expect(InfoCommand.flags['plugin-dir']).toBe(
-        EverywhereBaseCommand.baseFlags['plugin-dir'],
-      );
+      expect(InfoCommand.flags['plugin-dir']).toBe(EverywhereBaseCommand.baseFlags['plugin-dir']);
     });
   });
 });

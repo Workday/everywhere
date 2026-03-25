@@ -23,5 +23,8 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      - name: Build CLI
+        run: cd cli && npx tsc && npx oclif manifest
+
       - name: Test
         run: npx vitest run
