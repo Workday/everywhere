@@ -1,5 +1,9 @@
 # Workflow targets for Workday Everywhere example plugins
 
+# Install example plugin dependencies
+setup:
+    cd hello && npm install
+
 # Format example source files
 tidy:
     npx prettier --write .
