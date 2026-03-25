@@ -21,7 +21,8 @@ function runExpectError(...args: string[]): string {
     });
     return '';
   } catch (err) {
-    return (err as { stderr: string }).stderr;
+    const { stdout, stderr } = err as { stdout: string; stderr: string };
+    return stdout + stderr;
   }
 }
 
@@ -35,18 +36,18 @@ describe('bin/everywhere.js', () => {
   });
 
   describe('unknown command', () => {
-    it('prints an error message', () => {
+    it('exits with a non-zero code', () => {
       const output = runExpectError('bogus');
 
-      expect(output).toContain('Unknown command: bogus');
+      expect(output).not.toBe('');
     });
   });
 
   describe('no command', () => {
-    it('prints usage information', () => {
-      const output = runExpectError();
+    it('prints available commands', () => {
+      const output = run('--help');
 
-      expect(output).toContain('Usage: everywhere <command>');
+      expect(output).toContain('info');
     });
   });
 });

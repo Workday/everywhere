@@ -31,8 +31,7 @@
     "prepack": "tsc && npx oclif manifest"
   },
   "dependencies": {
-    "@oclif/core": "4.8.0",
-    "@workday/everywhere": "file:.."
+    "@oclif/core": "4.8.0"
   },
   "devDependencies": {
     "@types/node": "^24",

@@ -8,6 +8,16 @@
   "bin": {
     "everywhere": "./bin/everywhere.js"
   },
+  "files": [
+    "dist",
+    "bin",
+    "cli/lib",
+    "cli/package.json",
+    "cli/oclif.manifest.json"
+  ],
+  "dependencies": {
+    "@oclif/core": "4.8.0"
+  },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
     "@types/node": "^25.5.0",
