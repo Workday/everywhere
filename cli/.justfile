@@ -2,7 +2,7 @@
 
 # Install dependencies
 setup:
-    npm install
+    npm {{ if env("CI", "") != "" { "ci" } else { "install" } }}
 
 # Build to dist/
 build: setup
