@@ -26,5 +26,5 @@ jobs:
       - name: Install dependencies
         run: just setup
 
-      - name: Test
+      - name: Run unit tests
         run: just test
