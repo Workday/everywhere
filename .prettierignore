@@ -1,5 +1,5 @@
 node_modules/
 dist/
-cli/lib/
+cli/dist/
 cli/oclif.manifest.json
 package-lock.json

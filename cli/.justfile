@@ -4,7 +4,7 @@
 setup:
     npm install
 
-# Build to lib/
+# Build to dist/
 build: setup
     npx tsc
 
@@ -22,7 +22,7 @@ manifest: build
 
 # Remove build artifacts
 clean:
-    rm -rf lib/
+    rm -rf dist/
 
 # Remove build artifacts and installed dependencies
 clobber: clean

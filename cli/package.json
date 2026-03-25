@@ -5,12 +5,12 @@
   "author": "Workday",
   "license": "UNLICENSED",
   "type": "commonjs",
-  "main": "lib/index.js",
+  "main": "dist/index.js",
   "engines": {
     "node": ">=20.11.1"
   },
   "files": [
-    "lib",
+    "dist",
     "oclif.manifest.json"
   ],
   "keywords": [
@@ -19,7 +19,7 @@
     "everywhere"
   ],
   "oclif": {
-    "commands": "./lib/commands",
+    "commands": "./dist/commands",
     "topicSeparator": " ",
     "topics": {
       "everywhere": {
