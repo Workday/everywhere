@@ -1,5 +1,8 @@
 import { Command, Flags } from '@oclif/core';
+import * as fs from 'node:fs';
 import * as path from 'node:path';
+
+const PLUGIN_EXTENSIONS = ['.tsx', '.ts'];
 
 export default abstract class EverywhereBaseCommand extends Command {
   static hidden = true;
@@ -26,5 +29,17 @@ export default abstract class EverywhereBaseCommand extends Command {
       this._pluginDir = path.resolve(dir);
     }
     return this._pluginDir;
+  }
+
+  protected resolvePluginEntry(pluginDir: string): string {
+    const found = PLUGIN_EXTENSIONS.map((ext) => path.join(pluginDir, `plugin${ext}`)).find((f) =>
+      fs.existsSync(f)
+    );
+
+    if (!found) {
+      this.error('No plugin.ts or plugin.tsx found in the plugin directory.');
+    }
+
+    return found;
   }
 }

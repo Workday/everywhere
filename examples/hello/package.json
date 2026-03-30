@@ -3,6 +3,10 @@
   "version": "1.0.0",
   "description": "A simple Hello World plugin for Workday Everywhere.",
   "private": true,
+  "scripts": {
+    "preview": "everywhere view",
+    "clean": "rm -rf node_modules"
+  },
   "dependencies": {
     "@workday/everywhere": "file:../..",
     "react": "^19",

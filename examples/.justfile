@@ -11,3 +11,7 @@ tidy:
 # Typecheck example plugins
 check:
     npx tsc --noEmit -p tsconfig.json
+
+# Preview an example plugin in the browser
+view plugin:
+    node ../bin/everywhere.js view -D {{plugin}}
