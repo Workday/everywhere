@@ -7,5 +7,5 @@ export interface StyleBoundaryProps {
 
 export function StyleBoundary({ children, provider: Provider }: StyleBoundaryProps) {
   const content = Provider ? <Provider>{children}</Provider> : children;
-  return <div style={{ contain: 'style' }}>{content}</div>;
+  return <div>{content}</div>;
 }

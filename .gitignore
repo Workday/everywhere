@@ -3,3 +3,5 @@ dist/
 cli/lib/
 cli/node_modules/
 cli/oclif.manifest.json
+.data/
+everywhere/.config.json

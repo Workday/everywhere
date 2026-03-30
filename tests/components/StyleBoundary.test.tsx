@@ -14,14 +14,14 @@ describe('StyleBoundary', () => {
       expect(html).toContain('<span>hello</span>');
     });
 
-    it('wraps content in a div with contain:style', () => {
+    it('wraps content in a div', () => {
       const html = renderToStaticMarkup(
         <StyleBoundary>
           <span>content</span>
         </StyleBoundary>
       );
 
-      expect(html).toContain('style="contain:style"');
+      expect(html).toContain('<div><span>content</span></div>');
     });
   });
 
