@@ -85,14 +85,19 @@ export function generateModelHooks(schema: ModelSchema): string {
   const lines = [HEADER];
 
   lines.push("import { useQuery, useMutation } from '@workday/everywhere';");
+  lines.push(`import type { QueryResult } from '@workday/everywhere';`);
   lines.push(`import type { ${name} } from './models.js';`);
   lines.push('');
   lines.push(`export function use${plural}(options?: Parameters<typeof useQuery>[1]) {`);
-  lines.push(`  return useQuery<${name}>('${name}', options);`);
+  lines.push(
+    `  return useQuery<${name}>('${name}', options) as QueryResult<${name}> & { data: ${name}[] | null };`
+  );
   lines.push('}');
   lines.push('');
   lines.push(`export function use${name}(id: string) {`);
-  lines.push(`  return useQuery<${name}>('${name}', { id });`);
+  lines.push(
+    `  return useQuery<${name}>('${name}', { id }) as QueryResult<${name}> & { data: ${name} | null };`
+  );
   lines.push('}');
   lines.push('');
   lines.push(`export function use${name}Mutation() {`);
