@@ -4,6 +4,8 @@
   "description": "A simple Hello World plugin for Workday Everywhere.",
   "private": true,
   "dependencies": {
-    "@workday/everywhere": "file:../.."
+    "@workday/everywhere": "file:../..",
+    "react": "^19",
+    "react-dom": "^19"
   }
 }

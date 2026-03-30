@@ -15,15 +15,31 @@
     "cli/package.json",
     "cli/oclif.manifest.json"
   ],
+  "peerDependencies": {
+    "react": ">=18",
+    "react-dom": ">=18"
+  },
+  "peerDependenciesMeta": {
+    "react": {
+      "optional": true
+    },
+    "react-dom": {
+      "optional": true
+    }
+  },
   "dependencies": {
     "@oclif/core": "4.10.3"
   },
   "devDependencies": {
+    "@types/react": "^19",
+    "@types/react-dom": "^19",
     "@eslint/js": "^10.0.1",
     "@types/node": "^25.5.0",
     "eslint": "^10.1.0",
     "husky": "^9.1.7",
     "lint-staged": "^16.4.0",
+    "react": "^19",
+    "react-dom": "^19",
     "prettier": "^3.8.1",
     "typescript": "^5",
     "typescript-eslint": "^8.57.2",
