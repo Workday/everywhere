@@ -34,11 +34,16 @@ export default class ViewCommand extends EverywhereBaseCommand {
     this.log(`Starting viewer on port ${flags.port}...`);
 
     // Vite is ESM-only; use dynamic import from this CJS module.
-    const { createServer } = await import('vite');
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const vite: any = await import('vite');
 
-    const server = await createServer({
+    // Data service plugin — serves /api/data/graphql backed by .data/ files.
+    const { dataServicePlugin } = await import('../../data/vite-data-plugin.js');
+
+    const server = await vite.createServer({
       root: viewerDir,
       configFile: false,
+      plugins: [dataServicePlugin(pluginDir)],
       server: {
         port: flags.port,
         open: flags.open,
