@@ -16,7 +16,7 @@
     "cli/oclif.manifest.json"
   ],
   "dependencies": {
-    "@oclif/core": "4.10.2"
+    "@oclif/core": "4.10.3"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
