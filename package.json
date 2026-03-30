@@ -28,7 +28,8 @@
     }
   },
   "dependencies": {
-    "@oclif/core": "4.10.3"
+    "@oclif/core": "4.10.3",
+    "vite": "^6"
   },
   "devDependencies": {
     "@types/react": "^19",

@@ -17,6 +17,7 @@ check:
 # Build package to dist/
 build:
     npx tsc -p tsconfig.build.json
+    cp src/viewer/index.html src/viewer/viewer.css dist/viewer/
 
 # Run tests
 test: build
