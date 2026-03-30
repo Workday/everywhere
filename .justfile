@@ -21,7 +21,7 @@ build:
 
 # Run tests
 test: build
-    cd cli && just manifest
+    cd cli && just build
     cd examples && just setup
     npx vitest run
 

@@ -7,6 +7,7 @@ setup:
 # Build to dist/
 build: setup
     npx tsc
+    npx oclif manifest
 
 # Run static checks
 check:
@@ -15,10 +16,6 @@ check:
 # Run tests
 test:
     npx vitest run
-
-# Generate oclif manifest
-manifest: build
-    npx oclif manifest
 
 # Remove build artifacts
 clean:
