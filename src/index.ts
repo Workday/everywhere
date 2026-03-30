@@ -10,3 +10,5 @@ export { NavigationProvider } from './hooks/index.js';
 export type { NavigationProviderProps, NavigationState } from './hooks/index.js';
 export { useNavigate } from './hooks/index.js';
 export { useParams } from './hooks/index.js';
+
+export type { FieldType, FieldSchema, ModelSchema } from './data/types.js';
