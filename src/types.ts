@@ -1,11 +1,5 @@
-export interface PluginConfig {
-  name: string;
-  version: string;
-  description?: string;
-}
+// eslint-disable-next-line @typescript-eslint/no-empty-object-type -- intentionally open for extension
+export interface PluginConfig {}
 
-export interface PluginDefinition {
-  name: string;
-  version: string;
-  description?: string;
-}
+// eslint-disable-next-line @typescript-eslint/no-empty-object-type -- intentionally open for extension
+export interface PluginDefinition {}

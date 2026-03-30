@@ -1,5 +1,5 @@
+import * as fs from 'node:fs';
 import * as path from 'node:path';
-import { createJiti } from 'jiti';
 
 import EverywhereBaseCommand from './base';
 
@@ -12,16 +12,18 @@ export default class InfoCommand extends EverywhereBaseCommand {
 
   async run(): Promise<void> {
     const pluginDir = await this.parsePluginDir();
-    const pluginFile = path.join(pluginDir, 'plugin.ts');
+    const pkgPath = path.join(pluginDir, 'package.json');
 
     this.log(`Plugin directory: ${pluginDir}`);
 
-    const jiti = createJiti(pluginDir);
-    const mod = await jiti.import(pluginFile);
-    const definition = (mod as { default: Record<string, unknown> }).default;
+    if (!fs.existsSync(pkgPath)) {
+      this.error('No package.json found in the plugin directory.');
+    }
 
-    if (definition.name) this.log(`Name: ${definition.name}`);
-    if (definition.version) this.log(`Version: ${definition.version}`);
-    if (definition.description) this.log(`Description: ${definition.description}`);
+    const pkg = JSON.parse(fs.readFileSync(pkgPath, 'utf-8'));
+
+    if (pkg.name) this.log(`Name: ${pkg.name}`);
+    if (pkg.version) this.log(`Version: ${pkg.version}`);
+    if (pkg.description) this.log(`Description: ${pkg.description}`);
   }
 }
