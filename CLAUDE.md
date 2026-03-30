@@ -32,14 +32,45 @@ This SDK is consumed by external users. Treat every exported symbol as a public 
 - `just test` — run tests
 - `just tidy` — format source files
 
-## Conventional Commits
+## Commit Conventions
 
-This project uses [conventional commits](https://www.conventionalcommits.org/). PRs are
-squash-merged, so the PR title becomes the merge commit message.
+Use [Conventional Commits](https://www.conventionalcommits.org/) format:
 
-- **Branch names:** use a conventional commit prefix (e.g., `feat/add-auth`, `fix/null-check`)
-- **PR titles:** use conventional commit format (e.g., `feat: add auth module`,
-  `fix: handle null response`)
+```
+<type>(<scope>): <description>
+```
+
+Types: `feat`, `fix`, `chore`, `docs`, `refactor`, `test`, `style`, `perf`
+
+Scope is optional but encouraged (e.g. `fix(auth): ...`, `feat(events): ...`).
+
+## Branch Naming
+
+Use the same type prefixes as commits, followed by a short description of the intended changes:
+
+```
+<type>/<change-slug>
+```
+
+Examples: `feat/email-notifications`, `fix/sidebar-delete-width`, `chore/update-deps`
+
+Optionally include the issue number: `feat/279-email-notifications`
+
+## Worktrees
+
+Use a dedicated git worktree for development to keep the main working directory clean. Worktrees
+live in the `.worktrees/` directory and are specific to an agent session (not the feature or
+changes). Each session should use a fresh worktree with a unique name. Always announce your worktree
+name when creating or switching to a new worktree - feel free to be creative/silly with the name
+selection.
+
+```bash
+# Create a worktree based on origin/main
+git worktree add .worktrees/<name> -b <branch-name> origin/main
+
+# Clean up after merging
+git worktree remove .worktrees/<name>
+```
 
 ## Import Conventions
 
