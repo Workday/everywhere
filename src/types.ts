@@ -1,5 +1,17 @@
-// eslint-disable-next-line @typescript-eslint/no-empty-object-type -- intentionally open for extension
-export interface PluginConfig {}
+import type { ComponentType, ReactNode } from 'react';
 
-// eslint-disable-next-line @typescript-eslint/no-empty-object-type -- intentionally open for extension
-export interface PluginDefinition {}
+export interface PageConfig {
+  id: string;
+  title: string;
+  component: ComponentType;
+}
+
+export interface PluginConfig {
+  pages?: PageConfig[];
+  provider?: ComponentType<{ children: ReactNode }>;
+}
+
+export interface PluginDefinition {
+  pages: PageConfig[];
+  provider?: ComponentType<{ children: ReactNode }>;
+}
