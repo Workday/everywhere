@@ -3,6 +3,7 @@
 # Install example plugin dependencies
 setup:
     cd hello && npm install
+    cd directory && npm install
 
 # Format example source files
 tidy:
