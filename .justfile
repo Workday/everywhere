@@ -18,10 +18,10 @@ check:
 build:
     npx tsc -p tsconfig.build.json
     cp src/viewer/index.html src/viewer/viewer.css dist/viewer/
+    cd cli && just build
 
 # Run tests
 test: build
-    cd cli && just build
     cd examples && just setup
     npx vitest run
 
