@@ -3,11 +3,19 @@ import { tmpdir } from 'node:os';
 import { writeFile, unlink } from 'node:fs/promises';
 
 function stubExternalImports(code: string): string {
+  const sdkPattern = /import\s*\{[^}]*\}\s*from\s*["']@workday\/everywhere(?:\/[^"']*)?\s*["'];?/g;
+
+  // Only the first SDK import gets the plugin stub; subsequent ones become
+  // empty strings so we don't redeclare `const plugin` in strict mode.
+  let stubbed = false;
   return code
-    .replace(
-      /import\s*\{[^}]*\}\s*from\s*["']@workday\/everywhere(?:\/[^"']*)?\s*["'];?/g,
-      'const plugin = (c) => c;'
-    )
+    .replace(sdkPattern, () => {
+      if (!stubbed) {
+        stubbed = true;
+        return 'const plugin = (c) => c;';
+      }
+      return '';
+    })
     .replace(/import\s*\{[^}]*\}\s*from\s*["']react(?:\/[^"']*)?\s*["'];?/g, '')
     .replace(/import\s*\{[^}]*\}\s*from\s*["']react-dom(?:\/[^"']*)?\s*["'];?/g, '');
 }

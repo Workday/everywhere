@@ -43,6 +43,22 @@ describe('extractPages()', () => {
     expect(pages).toEqual([{ id: 'home', title: 'Home' }]);
   });
 
+  it('handles bundles with multiple @workday/everywhere imports', async () => {
+    const bundle = `
+      import { plugin } from "@workday/everywhere";
+      import { DataProvider } from "@workday/everywhere/data";
+      export default plugin({
+        name: 'test',
+        version: '1.0.0',
+        pages: [{ id: 'home', title: 'Home', component: () => null }],
+      });
+    `;
+
+    const pages = await extractPages(bundle);
+
+    expect(pages).toEqual([{ id: 'home', title: 'Home' }]);
+  });
+
   it('throws when the bundle has no default export', async () => {
     const bundle = `export const foo = 'bar';`;
 
