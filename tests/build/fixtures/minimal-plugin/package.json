@@ -1,0 +1,10 @@
+{
+  "name": "test-plugin",
+  "version": "0.0.1",
+  "private": true,
+  "dependencies": {
+    "@workday/everywhere": "file:../../../..",
+    "react": "^19",
+    "react-dom": "^19"
+  }
+}

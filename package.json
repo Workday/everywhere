@@ -29,6 +29,8 @@
   },
   "dependencies": {
     "@oclif/core": "4.10.3",
+    "esbuild": "^0.25",
+    "jszip": "^3.10.1",
     "vite": "^6"
   },
   "devDependencies": {
