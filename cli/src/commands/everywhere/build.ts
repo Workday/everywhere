@@ -23,6 +23,7 @@ export default class BuildCommand extends EverywhereBaseCommand {
     if (!pkg.version) this.error('package.json is missing required field: version');
 
     // Build utilities are ESM; use dynamic import from this CJS module.
+    // Compiled path: cli/dist/commands/everywhere/build.js → 4 levels up = SDK root.
     const { bundlePlugin, extractPages, buildManifest, packagePlugin, slugify } =
       await import('../../../../dist/build/index.js');
 
