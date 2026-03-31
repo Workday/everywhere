@@ -16,3 +16,7 @@ check:
 # Preview an example plugin in the browser
 view plugin:
     node ../bin/everywhere.js view -D {{plugin}}
+
+# Package an example plugin into a distributable bundle
+build plugin:
+    cd {{plugin}} && npx everywhere build
