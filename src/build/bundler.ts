@@ -44,6 +44,7 @@ export async function bundlePlugin(cwd: string): Promise<string> {
     minify: false,
     sourcemap: false,
     external: EXTERNAL_PACKAGES,
+    loader: { '.css': 'empty' },
     nodePaths,
   });
 

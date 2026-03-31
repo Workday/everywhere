@@ -24,35 +24,21 @@ export default class BuildCommand extends EverywhereBaseCommand {
 
     // Build utilities are ESM; use dynamic import from this CJS module.
     // Compiled path: cli/dist/commands/everywhere/build.js → 4 levels up = SDK root.
-    const { bundlePlugin, extractPages, buildManifest, packagePlugin, slugify } =
+    const { bundlePlugin, packagePlugin, slugify } =
       await import('../../../../dist/build/index.js');
 
     this.log('Bundling plugin...');
     const code = await bundlePlugin(pluginDir);
 
-    const pages = await extractPages(code);
-
-    const manifest = buildManifest({
-      name: pkg.name,
-      version: pkg.version,
-      description: pkg.description,
-      pages,
-    });
-
-    this.log(`Name: ${manifest.name}`);
-    this.log(`Version: ${manifest.version}`);
-    if (manifest.description) {
-      this.log(`Description: ${manifest.description}`);
-    }
-
     this.log('Packaging...');
-    const slug = slugify(manifest.name);
+    const slug = slugify(pkg.name);
     const outputDir = join(pluginDir, 'dist');
     const result = await packagePlugin({
-      manifest,
+      pluginDir,
       bundleCode: code,
       outputDir,
       slug,
+      version: pkg.version,
     });
 
     const sizeKB = (result.size / 1024).toFixed(1);

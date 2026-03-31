@@ -1,13 +1,13 @@
 import JSZip from 'jszip';
 import { join } from 'node:path';
-import { mkdir, writeFile } from 'node:fs/promises';
-import type { Manifest } from './manifest.js';
+import { mkdir, readFile, writeFile } from 'node:fs/promises';
 
 export interface PackageOptions {
-  manifest: Manifest;
+  pluginDir: string;
   bundleCode: string;
   outputDir: string;
   slug: string;
+  version: string;
 }
 
 export interface PackageResult {
@@ -16,17 +16,19 @@ export interface PackageResult {
 }
 
 export async function packagePlugin(options: PackageOptions): Promise<PackageResult> {
-  const { manifest, bundleCode, outputDir, slug } = options;
+  const { pluginDir, bundleCode, outputDir, slug, version } = options;
+
+  const pkgJson = await readFile(join(pluginDir, 'package.json'), 'utf-8');
 
   const zip = new JSZip();
-  zip.file('manifest.json', JSON.stringify(manifest, null, 2));
+  zip.file('package.json', pkgJson);
   zip.file('plugin.js', bundleCode);
 
   const content = await zip.generateAsync({ type: 'uint8array' });
 
   await mkdir(outputDir, { recursive: true });
 
-  const filename = `${slug}-${manifest.version}.zip`;
+  const filename = `${slug}-${version}.zip`;
   const filePath = join(outputDir, filename);
 
   await writeFile(filePath, content);
