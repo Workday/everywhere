@@ -5,14 +5,7 @@ export interface Manifest {
   pages: Array<{ id: string; title: string }>;
 }
 
-export interface ManifestInput {
-  name: string;
-  version: string;
-  description?: string;
-  pages: Array<{ id: string; title: string }>;
-}
-
-export function buildManifest(input: ManifestInput): Manifest {
+export function buildManifest(input: Manifest): Manifest {
   const manifest: Manifest = {
     name: input.name,
     version: input.version,
