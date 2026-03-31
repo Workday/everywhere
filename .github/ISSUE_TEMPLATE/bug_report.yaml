@@ -1,0 +1,93 @@
+name: Bug Report
+description: Report a bug or unexpected behavior in the Workday Everywhere SDK
+title: '[Bug]: '
+labels: ['bug']
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time to report this bug! Please fill out the sections below to help us understand and fix the issue.
+
+  - type: textarea
+    id: description
+    attributes:
+      label: What happened?
+      description: Provide a clear and concise description of what the bug is.
+      placeholder: |
+        Example: When I run `everywhere build`, the command fails with an esbuild error even though my plugin previews correctly with `everywhere view`.
+    validations:
+      required: true
+
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to Reproduce
+      description: Tell us how to reproduce this issue. Be as specific as possible.
+      placeholder: |
+        1. Create a plugin with `npm init -y && npm install @workday/everywhere`
+        2. Add a plugin.tsx with ...
+        3. Run `npx everywhere build`
+        4. See error ...
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: What did you expect to happen?
+      description: Describe what you expected to happen instead.
+      placeholder: |
+        Example: I expected the build command to produce a zip file in the dist/ directory.
+    validations:
+      required: true
+
+  - type: textarea
+    id: actual
+    attributes:
+      label: What actually happened?
+      description: Describe what actually happened. Include any error messages you saw.
+      placeholder: |
+        Example: The build failed with the following error output ...
+    validations:
+      required: true
+
+  - type: textarea
+    id: screenshots
+    attributes:
+      label: Screenshots or Logs
+      description:
+        If applicable, add screenshots or terminal output to help explain the problem. You can drag
+        and drop images here.
+      placeholder: Paste terminal output or drag and drop images here.
+
+  - type: textarea
+    id: environment
+    attributes:
+      label: Environment Information
+      description: Help us understand your setup.
+      value: |
+        - Node.js version:
+        - SDK version:
+        - Operating System:
+        - Package manager:
+
+  - type: textarea
+    id: additional
+    attributes:
+      label: Additional Context
+      description: |
+        Add any other context about the problem here. For example:
+        - Does this happen every time or only sometimes?
+        - Does this affect `everywhere view` as well, or only `everywhere build`?
+        - Are there any workarounds you've found?
+      placeholder: Any additional information that might help us fix this bug.
+
+  - type: dropdown
+    id: occurrence
+    attributes:
+      label: How often does this happen?
+      options:
+        - Every time
+        - Sometimes
+        - Only happened once
+        - I'm not sure
