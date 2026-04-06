@@ -38,8 +38,8 @@ release-guard:
         exit 1
     fi
 
-# Bump version, preflight, publish, commit, tag, and push
-release bump="patch": release-guard check test
+# Bump version, publish to registry, commit, tag, and push
+publish bump="patch": release-guard check test
     #!/usr/bin/env bash
     npm version {{bump}} --no-git-tag-version
     VERSION=$(node -p "require('./package.json').version")
