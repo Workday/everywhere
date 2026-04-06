@@ -1,7 +1,7 @@
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 
-import EverywhereBaseCommand from './base';
+import EverywhereBaseCommand from './base.js';
 
 export default class InfoCommand extends EverywhereBaseCommand {
   static description = 'Show details for a Workday Everywhere plugin.';
