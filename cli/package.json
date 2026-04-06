@@ -4,7 +4,7 @@
   "version": "0.1.0",
   "author": "Workday",
   "license": "UNLICENSED",
-  "type": "commonjs",
+  "type": "module",
   "main": "dist/index.js",
   "engines": {
     "node": ">=20.11.1"

@@ -1,7 +1,10 @@
 import { Flags } from '@oclif/core';
 import * as path from 'node:path';
+import { fileURLToPath } from 'node:url';
+import * as vite from 'vite';
 
-import EverywhereBaseCommand from './base';
+import { dataServicePlugin } from '../../data/vite-data-plugin.js';
+import EverywhereBaseCommand from './base.js';
 
 export default class ViewCommand extends EverywhereBaseCommand {
   static description = 'Preview a Workday Everywhere plugin in the browser.';
@@ -27,18 +30,17 @@ export default class ViewCommand extends EverywhereBaseCommand {
 
     // Locate the SDK package root (where dist/viewer/ lives).
     // Compiled path: cli/dist/commands/everywhere/view.js → 4 levels up = SDK root.
-    const sdkRoot = path.resolve(__dirname, '..', '..', '..', '..');
+    const sdkRoot = path.resolve(
+      fileURLToPath(new URL('.', import.meta.url)),
+      '..',
+      '..',
+      '..',
+      '..'
+    );
     const viewerDir = path.join(sdkRoot, 'dist', 'viewer');
 
     this.log(`Plugin: ${pluginEntry}`);
     this.log(`Starting viewer on port ${flags.port}...`);
-
-    // Vite is ESM-only; use dynamic import from this CJS module.
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const vite: any = await import('vite');
-
-    // Data service plugin — serves /api/data/graphql backed by .data/ files.
-    const { dataServicePlugin } = await import('../../data/vite-data-plugin.js');
 
     const server = await vite.createServer({
       root: viewerDir,

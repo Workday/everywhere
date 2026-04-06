@@ -2,14 +2,14 @@ import { Args } from '@oclif/core';
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 
-import EverywhereBaseCommand from './base';
-import { parseBusinessObject } from '../../codegen/parser';
+import EverywhereBaseCommand from './base.js';
+import { parseBusinessObject } from '../../codegen/parser.js';
 import {
   generateModels,
   generateSchema,
   generateModelHooks,
   generateIndex,
-} from '../../codegen/generator';
+} from '../../codegen/generator.js';
 
 const CONFIG_DIR = 'everywhere';
 const CONFIG_FILE = '.config.json';
