@@ -25,6 +25,10 @@ test: build
     cd examples && just setup
     npx vitest run
 
+# Publish package to registry
+publish: build
+    npm publish
+
 # Remove build artifacts
 clean:
     rm -rf dist/
