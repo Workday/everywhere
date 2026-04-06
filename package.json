@@ -12,7 +12,7 @@
   "files": [
     "dist",
     "bin",
-    "cli/lib",
+    "cli/dist",
     "cli/package.json",
     "cli/oclif.manifest.json"
   ],
