@@ -20,8 +20,8 @@ export default class AuthStatusCommand extends EverywhereBaseCommand {
     }
 
     const gateway = config.auth?.gateway ?? 'unknown';
-    const scheme = (config.auth?.https ?? true) ? 'https' : 'http';
-    this.log(`Gateway: ${scheme}://${gateway}`);
+    this.log(`Gateway: ${gateway}`);
+    this.log(`HTTPS: ${(config.auth?.https ?? true) ? 'yes' : 'no'}`);
 
     if (isTokenExpired(token)) {
       this.log(chalk.yellow('Status: Token expired'));
