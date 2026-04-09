@@ -15,9 +15,7 @@ describe('everywhere auth logout', () => {
 
   describe('flags', () => {
     it('inherits the plugin-dir flag from the base command', () => {
-      expect(LogoutCommand.flags['plugin-dir']).toBe(
-        EverywhereBaseCommand.baseFlags['plugin-dir']
-      );
+      expect(LogoutCommand.flags['plugin-dir']).toBe(EverywhereBaseCommand.baseFlags['plugin-dir']);
     });
   });
 });
