@@ -20,7 +20,8 @@ export default class AuthTokenCommand extends EverywhereBaseCommand {
     }
 
     const gateway = config.auth?.gateway ?? DEFAULT_GATEWAY;
-    const url = `https://${gateway}/auth/token`;
+    const scheme = (config.auth?.https ?? true) ? 'https' : 'http';
+    const url = `${scheme}://${gateway}/auth/token`;
 
     const response = await fetch(url, {
       headers: {

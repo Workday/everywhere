@@ -15,6 +15,10 @@ export default class AuthLoginCommand extends EverywhereBaseCommand {
     gateway: Flags.string({
       description: 'Workday API gateway hostname.',
     }),
+    https: Flags.boolean({
+      description: 'Use HTTPS to contact the gateway (use --no-https to disable).',
+      allowNo: true,
+    }),
     token: Flags.string({
       description: 'Access token (omit to enter interactively).',
     }),
@@ -24,6 +28,7 @@ export default class AuthLoginCommand extends EverywhereBaseCommand {
     const { flags } = await this.parse(AuthLoginCommand);
     const config = readConfig();
     const gateway = flags.gateway ?? config.auth?.gateway ?? DEFAULT_GATEWAY;
+    const https = flags.https ?? config.auth?.https ?? true;
 
     const token = flags.token ?? (await this.promptForToken());
 
@@ -37,7 +42,7 @@ export default class AuthLoginCommand extends EverywhereBaseCommand {
       this.error('Invalid token format. Please provide a valid JWT.');
     }
 
-    writeConfig({ auth: { gateway, token } });
+    writeConfig({ auth: { gateway, https, token } });
     this.log(chalk.green('Successfully authenticated.'));
   }
 

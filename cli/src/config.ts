@@ -11,6 +11,7 @@ function configDir(): string {
 export interface GlobalConfig {
   auth?: {
     gateway?: string;
+    https?: boolean;
     token?: string;
   };
   [key: string]: unknown;

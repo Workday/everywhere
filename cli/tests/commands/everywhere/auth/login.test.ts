@@ -24,6 +24,14 @@ describe('everywhere auth login', () => {
       expect(LoginCommand.flags['token']).toBeDefined();
     });
 
+    it('has an https flag', () => {
+      expect(LoginCommand.flags['https']).toBeDefined();
+    });
+
+    it('allows disabling https via --no-https', () => {
+      expect(LoginCommand.flags['https']).toMatchObject({ allowNo: true });
+    });
+
     it('inherits the plugin-dir flag from the base command', () => {
       expect(LoginCommand.flags['plugin-dir']).toBe(EverywhereBaseCommand.baseFlags['plugin-dir']);
     });
