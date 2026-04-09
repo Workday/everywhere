@@ -17,10 +17,12 @@ export function decodeToken(jwt: string): TokenPayload {
   return JSON.parse(payload) as TokenPayload;
 }
 
-export function isTokenExpired(jwt: string): boolean {
+export type TokenExpiryStatus = 'valid' | 'expired' | 'unknown';
+
+export function getTokenExpiryStatus(jwt: string): TokenExpiryStatus {
   const payload = decodeToken(jwt);
   if (payload.exp === undefined) {
-    return true;
+    return 'unknown';
   }
-  return payload.exp < Math.floor(Date.now() / 1000);
+  return payload.exp < Math.floor(Date.now() / 1000) ? 'expired' : 'valid';
 }

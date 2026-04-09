@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { decodeToken, isTokenExpired } from '../../src/auth/token.js';
+import { decodeToken, getTokenExpiryStatus } from '../../src/auth/token.js';
 
 function makeJwt(payload: Record<string, unknown>): string {
   const header = Buffer.from(JSON.stringify({ alg: 'RS256', typ: 'JWT' })).toString('base64url');
@@ -19,19 +19,25 @@ describe('decodeToken', () => {
   });
 });
 
-describe('isTokenExpired', () => {
-  it('returns false when the token expiry is in the future', () => {
-    const token = makeJwt({ exp: Math.floor(Date.now() / 1000) + 3600 });
-    expect(isTokenExpired(token)).toBe(false);
+describe('getTokenExpiryStatus', () => {
+  describe('when the exp claim is in the future', () => {
+    it("returns 'valid'", () => {
+      const token = makeJwt({ exp: Math.floor(Date.now() / 1000) + 3600 });
+      expect(getTokenExpiryStatus(token)).toBe('valid');
+    });
   });
 
-  it('returns true when the token expiry is in the past', () => {
-    const token = makeJwt({ exp: Math.floor(Date.now() / 1000) - 3600 });
-    expect(isTokenExpired(token)).toBe(true);
+  describe('when the exp claim is in the past', () => {
+    it("returns 'expired'", () => {
+      const token = makeJwt({ exp: Math.floor(Date.now() / 1000) - 3600 });
+      expect(getTokenExpiryStatus(token)).toBe('expired');
+    });
   });
 
-  it('returns true when the token has no exp claim', () => {
-    const token = makeJwt({ sub: 'user-123' });
-    expect(isTokenExpired(token)).toBe(true);
+  describe('when the token has no exp claim', () => {
+    it("returns 'unknown'", () => {
+      const token = makeJwt({ sub: 'user-123' });
+      expect(getTokenExpiryStatus(token)).toBe('unknown');
+    });
   });
 });

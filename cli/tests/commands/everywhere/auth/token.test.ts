@@ -21,5 +21,9 @@ describe('everywhere auth token', () => {
         EverywhereBaseCommand.baseFlags['plugin-dir']
       );
     });
+
+    it('defines a --json flag for full payload output', () => {
+      expect(AuthTokenCommand.flags['json']).toBeDefined();
+    });
   });
 });

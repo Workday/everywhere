@@ -8,6 +8,9 @@ function configDir(): string {
   return path.join(base, '@workday', 'everywhere');
 }
 
+export const DEFAULT_GATEWAY = 'api.workday.com';
+export const DEFAULT_HTTPS = true;
+
 export interface GlobalConfig {
   auth?: {
     gateway?: string;

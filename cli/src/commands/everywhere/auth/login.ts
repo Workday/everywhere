@@ -2,10 +2,8 @@ import * as readline from 'node:readline';
 import { Flags } from '@oclif/core';
 import chalk from 'chalk';
 import EverywhereBaseCommand from '../base.js';
-import { readConfig, writeConfig } from '../../../config.js';
+import { readConfig, writeConfig, DEFAULT_GATEWAY, DEFAULT_HTTPS } from '../../../config.js';
 import { decodeToken } from '../../../auth/token.js';
-
-const DEFAULT_GATEWAY = 'api.workday.com';
 
 export default class AuthLoginCommand extends EverywhereBaseCommand {
   static description = 'Authenticate with a Workday server using an access token.';
@@ -28,7 +26,7 @@ export default class AuthLoginCommand extends EverywhereBaseCommand {
     const { flags } = await this.parse(AuthLoginCommand);
     const config = readConfig();
     const gateway = flags.gateway ?? config.auth?.gateway ?? DEFAULT_GATEWAY;
-    const https = flags.https ?? config.auth?.https ?? true;
+    const https = flags.https ?? config.auth?.https ?? DEFAULT_HTTPS;
 
     const token = flags.token ?? (await this.promptForToken());
 

@@ -1,7 +1,7 @@
 import chalk from 'chalk';
 import EverywhereBaseCommand from '../base.js';
-import { readConfig } from '../../../config.js';
-import { isTokenExpired, decodeToken } from '../../../auth/token.js';
+import { readConfig, DEFAULT_GATEWAY, DEFAULT_HTTPS } from '../../../config.js';
+import { getTokenExpiryStatus, decodeToken } from '../../../auth/token.js';
 
 export default class AuthStatusCommand extends EverywhereBaseCommand {
   static description = 'Show current authentication status.';
@@ -15,24 +15,33 @@ export default class AuthStatusCommand extends EverywhereBaseCommand {
     const token = config.auth?.token;
 
     if (!token) {
-      this.log(chalk.red('Status: Not authenticated'));
+      this.log(`Status: ${chalk.red.bold('Not authenticated')}`);
       return;
     }
 
-    const gateway = config.auth?.gateway ?? 'unknown';
-    this.log(`Gateway: ${gateway}`);
-    this.log(`HTTPS: ${(config.auth?.https ?? true) ? 'yes' : 'no'}`);
-
-    if (isTokenExpired(token)) {
-      this.log(chalk.yellow('Status: Token expired'));
+    const expiryStatus = getTokenExpiryStatus(token);
+    if (expiryStatus === 'expired') {
+      this.log(`Status: ${chalk.yellow.bold('Token expired')}`);
     } else {
-      this.log(chalk.green('Status: Authenticated'));
+      this.log(`Status: ${chalk.green.bold('Authenticated')}`);
     }
+
+    const gateway = config.auth?.gateway ?? DEFAULT_GATEWAY;
+    const gatewayDisplay = gateway === DEFAULT_GATEWAY ? gateway : chalk.white.bold(gateway);
+    this.log(`Gateway: ${gatewayDisplay}`);
+
+    const https = config.auth?.https ?? DEFAULT_HTTPS;
+    const httpsDisplay = https ? chalk.green('yes') : chalk.red.bold('no');
+    this.log(`HTTPS: ${httpsDisplay}`);
 
     const payload = decodeToken(token);
-    if (payload.exp) {
-      const expiry = new Date(payload.exp * 1000).toLocaleString();
-      this.log(`Token expires: ${expiry}`);
-    }
+    const expiryValue = payload.exp ? new Date(payload.exp * 1000).toLocaleString() : 'unknown';
+    const colorize =
+      expiryStatus === 'expired'
+        ? chalk.red.bold
+        : expiryStatus === 'unknown'
+          ? chalk.yellow.bold
+          : chalk.green.bold;
+    this.log(`Token expires: ${colorize(expiryValue)}`);
   }
 }
