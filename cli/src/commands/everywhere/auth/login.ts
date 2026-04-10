@@ -3,7 +3,7 @@ import { Flags } from '@oclif/core';
 import chalk from 'chalk';
 import EverywhereBaseCommand from '../base.js';
 import { appConfig } from '../../../config.js';
-import { DEFAULT_GATEWAY, DEFAULT_HTTPS } from './defaults.js';
+import { DEFAULT_GATEWAY, DEFAULT_HTTPS } from '../../../auth/defaults.js';
 import { decodeToken } from '../../../auth/token.js';
 
 export default class AuthLoginCommand extends EverywhereBaseCommand {
