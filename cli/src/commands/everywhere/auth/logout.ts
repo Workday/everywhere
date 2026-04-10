@@ -1,6 +1,6 @@
 import chalk from 'chalk';
 import EverywhereBaseCommand from '../base.js';
-import { readConfig, writeConfig } from '../../../global-config.js';
+import { appConfig } from '../../../config.js';
 
 export default class AuthLogoutCommand extends EverywhereBaseCommand {
   static description = 'Log out and clear stored authentication token.';
@@ -10,14 +10,15 @@ export default class AuthLogoutCommand extends EverywhereBaseCommand {
   };
 
   async run(): Promise<void> {
-    const config = readConfig();
+    const config = appConfig();
+    const saved = config.read();
 
-    if (!config.auth?.token) {
+    if (!saved.auth?.token) {
       this.log(chalk.yellow('Not currently authenticated.'));
       return;
     }
 
-    writeConfig({ auth: { ...config.auth, token: undefined } });
+    config.write({ auth: { ...saved.auth, token: undefined } });
     this.log(chalk.green('Successfully logged out.'));
   }
 }

@@ -1,7 +1,8 @@
 import chalk from 'chalk';
 import { Flags } from '@oclif/core';
 import EverywhereBaseCommand from '../base.js';
-import { readConfig, DEFAULT_GATEWAY, DEFAULT_HTTPS } from '../../../global-config.js';
+import { appConfig } from '../../../config.js';
+import { DEFAULT_GATEWAY, DEFAULT_HTTPS } from './defaults.js';
 
 export default class AuthTokenCommand extends EverywhereBaseCommand {
   static description = 'Fetch and display an access token from the gateway.';
@@ -15,15 +16,16 @@ export default class AuthTokenCommand extends EverywhereBaseCommand {
 
   async run(): Promise<void> {
     const { flags } = await this.parse(AuthTokenCommand);
-    const config = readConfig();
-    const token = config.auth?.token;
+    const config = appConfig();
+    const saved = config.read();
+    const token = saved.auth?.token;
 
     if (!token) {
       this.error(chalk.red('Not authenticated. Run `everywhere auth login` first.'));
     }
 
-    const gateway = config.auth?.gateway ?? DEFAULT_GATEWAY;
-    const scheme = (config.auth?.https ?? DEFAULT_HTTPS) ? 'https' : 'http';
+    const gateway = saved.auth?.gateway ?? DEFAULT_GATEWAY;
+    const scheme = (saved.auth?.https ?? DEFAULT_HTTPS) ? 'https' : 'http';
     const url = `${scheme}://${gateway}/auth/token`;
 
     let response: Response;

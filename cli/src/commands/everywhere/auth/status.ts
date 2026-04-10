@@ -1,6 +1,7 @@
 import chalk from 'chalk';
 import EverywhereBaseCommand from '../base.js';
-import { readConfig, DEFAULT_GATEWAY, DEFAULT_HTTPS } from '../../../global-config.js';
+import { appConfig } from '../../../config.js';
+import { DEFAULT_GATEWAY, DEFAULT_HTTPS } from './defaults.js';
 import { getTokenExpiryStatus, decodeToken } from '../../../auth/token.js';
 
 export default class AuthStatusCommand extends EverywhereBaseCommand {
@@ -11,8 +12,9 @@ export default class AuthStatusCommand extends EverywhereBaseCommand {
   };
 
   async run(): Promise<void> {
-    const config = readConfig();
-    const token = config.auth?.token;
+    const config = appConfig();
+    const saved = config.read();
+    const token = saved.auth?.token;
 
     if (!token) {
       this.log(`Status: ${chalk.red.bold('Not authenticated')}`);
@@ -26,11 +28,11 @@ export default class AuthStatusCommand extends EverywhereBaseCommand {
       this.log(`Status: ${chalk.green.bold('Authenticated')}`);
     }
 
-    const gateway = config.auth?.gateway ?? DEFAULT_GATEWAY;
+    const gateway = saved.auth?.gateway ?? DEFAULT_GATEWAY;
     const gatewayDisplay = gateway === DEFAULT_GATEWAY ? gateway : chalk.white.bold(gateway);
     this.log(`Gateway: ${gatewayDisplay}`);
 
-    const https = config.auth?.https ?? DEFAULT_HTTPS;
+    const https = saved.auth?.https ?? DEFAULT_HTTPS;
     const httpsDisplay = https ? chalk.green('yes') : chalk.red.bold('no');
     this.log(`HTTPS: ${httpsDisplay}`);
 

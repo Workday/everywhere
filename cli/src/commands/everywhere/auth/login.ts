@@ -2,7 +2,8 @@ import * as readline from 'node:readline';
 import { Flags } from '@oclif/core';
 import chalk from 'chalk';
 import EverywhereBaseCommand from '../base.js';
-import { readConfig, writeConfig, DEFAULT_GATEWAY, DEFAULT_HTTPS } from '../../../global-config.js';
+import { appConfig } from '../../../config.js';
+import { DEFAULT_GATEWAY, DEFAULT_HTTPS } from './defaults.js';
 import { decodeToken } from '../../../auth/token.js';
 
 export default class AuthLoginCommand extends EverywhereBaseCommand {
@@ -24,9 +25,10 @@ export default class AuthLoginCommand extends EverywhereBaseCommand {
 
   async run(): Promise<void> {
     const { flags } = await this.parse(AuthLoginCommand);
-    const config = readConfig();
-    const gateway = flags.gateway ?? config.auth?.gateway ?? DEFAULT_GATEWAY;
-    const https = flags.https ?? config.auth?.https ?? DEFAULT_HTTPS;
+    const config = appConfig();
+    const saved = config.read();
+    const gateway = flags.gateway ?? saved.auth?.gateway ?? DEFAULT_GATEWAY;
+    const https = flags.https ?? saved.auth?.https ?? DEFAULT_HTTPS;
 
     const token = flags.token ?? (await this.promptForToken());
 
@@ -40,7 +42,7 @@ export default class AuthLoginCommand extends EverywhereBaseCommand {
       this.error('Invalid token format. Please provide a valid JWT.');
     }
 
-    writeConfig({ auth: { gateway, https, token } });
+    config.write({ auth: { gateway, https, token } });
     this.log(chalk.green('Successfully authenticated.'));
   }
 
