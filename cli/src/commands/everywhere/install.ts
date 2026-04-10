@@ -1,4 +1,10 @@
+import * as fs from 'node:fs';
+import { join, resolve } from 'node:path';
+
 import { Flags } from '@oclif/core';
+
+import { bundlePlugin, packagePlugin, slugify } from '../../../../dist/build/index.js';
+import { readConfig, writeConfig } from '../../config.js';
 import EverywhereBaseCommand from './base.js';
 
 export default class InstallCommand extends EverywhereBaseCommand {
@@ -13,6 +19,57 @@ export default class InstallCommand extends EverywhereBaseCommand {
   };
 
   async run(): Promise<void> {
-    // implemented in Task 5
+    const { flags } = await this.parse(InstallCommand);
+    const pluginDir = await this.parsePluginDir();
+
+    // Resolve install path
+    let installPath: string;
+
+    if (flags.path) {
+      installPath = resolve(flags.path);
+      writeConfig(pluginDir, { install: installPath });
+    } else {
+      const config = readConfig(pluginDir);
+      if (!config.install) {
+        this.error('No install target configured. Run: everywhere install --path <dir>');
+      }
+      installPath = config.install;
+    }
+
+    if (!fs.existsSync(installPath)) {
+      this.error(`Install target directory does not exist: ${installPath}`);
+    }
+
+    // Read package.json
+    const pkgPath = join(pluginDir, 'package.json');
+    if (!fs.existsSync(pkgPath)) {
+      this.error('No package.json found in the plugin directory.');
+    }
+
+    const pkg = JSON.parse(fs.readFileSync(pkgPath, 'utf-8'));
+    if (!pkg.name) this.error('package.json is missing required field: name');
+    if (!pkg.version) this.error('package.json is missing required field: version');
+
+    // Build
+    this.log('Bundling plugin...');
+    const code = await bundlePlugin(pluginDir);
+
+    this.log('Packaging...');
+    const slug = slugify(pkg.name);
+    const outputDir = join(pluginDir, 'dist');
+    const result = await packagePlugin({
+      pluginDir,
+      bundleCode: code,
+      outputDir,
+      slug,
+      version: pkg.version,
+    });
+
+    // Copy to install path
+    const destPath = join(installPath, `${slug}.zip`);
+    fs.copyFileSync(result.filePath, destPath);
+
+    const sizeKB = (result.size / 1024).toFixed(1);
+    this.log(`Installed → ${destPath} (${sizeKB} KB)`);
   }
 }
