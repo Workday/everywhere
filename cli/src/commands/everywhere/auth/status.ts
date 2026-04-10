@@ -1,6 +1,6 @@
 import chalk from 'chalk';
 import EverywhereBaseCommand from '../base.js';
-import { readConfig, DEFAULT_GATEWAY, DEFAULT_HTTPS } from '../../../config.js';
+import { readConfig, DEFAULT_GATEWAY, DEFAULT_HTTPS } from '../../../global-config.js';
 import { getTokenExpiryStatus, decodeToken } from '../../../auth/token.js';
 
 export default class AuthStatusCommand extends EverywhereBaseCommand {

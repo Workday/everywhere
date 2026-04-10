@@ -1,6 +1,6 @@
 import chalk from 'chalk';
 import EverywhereBaseCommand from '../base.js';
-import { readConfig, writeConfig } from '../../../config.js';
+import { readConfig, writeConfig } from '../../../global-config.js';
 
 export default class AuthLogoutCommand extends EverywhereBaseCommand {
   static description = 'Log out and clear stored authentication token.';

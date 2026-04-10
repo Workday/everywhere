@@ -10,9 +10,8 @@ import {
   generateModelHooks,
   generateIndex,
 } from '../../codegen/generator.js';
+import { readConfig, writeConfig } from '../../config.js';
 
-const CONFIG_DIR = 'everywhere';
-const CONFIG_FILE = '.config.json';
 const OUTPUT_DIR = 'data';
 
 export default class BindCommand extends EverywhereBaseCommand {
@@ -34,23 +33,19 @@ export default class BindCommand extends EverywhereBaseCommand {
   async run(): Promise<void> {
     const { args } = await this.parse(BindCommand);
     const pluginDir = await this.parsePluginDir();
-    const everywhereDir = path.join(pluginDir, CONFIG_DIR);
-    const configPath = path.join(everywhereDir, CONFIG_FILE);
-
-    // Resolve the app directory
+    const everywhereDir = path.join(pluginDir, 'everywhere');
     let appDir: string;
 
     if (args['app-dir']) {
       appDir = path.resolve(args['app-dir']);
-      // Save to config for future runs
-      fs.mkdirSync(everywhereDir, { recursive: true });
-      fs.writeFileSync(configPath, JSON.stringify({ extend: appDir }, null, 2) + '\n');
-    } else if (fs.existsSync(configPath)) {
-      const config = JSON.parse(fs.readFileSync(configPath, 'utf-8'));
-      appDir = path.resolve(pluginDir, config.extend);
+      writeConfig(pluginDir, { extend: appDir });
     } else {
-      // Fall back to plugin dir itself (model/ in the plugin)
-      appDir = pluginDir;
+      const config = readConfig(pluginDir);
+      if (config.extend) {
+        appDir = path.resolve(pluginDir, config.extend);
+      } else {
+        appDir = pluginDir;
+      }
     }
 
     // Find .businessobject files

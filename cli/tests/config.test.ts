@@ -4,58 +4,76 @@ import * as path from 'node:path';
 import * as os from 'node:os';
 import { readConfig, writeConfig } from '../src/config.js';
 
-let tmpDir: string;
-let originalHome: string | undefined;
-
-beforeEach(() => {
-  tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'we-config-'));
-  originalHome = process.env['XDG_CONFIG_HOME'];
-  process.env['XDG_CONFIG_HOME'] = tmpDir;
-});
-
-afterEach(() => {
-  if (originalHome === undefined) {
-    delete process.env['XDG_CONFIG_HOME'];
-  } else {
-    process.env['XDG_CONFIG_HOME'] = originalHome;
-  }
-  fs.rmSync(tmpDir, { recursive: true, force: true });
-});
-
 describe('readConfig', () => {
-  it('returns an empty object when no config file exists', () => {
-    expect(readConfig()).toEqual({});
+  let tmpDir: string;
+
+  beforeEach(() => {
+    tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'we-config-'));
+    fs.mkdirSync(path.join(tmpDir, 'everywhere'), { recursive: true });
   });
 
-  it('returns parsed contents when the config file exists', () => {
-    const dir = path.join(tmpDir, '@workday', 'everywhere');
-    fs.mkdirSync(dir, { recursive: true });
-    fs.writeFileSync(
-      path.join(dir, 'config.json'),
-      JSON.stringify({ auth: { gateway: 'example.com' } })
-    );
-    expect(readConfig()).toEqual({ auth: { gateway: 'example.com' } });
+  afterEach(() => {
+    fs.rmSync(tmpDir, { recursive: true, force: true });
+  });
+
+  describe('when config file exists', () => {
+    it('returns the parsed contents', () => {
+      const configPath = path.join(tmpDir, 'everywhere', '.config.json');
+      fs.writeFileSync(configPath, JSON.stringify({ extend: '/some/path' }));
+
+      const result = readConfig(tmpDir);
+      expect(result).toEqual({ extend: '/some/path' });
+    });
+  });
+
+  describe('when config file does not exist', () => {
+    it('returns an empty object', () => {
+      const result = readConfig(tmpDir);
+      expect(result).toEqual({});
+    });
   });
 });
 
 describe('writeConfig', () => {
-  it('creates the directory and file when none exist', () => {
-    writeConfig({ auth: { gateway: 'example.com' } });
-    const configPath = path.join(tmpDir, '@workday', 'everywhere', 'config.json');
-    expect(fs.existsSync(configPath)).toBe(true);
+  let tmpDir: string;
+
+  beforeEach(() => {
+    tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'we-config-'));
   });
 
-  it('merges with existing config preserving unrelated keys', () => {
-    writeConfig({ other: 'value' });
-    writeConfig({ auth: { gateway: 'example.com' } });
-    const result = readConfig();
-    expect(result).toEqual({ other: 'value', auth: { gateway: 'example.com' } });
+  afterEach(() => {
+    fs.rmSync(tmpDir, { recursive: true, force: true });
   });
 
-  it('deep-merges the auth object', () => {
-    writeConfig({ auth: { gateway: 'example.com' } });
-    writeConfig({ auth: { token: 'abc123' } });
-    const result = readConfig();
-    expect(result.auth).toEqual({ gateway: 'example.com', token: 'abc123' });
+  describe('when config file already has data', () => {
+    it('merges new keys with existing keys', () => {
+      const dir = path.join(tmpDir, 'everywhere');
+      fs.mkdirSync(dir, { recursive: true });
+      fs.writeFileSync(path.join(dir, '.config.json'), JSON.stringify({ extend: '/app' }));
+
+      writeConfig(tmpDir, { install: '/target' });
+
+      const result = readConfig(tmpDir);
+      expect(result).toEqual({ extend: '/app', install: '/target' });
+    });
+  });
+
+  describe('when config file does not exist', () => {
+    it('creates the file with the provided keys', () => {
+      writeConfig(tmpDir, { install: '/target' });
+
+      const result = readConfig(tmpDir);
+      expect(result).toEqual({ install: '/target' });
+    });
+  });
+
+  describe('when updating an existing key', () => {
+    it('overwrites the old value', () => {
+      writeConfig(tmpDir, { install: '/old' });
+      writeConfig(tmpDir, { install: '/new' });
+
+      const result = readConfig(tmpDir);
+      expect(result).toEqual({ install: '/new' });
+    });
   });
 });

@@ -2,7 +2,7 @@ import * as readline from 'node:readline';
 import { Flags } from '@oclif/core';
 import chalk from 'chalk';
 import EverywhereBaseCommand from '../base.js';
-import { readConfig, writeConfig, DEFAULT_GATEWAY, DEFAULT_HTTPS } from '../../../config.js';
+import { readConfig, writeConfig, DEFAULT_GATEWAY, DEFAULT_HTTPS } from '../../../global-config.js';
 import { decodeToken } from '../../../auth/token.js';
 
 export default class AuthLoginCommand extends EverywhereBaseCommand {

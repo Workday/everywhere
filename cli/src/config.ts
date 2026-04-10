@@ -1,40 +1,36 @@
 import * as fs from 'node:fs';
 import * as path from 'node:path';
-import * as os from 'node:os';
 
-function configDir(): string {
-  const xdg = process.env['XDG_CONFIG_HOME'];
-  const base = xdg ?? path.join(os.homedir(), '.config');
-  return path.join(base, '@workday', 'everywhere');
+const CONFIG_DIR = 'everywhere';
+const CONFIG_FILE = '.config.json';
+
+export interface PluginConfig {
+  extend?: string;
+  install?: string;
 }
 
-export const DEFAULT_GATEWAY = 'api.workday.com';
-export const DEFAULT_HTTPS = true;
-
-export interface GlobalConfig {
-  auth?: {
-    gateway?: string;
-    https?: boolean;
-    token?: string;
-  };
-  [key: string]: unknown;
+export function configPath(pluginDir: string): string {
+  return path.join(pluginDir, CONFIG_DIR, CONFIG_FILE);
 }
 
-export function readConfig(): GlobalConfig {
-  const configPath = path.join(configDir(), 'config.json');
-  if (!fs.existsSync(configPath)) {
+export function readConfig(pluginDir: string): PluginConfig {
+  const filePath = configPath(pluginDir);
+
+  if (!fs.existsSync(filePath)) {
     return {};
   }
-  return JSON.parse(fs.readFileSync(configPath, 'utf-8')) as GlobalConfig;
+
+  return JSON.parse(fs.readFileSync(filePath, 'utf-8'));
 }
 
-export function writeConfig(partial: Partial<GlobalConfig>): void {
-  const dir = configDir();
+export function writeConfig(pluginDir: string, updates: Partial<PluginConfig>): void {
+  const filePath = configPath(pluginDir);
+  const dir = path.dirname(filePath);
+
   fs.mkdirSync(dir, { recursive: true });
-  const existing = readConfig();
-  const merged: GlobalConfig = { ...existing, ...partial };
-  if (existing.auth && partial.auth) {
-    merged.auth = { ...existing.auth, ...partial.auth };
-  }
-  fs.writeFileSync(path.join(dir, 'config.json'), JSON.stringify(merged, null, 2) + '\n');
+
+  const existing = readConfig(pluginDir);
+  const merged = { ...existing, ...updates };
+
+  fs.writeFileSync(filePath, JSON.stringify(merged, null, 2) + '\n');
 }
