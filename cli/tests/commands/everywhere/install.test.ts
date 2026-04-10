@@ -15,7 +15,9 @@ describe('everywhere install', () => {
 
   describe('flags', () => {
     it('inherits the plugin-dir flag from the base command', () => {
-      expect(InstallCommand.flags['plugin-dir']).toBe(EverywhereBaseCommand.baseFlags['plugin-dir']);
+      expect(InstallCommand.flags['plugin-dir']).toBe(
+        EverywhereBaseCommand.baseFlags['plugin-dir']
+      );
     });
 
     it('defines a path flag for the install target', () => {
