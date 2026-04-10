@@ -13,7 +13,17 @@ export interface PluginConfig {
   install?: string;
 }
 
-function createConfig<T>(dir: string, filename: string): ConfigProvider<T> {
+type MergeFn<T> = (existing: T, updates: Partial<T>) => T;
+
+function shallowMerge<T>(existing: T, updates: Partial<T>): T {
+  return { ...existing, ...updates };
+}
+
+function createConfig<T>(
+  dir: string,
+  filename: string,
+  merge: MergeFn<T> = shallowMerge
+): ConfigProvider<T> {
   const filePath = path.join(dir, filename);
 
   return {
@@ -32,7 +42,7 @@ function createConfig<T>(dir: string, filename: string): ConfigProvider<T> {
       const dirPath = path.dirname(filePath);
       fs.mkdirSync(dirPath, { recursive: true });
       const existing = this.read();
-      const merged = { ...existing, ...updates };
+      const merged = merge(existing, updates);
       fs.writeFileSync(filePath, JSON.stringify(merged, null, 2) + '\n');
     },
   };
@@ -58,30 +68,17 @@ export interface AppConfig {
   [key: string]: unknown;
 }
 
+function appMerge(existing: AppConfig, updates: Partial<AppConfig>): AppConfig {
+  const merged: AppConfig = { ...existing, ...updates };
+  if (existing.auth && updates.auth) {
+    merged.auth = { ...existing.auth, ...updates.auth };
+  }
+  return merged;
+}
+
 export function appConfig(): ConfigProvider<AppConfig> {
   const xdg = process.env['XDG_CONFIG_HOME'];
   const base = xdg ?? path.join(os.homedir(), '.config');
   const dir = path.join(base, '@workday', 'everywhere');
-  const inner = createConfig<AppConfig>(dir, 'config.json');
-
-  return {
-    get path(): string {
-      return inner.path;
-    },
-
-    read(): AppConfig {
-      return inner.read();
-    },
-
-    write(updates: Partial<AppConfig>): void {
-      const existing = inner.read();
-      const merged: AppConfig = { ...existing, ...updates };
-      if (existing.auth && updates.auth) {
-        merged.auth = { ...existing.auth, ...updates.auth };
-      }
-      const dirPath = path.dirname(inner.path);
-      fs.mkdirSync(dirPath, { recursive: true });
-      fs.writeFileSync(inner.path, JSON.stringify(merged, null, 2) + '\n');
-    },
-  };
+  return createConfig<AppConfig>(dir, 'config.json', appMerge);
 }
