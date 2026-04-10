@@ -22,3 +22,15 @@ export function readConfig(pluginDir: string): PluginConfig {
 
   return JSON.parse(fs.readFileSync(filePath, 'utf-8'));
 }
+
+export function writeConfig(pluginDir: string, updates: Partial<PluginConfig>): void {
+  const filePath = configPath(pluginDir);
+  const dir = path.dirname(filePath);
+
+  fs.mkdirSync(dir, { recursive: true });
+
+  const existing = readConfig(pluginDir);
+  const merged = { ...existing, ...updates };
+
+  fs.writeFileSync(filePath, JSON.stringify(merged, null, 2) + '\n');
+}
