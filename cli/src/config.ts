@@ -1,36 +1,49 @@
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 
-const CONFIG_DIR = 'everywhere';
-const CONFIG_FILE = '.config.json';
+export interface ConfigProvider<T> {
+  read(): T;
+  write(updates: Partial<T>): void;
+  readonly path: string;
+}
 
 export interface PluginConfig {
   extend?: string;
   install?: string;
 }
 
-export function configPath(pluginDir: string): string {
-  return path.join(pluginDir, CONFIG_DIR, CONFIG_FILE);
+function createConfig<T>(dir: string, filename: string): ConfigProvider<T> {
+  const filePath = path.join(dir, filename);
+
+  return {
+    get path(): string {
+      return filePath;
+    },
+
+    read(): T {
+      if (!fs.existsSync(filePath)) {
+        return {} as T;
+      }
+      return JSON.parse(fs.readFileSync(filePath, 'utf-8')) as T;
+    },
+
+    write(updates: Partial<T>): void {
+      const dirPath = path.dirname(filePath);
+      fs.mkdirSync(dirPath, { recursive: true });
+      const existing = this.read();
+      const merged = { ...existing, ...updates };
+      fs.writeFileSync(filePath, JSON.stringify(merged, null, 2) + '\n');
+    },
+  };
 }
 
-export function readConfig(pluginDir: string): PluginConfig {
-  const filePath = configPath(pluginDir);
+let _pluginDir: string | undefined;
 
-  if (!fs.existsSync(filePath)) {
-    return {};
-  }
-
-  return JSON.parse(fs.readFileSync(filePath, 'utf-8'));
+export function setPluginDir(dir: string): void {
+  _pluginDir = dir;
 }
 
-export function writeConfig(pluginDir: string, updates: Partial<PluginConfig>): void {
-  const filePath = configPath(pluginDir);
-  const dir = path.dirname(filePath);
-
-  fs.mkdirSync(dir, { recursive: true });
-
-  const existing = readConfig(pluginDir);
-  const merged = { ...existing, ...updates };
-
-  fs.writeFileSync(filePath, JSON.stringify(merged, null, 2) + '\n');
+export function pluginConfig(): ConfigProvider<PluginConfig> {
+  const dir = _pluginDir ?? process.cwd();
+  return createConfig<PluginConfig>(path.join(dir, 'everywhere'), '.config.json');
 }
