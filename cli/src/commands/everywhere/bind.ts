@@ -10,7 +10,7 @@ import {
   generateModelHooks,
   generateIndex,
 } from '../../codegen/generator.js';
-import { readConfig, writeConfig } from '../../config.js';
+import { pluginConfig } from '../../config.js';
 
 const OUTPUT_DIR = 'data';
 
@@ -34,15 +34,16 @@ export default class BindCommand extends EverywhereBaseCommand {
     const { args } = await this.parse(BindCommand);
     const pluginDir = await this.parsePluginDir();
     const everywhereDir = path.join(pluginDir, 'everywhere');
+    const config = pluginConfig();
     let appDir: string;
 
     if (args['app-dir']) {
       appDir = path.resolve(args['app-dir']);
-      writeConfig(pluginDir, { extend: appDir });
+      config.write({ extend: appDir });
     } else {
-      const config = readConfig(pluginDir);
-      if (config.extend) {
-        appDir = path.resolve(pluginDir, config.extend);
+      const saved = config.read();
+      if (saved.extend) {
+        appDir = path.resolve(pluginDir, saved.extend);
       } else {
         appDir = pluginDir;
       }
