@@ -32,6 +32,9 @@ just setup
 | `just tidy`  | Format source files  |
 | `just build` | Build to dist/       |
 
+> **Note:** Run `just build` before using the `everywhere` CLI locally. The CLI commands are
+> compiled from TypeScript and won't be available until the build output exists.
+
 ### Commit Conventions
 
 Use [Conventional Commits](https://www.conventionalcommits.org/) format:
