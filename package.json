@@ -29,7 +29,7 @@
     }
   },
   "dependencies": {
-    "@oclif/core": "4.10.4",
+    "@oclif/core": "4.10.5",
     "esbuild": "^0.28",
     "jszip": "^3.10.1",
     "vite": "^8"
