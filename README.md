@@ -27,6 +27,7 @@ Add your plugin metadata to `package.json`:
 Define your plugin in a `plugin.tsx` file:
 
 ```tsx
+import React from 'react';
 import { plugin } from '@workday/everywhere';
 
 function HomePage() {
