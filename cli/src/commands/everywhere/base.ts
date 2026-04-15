@@ -2,6 +2,8 @@ import { Command, Flags } from '@oclif/core';
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 
+import { setPluginDir } from '../../config.js';
+
 const PLUGIN_EXTENSIONS = ['.tsx', '.ts'];
 
 export default abstract class EverywhereBaseCommand extends Command {
@@ -28,6 +30,7 @@ export default abstract class EverywhereBaseCommand extends Command {
     if (dir) {
       this._pluginDir = path.resolve(dir);
     }
+    setPluginDir(this._pluginDir);
     return this._pluginDir;
   }
 

@@ -4,7 +4,7 @@ import { join, resolve } from 'node:path';
 import { Flags } from '@oclif/core';
 
 import { bundlePlugin, packagePlugin, slugify } from '../../../../dist/build/index.js';
-import { readConfig, writeConfig } from '../../config.js';
+import { pluginConfig } from '../../config.js';
 import EverywhereBaseCommand from './base.js';
 
 export default class InstallCommand extends EverywhereBaseCommand {
@@ -20,19 +20,20 @@ export default class InstallCommand extends EverywhereBaseCommand {
   async run(): Promise<void> {
     const { flags } = await this.parse(InstallCommand);
     const pluginDir = await this.parsePluginDir();
+    const config = pluginConfig();
 
     // Resolve install path
     let installPath: string;
 
     if (flags.path) {
       installPath = resolve(flags.path);
-      writeConfig(pluginDir, { install: installPath });
+      config.write({ install: installPath });
     } else {
-      const config = readConfig(pluginDir);
-      if (!config.install) {
+      const saved = config.read();
+      if (!saved.install) {
         this.error('No install target configured. Run: everywhere install --path <dir>');
       }
-      installPath = config.install;
+      installPath = saved.install;
     }
 
     if (!fs.existsSync(installPath)) {
