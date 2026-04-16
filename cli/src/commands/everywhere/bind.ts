@@ -69,27 +69,32 @@ export default class BindCommand extends EverywhereBaseCommand {
   ): Promise<BusinessObjectFile[]> {
     const config = pluginConfig();
 
+    if (!argSource) {
+      try {
+        const saved = config.read();
+        const appDir = saved.extend ? path.resolve(pluginDir, saved.extend) : pluginDir;
+        return loadBusinessObjects(appDir);
+      } catch (err) {
+        this.error(err instanceof Error ? err.message : String(err));
+      }
+    }
+
+    const appSource = path.resolve(argSource);
+
     try {
-      if (argSource) {
-        const appSource = path.resolve(argSource);
-
-        if (appSource.endsWith('.zip') && fs.existsSync(appSource)) {
-          return await loadBusinessObjectsFromZip(appSource);
-        }
-
-        if (fs.existsSync(appSource) && fs.statSync(appSource).isDirectory()) {
-          config.write({ extend: appSource });
-          return loadBusinessObjects(appSource);
-        }
-
-        this.error(`app-source must be a directory or .zip file: ${appSource}`);
+      if (appSource.endsWith('.zip') && fs.existsSync(appSource)) {
+        return await loadBusinessObjectsFromZip(appSource);
       }
 
-      const saved = config.read();
-      const appDir = saved.extend ? path.resolve(pluginDir, saved.extend) : pluginDir;
-      return loadBusinessObjects(appDir);
+      if (fs.existsSync(appSource) && fs.statSync(appSource).isDirectory()) {
+        config.write({ extend: appSource });
+        return loadBusinessObjects(appSource);
+      }
     } catch (err) {
       this.error(err instanceof Error ? err.message : String(err));
     }
+
+    // argSource was provided but matched neither zip nor directory
+    this.error(`app-source must be a directory or .zip file: ${appSource}`);
   }
 }
