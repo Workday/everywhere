@@ -16,15 +16,12 @@ export async function loadBusinessObjectsFromZip(zipPath: string): Promise<Busin
   let hasModelFolder = false;
 
   for (const [entryPath, entry] of Object.entries(zip.files)) {
+    if (entryPath.startsWith('model/')) hasModelFolder = true;
     if (entry.dir) continue;
 
     const match = entryPath.match(/^model\/([^/]+\.businessobject)$/);
-    if (!match) {
-      if (entryPath.startsWith('model/')) hasModelFolder = true;
-      continue;
-    }
+    if (!match) continue;
 
-    hasModelFolder = true;
     const content = await entry.async('string');
     entries.push({ name: match[1], content });
   }
@@ -37,7 +34,7 @@ export async function loadBusinessObjectsFromZip(zipPath: string): Promise<Busin
     throw new Error(`No .businessobject files found in ${zipPath}`);
   }
 
-  entries.sort((a, b) => a.name.localeCompare(b.name));
+  entries.sort((a, b) => (a.name < b.name ? -1 : a.name > b.name ? 1 : 0));
 
   return entries;
 }
