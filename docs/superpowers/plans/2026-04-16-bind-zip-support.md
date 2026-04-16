@@ -19,13 +19,13 @@ persisted to `.config.json`); directory inputs continue to be persisted as today
 
 ## File Structure
 
-| File                                                                    | Responsibility                                           |
-| ----------------------------------------------------------------------- | -------------------------------------------------------- |
-| `cli/package.json` (modify)                                             | Add `jszip` as a direct dependency                       |
-| `cli/src/commands/everywhere/business-objects.ts` (create)              | Load `.businessobject` files from a directory or zip    |
-| `cli/tests/commands/everywhere/business-objects.test.ts` (create)       | Behavior tests for both loaders                          |
-| `cli/src/commands/everywhere/bind.ts` (modify)                          | Rename arg, detect input type, call helpers              |
-| `cli/tests/commands/everywhere/bind.test.ts` (modify)                   | Update arg test to reflect `app-source` rename           |
+| File                                                              | Responsibility                                       |
+| ----------------------------------------------------------------- | ---------------------------------------------------- |
+| `cli/package.json` (modify)                                       | Add `jszip` as a direct dependency                   |
+| `cli/src/commands/everywhere/business-objects.ts` (create)        | Load `.businessobject` files from a directory or zip |
+| `cli/tests/commands/everywhere/business-objects.test.ts` (create) | Behavior tests for both loaders                      |
+| `cli/src/commands/everywhere/bind.ts` (modify)                    | Rename arg, detect input type, call helpers          |
+| `cli/tests/commands/everywhere/bind.test.ts` (modify)             | Update arg test to reflect `app-source` rename       |
 
 ---
 
@@ -55,8 +55,8 @@ version used in the root package:
 
 - [ ] **Step 2: Install**
 
-Run: `cd /Users/jason.heddings/Projects/workday/everywhere/sdk && just setup`
-Expected: Completes successfully. `cli/node_modules/jszip` now exists.
+Run: `cd /Users/jason.heddings/Projects/workday/everywhere/sdk && just setup` Expected: Completes
+successfully. `cli/node_modules/jszip` now exists.
 
 - [ ] **Step 3: Verify jszip is resolvable from the cli workspace**
 
@@ -125,7 +125,8 @@ describe('loadBusinessObjects', () => {
 
 - [ ] **Step 2: Run test to verify it fails**
 
-Run: `cd /Users/jason.heddings/Projects/workday/everywhere/sdk && npx vitest run cli/tests/commands/everywhere/business-objects.test.ts`
+Run:
+`cd /Users/jason.heddings/Projects/workday/everywhere/sdk && npx vitest run cli/tests/commands/everywhere/business-objects.test.ts`
 Expected: FAIL — module not found
 
 - [ ] **Step 3: Write minimal implementation**
@@ -166,7 +167,8 @@ on ordering, sort the file list before mapping: `files.sort()`.
 
 - [ ] **Step 4: Run test to verify it passes**
 
-Run: `cd /Users/jason.heddings/Projects/workday/everywhere/sdk && npx vitest run cli/tests/commands/everywhere/business-objects.test.ts`
+Run:
+`cd /Users/jason.heddings/Projects/workday/everywhere/sdk && npx vitest run cli/tests/commands/everywhere/business-objects.test.ts`
 Expected: PASS. If the order is platform-dependent and fails, add `files.sort()` before the `.map`
 and re-run.
 
@@ -178,16 +180,15 @@ describe:
 ```typescript
 describe('when the model directory does not exist', () => {
   it('throws an error naming the missing directory', () => {
-    expect(() => loadBusinessObjects(tmpDir)).toThrow(
-      `No model/ directory found in ${tmpDir}`
-    );
+    expect(() => loadBusinessObjects(tmpDir)).toThrow(`No model/ directory found in ${tmpDir}`);
   });
 });
 ```
 
 - [ ] **Step 6: Run test to verify it passes**
 
-Run: `cd /Users/jason.heddings/Projects/workday/everywhere/sdk && npx vitest run cli/tests/commands/everywhere/business-objects.test.ts`
+Run:
+`cd /Users/jason.heddings/Projects/workday/everywhere/sdk && npx vitest run cli/tests/commands/everywhere/business-objects.test.ts`
 Expected: PASS (already implemented).
 
 - [ ] **Step 7: Write failing test for empty model directory**
@@ -211,7 +212,8 @@ describe('when the model directory has no .businessobject files', () => {
 
 - [ ] **Step 8: Run test to verify it passes**
 
-Run: `cd /Users/jason.heddings/Projects/workday/everywhere/sdk && npx vitest run cli/tests/commands/everywhere/business-objects.test.ts`
+Run:
+`cd /Users/jason.heddings/Projects/workday/everywhere/sdk && npx vitest run cli/tests/commands/everywhere/business-objects.test.ts`
 Expected: PASS.
 
 - [ ] **Step 9: Write failing test that non-.businessobject files are ignored**
@@ -236,7 +238,8 @@ describe('when the model directory has mixed files', () => {
 
 - [ ] **Step 10: Run test to verify it passes**
 
-Run: `cd /Users/jason.heddings/Projects/workday/everywhere/sdk && npx vitest run cli/tests/commands/everywhere/business-objects.test.ts`
+Run:
+`cd /Users/jason.heddings/Projects/workday/everywhere/sdk && npx vitest run cli/tests/commands/everywhere/business-objects.test.ts`
 Expected: PASS.
 
 - [ ] **Step 11: Commit**
@@ -277,10 +280,7 @@ describe('loadBusinessObjectsFromZip', () => {
     fs.rmSync(tmpDir, { recursive: true, force: true });
   });
 
-  async function writeZip(
-    zipPath: string,
-    entries: Record<string, string>
-  ): Promise<void> {
+  async function writeZip(zipPath: string, entries: Record<string, string>): Promise<void> {
     const zip = new JSZip();
     for (const [name, content] of Object.entries(entries)) {
       zip.file(name, content);
@@ -310,7 +310,8 @@ describe('loadBusinessObjectsFromZip', () => {
 
 - [ ] **Step 2: Run test to verify it fails**
 
-Run: `cd /Users/jason.heddings/Projects/workday/everywhere/sdk && npx vitest run cli/tests/commands/everywhere/business-objects.test.ts`
+Run:
+`cd /Users/jason.heddings/Projects/workday/everywhere/sdk && npx vitest run cli/tests/commands/everywhere/business-objects.test.ts`
 Expected: FAIL — `loadBusinessObjectsFromZip` does not exist.
 
 - [ ] **Step 3: Write minimal implementation**
@@ -321,9 +322,7 @@ Add to `cli/src/commands/everywhere/business-objects.ts`:
 import JSZip from 'jszip';
 import * as fsp from 'node:fs/promises';
 
-export async function loadBusinessObjectsFromZip(
-  zipPath: string
-): Promise<BusinessObjectFile[]> {
+export async function loadBusinessObjectsFromZip(zipPath: string): Promise<BusinessObjectFile[]> {
   const buffer = await fsp.readFile(zipPath);
   const zip = await JSZip.loadAsync(buffer);
 
@@ -365,7 +364,8 @@ import * as fsp from 'node:fs/promises';
 
 - [ ] **Step 4: Run test to verify it passes**
 
-Run: `cd /Users/jason.heddings/Projects/workday/everywhere/sdk && npx vitest run cli/tests/commands/everywhere/business-objects.test.ts`
+Run:
+`cd /Users/jason.heddings/Projects/workday/everywhere/sdk && npx vitest run cli/tests/commands/everywhere/business-objects.test.ts`
 Expected: PASS. If the order is platform-dependent and the test fails, sort `entries` by `name`
 before returning.
 
@@ -391,7 +391,8 @@ describe('when the zip has no model/ folder', () => {
 
 - [ ] **Step 6: Run test to verify it passes**
 
-Run: `cd /Users/jason.heddings/Projects/workday/everywhere/sdk && npx vitest run cli/tests/commands/everywhere/business-objects.test.ts`
+Run:
+`cd /Users/jason.heddings/Projects/workday/everywhere/sdk && npx vitest run cli/tests/commands/everywhere/business-objects.test.ts`
 Expected: PASS.
 
 - [ ] **Step 7: Write failing test for zip with model/ but no .businessobject files**
@@ -416,7 +417,8 @@ describe('when the zip has a model/ folder but no .businessobject files', () => 
 
 - [ ] **Step 8: Run test to verify it passes**
 
-Run: `cd /Users/jason.heddings/Projects/workday/everywhere/sdk && npx vitest run cli/tests/commands/everywhere/business-objects.test.ts`
+Run:
+`cd /Users/jason.heddings/Projects/workday/everywhere/sdk && npx vitest run cli/tests/commands/everywhere/business-objects.test.ts`
 Expected: PASS.
 
 - [ ] **Step 9: Write failing test that non-.businessobject entries in model/ are ignored**
@@ -442,7 +444,8 @@ describe('when the zip has mixed files in model/', () => {
 
 - [ ] **Step 10: Run test to verify it passes**
 
-Run: `cd /Users/jason.heddings/Projects/workday/everywhere/sdk && npx vitest run cli/tests/commands/everywhere/business-objects.test.ts`
+Run:
+`cd /Users/jason.heddings/Projects/workday/everywhere/sdk && npx vitest run cli/tests/commands/everywhere/business-objects.test.ts`
 Expected: PASS.
 
 - [ ] **Step 11: Commit**
@@ -457,8 +460,8 @@ git commit -m "feat(cli): add loadBusinessObjectsFromZip helper"
 ### Task 4: Rewire `bind` to use helpers, rename arg, and accept zip input
 
 Replace the inline file-discovery logic in `bind.ts` with calls to the new helpers, rename the
-positional arg from `app-dir` to `app-source`, and detect whether the input is a directory or a
-zip archive.
+positional arg from `app-dir` to `app-source`, and detect whether the input is a directory or a zip
+archive.
 
 **Files:**
 
@@ -479,7 +482,8 @@ describe('args', () => {
 
 - [ ] **Step 2: Run test to verify it fails**
 
-Run: `cd /Users/jason.heddings/Projects/workday/everywhere/sdk && npx vitest run cli/tests/commands/everywhere/bind.test.ts`
+Run:
+`cd /Users/jason.heddings/Projects/workday/everywhere/sdk && npx vitest run cli/tests/commands/everywhere/bind.test.ts`
 Expected: FAIL — `args['app-source']` is undefined.
 
 - [ ] **Step 3: Rewrite bind.ts to use the helpers and accept zip input**
@@ -586,8 +590,8 @@ export default class BindCommand extends EverywhereBaseCommand {
 
 Key behavior:
 
-- Arg renamed from `app-dir` to `app-source`, now `Args.string()` (was `Args.directory()`) because
-  a zip path is also valid.
+- Arg renamed from `app-dir` to `app-source`, now `Args.string()` (was `Args.directory()`) because a
+  zip path is also valid.
 - Zip detection: ends with `.zip` AND file exists on disk.
 - Directory inputs preserve the current behavior: resolve, persist to `.config.json`, load via
   helper.
@@ -600,28 +604,30 @@ Key behavior:
 
 - [ ] **Step 4: Run the bind test to verify the arg rename**
 
-Run: `cd /Users/jason.heddings/Projects/workday/everywhere/sdk && npx vitest run cli/tests/commands/everywhere/bind.test.ts`
+Run:
+`cd /Users/jason.heddings/Projects/workday/everywhere/sdk && npx vitest run cli/tests/commands/everywhere/bind.test.ts`
 Expected: PASS.
 
 - [ ] **Step 5: Run the full test suite**
 
-Run: `cd /Users/jason.heddings/Projects/workday/everywhere/sdk && npx vitest run`
-Expected: PASS (all existing tests unchanged, new tests from Tasks 2-3 pass).
+Run: `cd /Users/jason.heddings/Projects/workday/everywhere/sdk && npx vitest run` Expected: PASS
+(all existing tests unchanged, new tests from Tasks 2-3 pass).
 
 - [ ] **Step 6: Typecheck and lint**
 
-Run: `cd /Users/jason.heddings/Projects/workday/everywhere/sdk && just check`
-Expected: PASS.
+Run: `cd /Users/jason.heddings/Projects/workday/everywhere/sdk && just check` Expected: PASS.
 
 - [ ] **Step 7: Rebuild the cli so the oclif manifest picks up the new arg**
 
-Run: `cd /Users/jason.heddings/Projects/workday/everywhere/sdk && just build`
-Expected: Completes successfully.
+Run: `cd /Users/jason.heddings/Projects/workday/everywhere/sdk && just build` Expected: Completes
+successfully.
 
 - [ ] **Step 8: Verify the manifest reflects the renamed arg**
 
-Run: `cd /Users/jason.heddings/Projects/workday/everywhere/sdk && grep -c app-source cli/oclif.manifest.json`
-Expected: A non-zero count (the new arg is present). `grep -c app-dir cli/oclif.manifest.json` should be 0.
+Run:
+`cd /Users/jason.heddings/Projects/workday/everywhere/sdk && grep -c app-source cli/oclif.manifest.json`
+Expected: A non-zero count (the new arg is present). `grep -c app-dir cli/oclif.manifest.json`
+should be 0.
 
 - [ ] **Step 9: Commit**
 
@@ -644,8 +650,8 @@ npx everywhere bind examples/directory -D examples/directory
 ```
 
 Expected: Generates types under `examples/directory/everywhere/data/`, log ends with
-`Output: .../examples/directory/everywhere/data`. `examples/directory/everywhere/.config.json`
-now includes an `extend` key pointing at `examples/directory`.
+`Output: .../examples/directory/everywhere/data`. `examples/directory/everywhere/.config.json` now
+includes an `extend` key pointing at `examples/directory`.
 
 - [ ] **Step 2: Build a test zip from the example model/**
 
@@ -683,9 +689,9 @@ Expected: `extend` still points at the directory from Step 1, not the zip path.
 npx everywhere bind /tmp/does-not-exist.zip -D examples/directory
 ```
 
-Expected: Errors out. Acceptable messages include the helper-thrown
-`No model/ folder found in ...` (if JSZip treats the missing file as empty) or a file-not-found
-error — this is a free-form smoke check, not a behavioral assertion.
+Expected: Errors out. Acceptable messages include the helper-thrown `No model/ folder found in ...`
+(if JSZip treats the missing file as empty) or a file-not-found error — this is a free-form smoke
+check, not a behavioral assertion.
 
 - [ ] **Step 6: Verify a non-zip, non-directory input errors clearly**
 

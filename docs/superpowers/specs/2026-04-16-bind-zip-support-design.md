@@ -16,8 +16,8 @@ Supporting zip files directly avoids requiring users to manually extract before 
 ### Argument Change
 
 The `app-dir` argument is renamed to `app-source`. Its type changes from `Args.directory()` to
-`Args.string()` to accept both directory paths and zip file paths. Validation is handled manually
-in the command logic.
+`Args.string()` to accept both directory paths and zip file paths. Validation is handled manually in
+the command logic.
 
 ### Detection Logic
 
@@ -61,7 +61,7 @@ of input source.
 
 ## Scope
 
-- **In scope:** zip file detection, in-memory zip reading, helper extraction, argument rename,
-  tests for new behavior
+- **In scope:** zip file detection, in-memory zip reading, helper extraction, argument rename, tests
+  for new behavior
 - **Out of scope:** recursive zip traversal, nested zips, password-protected zips, config
   persistence for zip inputs
