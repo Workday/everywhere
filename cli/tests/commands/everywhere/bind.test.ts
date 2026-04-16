@@ -27,6 +27,10 @@ describe('everywhere bind', () => {
     it('defines a dry-run flag', () => {
       expect(BindCommand.flags['dry-run']).toBeDefined();
     });
+
+    it('uses -n as the short char for dry-run', () => {
+      expect(BindCommand.flags['dry-run'].char).toBe('n');
+    });
   });
 
   describe('args', () => {

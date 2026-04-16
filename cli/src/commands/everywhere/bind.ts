@@ -41,6 +41,7 @@ export default class BindCommand extends EverywhereBaseCommand {
   static flags = {
     ...EverywhereBaseCommand.baseFlags,
     'dry-run': Flags.boolean({
+      char: 'n',
       description:
         'Preview what would be generated without writing any files or updating saved config. Implies --verbose.',
     }),
