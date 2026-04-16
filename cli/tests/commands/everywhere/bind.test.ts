@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
-import BindCommand from '../../../src/commands/everywhere/bind';
-import EverywhereBaseCommand from '../../../src/commands/everywhere/base';
+import BindCommand from '../../../src/commands/everywhere/bind.js';
+import EverywhereBaseCommand from '../../../src/commands/everywhere/base.js';
 
 describe('everywhere bind', () => {
   it('exists as a command class', () => {
@@ -22,8 +22,8 @@ describe('everywhere bind', () => {
   });
 
   describe('args', () => {
-    it('accepts an optional app-dir argument', () => {
-      expect(BindCommand.args['app-dir']).toBeDefined();
+    it('accepts an optional app-source argument', () => {
+      expect(BindCommand.args['app-source']).toBeDefined();
     });
   });
 });
