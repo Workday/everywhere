@@ -19,6 +19,12 @@ import { pluginConfig } from '../../config.js';
 
 const OUTPUT_DIR = 'data';
 
+type LoadResult = {
+  records: BusinessObjectFile[];
+  source: { kind: 'zip' | 'directory'; path: string };
+  persistExtendPath?: string;
+};
+
 export default class BindCommand extends EverywhereBaseCommand {
   static description =
     'Generate TypeScript types and data hooks from Workday Extend business object models.';
@@ -40,12 +46,13 @@ export default class BindCommand extends EverywhereBaseCommand {
     const pluginDir = await this.parsePluginDir();
     const everywhereDir = path.join(pluginDir, 'everywhere');
 
-    const records = await this.loadRecords(args['app-source'], pluginDir);
+    const result = await this.loadRecords(args['app-source'], pluginDir);
+    const schemas = result.records.map((record) => parseBusinessObject(JSON.parse(record.content)));
 
-    // Parse all business objects
-    const schemas = records.map((record) => parseBusinessObject(JSON.parse(record.content)));
+    if (result.persistExtendPath) {
+      pluginConfig().write({ extend: result.persistExtendPath });
+    }
 
-    // Generate output
     const outputDir = path.join(everywhereDir, OUTPUT_DIR);
     fs.mkdirSync(outputDir, { recursive: true });
 
@@ -63,17 +70,17 @@ export default class BindCommand extends EverywhereBaseCommand {
     this.log(`Output: ${outputDir}`);
   }
 
-  private async loadRecords(
-    argSource: string | undefined,
-    pluginDir: string
-  ): Promise<BusinessObjectFile[]> {
+  private async loadRecords(argSource: string | undefined, pluginDir: string): Promise<LoadResult> {
     const config = pluginConfig();
 
     if (!argSource) {
       try {
         const saved = config.read();
         const appDir = saved.extend ? path.resolve(pluginDir, saved.extend) : pluginDir;
-        return loadBusinessObjects(appDir);
+        return {
+          records: loadBusinessObjects(appDir),
+          source: { kind: 'directory', path: appDir },
+        };
       } catch (err) {
         this.error(err instanceof Error ? err.message : String(err));
       }
@@ -83,12 +90,18 @@ export default class BindCommand extends EverywhereBaseCommand {
 
     try {
       if (appSource.endsWith('.zip') && fs.existsSync(appSource)) {
-        return await loadBusinessObjectsFromZip(appSource);
+        return {
+          records: await loadBusinessObjectsFromZip(appSource),
+          source: { kind: 'zip', path: appSource },
+        };
       }
 
       if (fs.existsSync(appSource) && fs.statSync(appSource).isDirectory()) {
-        config.write({ extend: appSource });
-        return loadBusinessObjects(appSource);
+        return {
+          records: loadBusinessObjects(appSource),
+          source: { kind: 'directory', path: appSource },
+          persistExtendPath: appSource,
+        };
       }
     } catch (err) {
       this.error(err instanceof Error ? err.message : String(err));
