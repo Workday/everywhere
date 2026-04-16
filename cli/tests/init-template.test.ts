@@ -21,7 +21,7 @@ describe('renderStub', () => {
   });
 
   describe('regardless of name', () => {
-    it("imports plugin from @workday/everywhere", () => {
+    it('imports plugin from @workday/everywhere', () => {
       expect(renderStub('anything')).toContain("import { plugin } from '@workday/everywhere';");
     });
 
