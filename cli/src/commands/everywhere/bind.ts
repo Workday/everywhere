@@ -1,4 +1,4 @@
-import { Args } from '@oclif/core';
+import { Args, Flags } from '@oclif/core';
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 
@@ -16,6 +16,7 @@ import {
   generateIndex,
 } from '../../codegen/generator.js';
 import { pluginConfig } from '../../config.js';
+import { formatSchemas } from '../../format-schemas.js';
 
 const OUTPUT_DIR = 'data';
 
@@ -39,34 +40,68 @@ export default class BindCommand extends EverywhereBaseCommand {
 
   static flags = {
     ...EverywhereBaseCommand.baseFlags,
+    'dry-run': Flags.boolean({
+      description:
+        'Preview what would be generated without writing any files or updating saved config. Implies --verbose.',
+    }),
   };
 
   async run(): Promise<void> {
-    const { args } = await this.parse(BindCommand);
+    const { args, flags } = await this.parse(BindCommand);
     const pluginDir = await this.parsePluginDir();
     const everywhereDir = path.join(pluginDir, 'everywhere');
+    const dryRun = flags['dry-run'];
+    const verbose = flags.verbose || dryRun;
 
     const result = await this.loadRecords(args['app-source'], pluginDir);
     const schemas = result.records.map((record) => parseBusinessObject(JSON.parse(record.content)));
+    const outputDir = path.join(everywhereDir, OUTPUT_DIR);
+
+    if (verbose) {
+      this.log(`Source: ${result.source.path} (${result.source.kind})`);
+      this.log(`Output: ${outputDir}`);
+      this.log('');
+      this.log(formatSchemas(schemas));
+      this.log('');
+    }
 
     if (result.persistExtendPath) {
-      pluginConfig().write({ extend: result.persistExtendPath });
+      if (dryRun) {
+        this.log(`Would save app path: ${result.persistExtendPath} (skipped — dry run)`);
+      } else {
+        pluginConfig().write({ extend: result.persistExtendPath });
+        this.log(`Saved app path: ${result.persistExtendPath}`);
+      }
     }
 
-    const outputDir = path.join(everywhereDir, OUTPUT_DIR);
-    fs.mkdirSync(outputDir, { recursive: true });
+    // Run the generators unconditionally so dry-run surfaces any generator
+    // errors the same way a real bind would. Writes are guarded.
+    const modelsSrc = generateModels(schemas);
+    const schemaSrc = generateSchema(schemas);
+    const indexSrc = generateIndex(schemas);
+    const modelHooks = schemas.map((s) => ({
+      name: s.name,
+      src: generateModelHooks(s),
+    }));
 
-    fs.writeFileSync(path.join(outputDir, 'models.ts'), generateModels(schemas));
-    fs.writeFileSync(path.join(outputDir, 'schema.ts'), generateSchema(schemas));
-    fs.writeFileSync(path.join(outputDir, 'index.ts'), generateIndex(schemas));
-
-    for (const schema of schemas) {
-      fs.writeFileSync(path.join(outputDir, `${schema.name}.ts`), generateModelHooks(schema));
+    if (!dryRun) {
+      fs.mkdirSync(outputDir, { recursive: true });
+      fs.writeFileSync(path.join(outputDir, 'models.ts'), modelsSrc);
+      fs.writeFileSync(path.join(outputDir, 'schema.ts'), schemaSrc);
+      fs.writeFileSync(path.join(outputDir, 'index.ts'), indexSrc);
+      for (const { name, src } of modelHooks) {
+        fs.writeFileSync(path.join(outputDir, `${name}.ts`), src);
+      }
     }
 
-    this.log(
-      `Generated types for ${schemas.length} model(s): ${schemas.map((s) => s.name).join(', ')}`
-    );
+    const modelList = schemas.map((s) => s.name).join(', ');
+    if (dryRun) {
+      this.log(
+        `Dry run — no files written. Would have generated types for ${schemas.length} model(s): ${modelList}`
+      );
+    } else {
+      this.log(`Generated types for ${schemas.length} model(s): ${modelList}`);
+    }
     this.log(`Output: ${outputDir}`);
   }
 
