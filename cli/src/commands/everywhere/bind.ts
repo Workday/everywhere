@@ -7,7 +7,7 @@ import {
   loadBusinessObjects,
   loadBusinessObjectsFromZip,
   type BusinessObjectFile,
-} from './business-objects.js';
+} from '../../codegen/business-objects.js';
 import { parseBusinessObject } from '../../codegen/parser.js';
 import {
   generateModels,

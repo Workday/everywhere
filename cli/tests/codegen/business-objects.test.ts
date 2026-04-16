@@ -6,7 +6,7 @@ import JSZip from 'jszip';
 import {
   loadBusinessObjects,
   loadBusinessObjectsFromZip,
-} from '../../../src/commands/everywhere/business-objects.js';
+} from '../../src/codegen/business-objects.js';
 
 describe('loadBusinessObjects', () => {
   let tmpDir: string;
