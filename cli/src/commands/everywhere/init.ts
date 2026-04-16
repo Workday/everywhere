@@ -75,18 +75,16 @@ export default class InitCommand extends EverywhereBaseCommand {
     for (const [name, version] of Object.entries(desiredDeps)) {
       if (name in existingDeps) {
         skipped.push({ name, existingVersion: existingDeps[name] });
+        if (verbose) {
+          this.log(
+            `Dependency already present: ${name} (keeping ${chalk.dim(existingDeps[name])})`
+          );
+        }
       } else {
         added.push({ name, version });
-      }
-    }
-
-    // Verbose: per-dep lines
-    if (verbose) {
-      for (const { name, version } of added) {
-        this.log(`Adding dependency: ${name} ${chalk.dim(version)}`);
-      }
-      for (const { name, existingVersion } of skipped) {
-        this.log(`Dependency already present: ${name} (keeping ${chalk.dim(existingVersion)})`);
+        if (verbose) {
+          this.log(`Adding dependency: ${name} ${chalk.dim(version)}`);
+        }
       }
     }
 
