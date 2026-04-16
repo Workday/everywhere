@@ -19,7 +19,7 @@ describe('formatSchemas', () => {
         },
       ]);
 
-      expect(result).toBe('Foo — "Foo Label" (collection: foos, 1 fields)\n  id  string');
+      expect(result).toBe('Foo — "Foo Label" (collection: foos, 1 field)\n  id  string');
     });
   });
 
