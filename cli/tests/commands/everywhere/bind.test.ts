@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
-import BindCommand from '../../../src/commands/everywhere/bind';
-import EverywhereBaseCommand from '../../../src/commands/everywhere/base';
+import BindCommand from '../../../src/commands/everywhere/bind.js';
+import EverywhereBaseCommand from '../../../src/commands/everywhere/base.js';
 
 describe('everywhere bind', () => {
   it('exists as a command class', () => {
@@ -19,11 +19,23 @@ describe('everywhere bind', () => {
     it('inherits the plugin-dir flag from the base command', () => {
       expect(BindCommand.flags['plugin-dir']).toBe(EverywhereBaseCommand.baseFlags['plugin-dir']);
     });
+
+    it('inherits the verbose flag from the base command', () => {
+      expect(BindCommand.flags['verbose']).toBe(EverywhereBaseCommand.baseFlags['verbose']);
+    });
+
+    it('defines a dry-run flag', () => {
+      expect(BindCommand.flags['dry-run']).toBeDefined();
+    });
+
+    it('uses -n as the short char for dry-run', () => {
+      expect(BindCommand.flags['dry-run'].char).toBe('n');
+    });
   });
 
   describe('args', () => {
-    it('accepts an optional app-dir argument', () => {
-      expect(BindCommand.args['app-dir']).toBeDefined();
+    it('accepts an optional app-source argument', () => {
+      expect(BindCommand.args['app-source']).toBeDefined();
     });
   });
 });
