@@ -3,6 +3,11 @@ import * as fs from 'node:fs';
 import * as path from 'node:path';
 
 import EverywhereBaseCommand from './base.js';
+import {
+  loadBusinessObjects,
+  loadBusinessObjectsFromZip,
+  type BusinessObjectFile,
+} from './business-objects.js';
 import { parseBusinessObject } from '../../codegen/parser.js';
 import {
   generateModels,
@@ -19,9 +24,9 @@ export default class BindCommand extends EverywhereBaseCommand {
     'Generate TypeScript types and data hooks from Workday Extend business object models.';
 
   static args = {
-    'app-dir': Args.directory({
+    'app-source': Args.string({
       description:
-        'Directory containing model/ subfolder with .businessobject files. Saved for future runs.',
+        'Path to a directory containing a model/ subfolder, or a .zip archive with the same structure. Directory paths are saved for future runs.',
       required: false,
     }),
   };
@@ -34,37 +39,11 @@ export default class BindCommand extends EverywhereBaseCommand {
     const { args } = await this.parse(BindCommand);
     const pluginDir = await this.parsePluginDir();
     const everywhereDir = path.join(pluginDir, 'everywhere');
-    const config = pluginConfig();
-    let appDir: string;
 
-    if (args['app-dir']) {
-      appDir = path.resolve(args['app-dir']);
-      config.write({ extend: appDir });
-    } else {
-      const saved = config.read();
-      if (saved.extend) {
-        appDir = path.resolve(pluginDir, saved.extend);
-      } else {
-        appDir = pluginDir;
-      }
-    }
-
-    // Find .businessobject files
-    const modelDir = path.join(appDir, 'model');
-    if (!fs.existsSync(modelDir)) {
-      this.error(`No model/ directory found in ${appDir}`);
-    }
-
-    const files = fs.readdirSync(modelDir).filter((f) => f.endsWith('.businessobject'));
-    if (files.length === 0) {
-      this.error(`No .businessobject files found in ${modelDir}`);
-    }
+    const records = await this.loadRecords(args['app-source'], pluginDir);
 
     // Parse all business objects
-    const schemas = files.map((file) => {
-      const content = fs.readFileSync(path.join(modelDir, file), 'utf-8');
-      return parseBusinessObject(JSON.parse(content));
-    });
+    const schemas = records.map((record) => parseBusinessObject(JSON.parse(record.content)));
 
     // Generate output
     const outputDir = path.join(everywhereDir, OUTPUT_DIR);
@@ -82,5 +61,35 @@ export default class BindCommand extends EverywhereBaseCommand {
       `Generated types for ${schemas.length} model(s): ${schemas.map((s) => s.name).join(', ')}`
     );
     this.log(`Output: ${outputDir}`);
+  }
+
+  private async loadRecords(
+    argSource: string | undefined,
+    pluginDir: string
+  ): Promise<BusinessObjectFile[]> {
+    const config = pluginConfig();
+
+    try {
+      if (argSource) {
+        const appSource = path.resolve(argSource);
+
+        if (appSource.endsWith('.zip') && fs.existsSync(appSource)) {
+          return await loadBusinessObjectsFromZip(appSource);
+        }
+
+        if (fs.existsSync(appSource) && fs.statSync(appSource).isDirectory()) {
+          config.write({ extend: appSource });
+          return loadBusinessObjects(appSource);
+        }
+
+        this.error(`app-source must be a directory or .zip file: ${appSource}`);
+      }
+
+      const saved = config.read();
+      const appDir = saved.extend ? path.resolve(pluginDir, saved.extend) : pluginDir;
+      return loadBusinessObjects(appDir);
+    } catch (err) {
+      this.error(err instanceof Error ? err.message : String(err));
+    }
   }
 }

@@ -19,7 +19,15 @@
     "everywhere"
   ],
   "oclif": {
-    "commands": "./dist/commands",
+    "commands": {
+      "strategy": "pattern",
+      "target": "./dist/commands",
+      "globPatterns": [
+        "**/*.+(js|cjs|mjs)",
+        "!**/*.+(d.ts|test.ts|test.js|spec.ts|spec.js|d.mts|d.cts)?(x)",
+        "!**/business-objects.js"
+      ]
+    },
     "topicSeparator": " ",
     "topics": {
       "everywhere": {

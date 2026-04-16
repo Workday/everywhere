@@ -22,8 +22,8 @@ describe('everywhere bind', () => {
   });
 
   describe('args', () => {
-    it('accepts an optional app-dir argument', () => {
-      expect(BindCommand.args['app-dir']).toBeDefined();
+    it('accepts an optional app-source argument', () => {
+      expect(BindCommand.args['app-source']).toBeDefined();
     });
   });
 });
