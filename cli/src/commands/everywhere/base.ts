@@ -15,6 +15,10 @@ export default abstract class EverywhereBaseCommand extends Command {
       description: 'Plugin directory (defaults to current working directory).',
       exists: true,
     }),
+    verbose: Flags.boolean({
+      char: 'v',
+      description: 'Show detailed output.',
+    }),
   };
 
   protected get pluginDir(): string {

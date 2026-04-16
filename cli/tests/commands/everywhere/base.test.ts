@@ -16,5 +16,13 @@ describe('EverywhereBaseCommand', () => {
     it('uses -D as the short char', () => {
       expect(EverywhereBaseCommand.baseFlags['plugin-dir'].char).toBe('D');
     });
+
+    it('defines a verbose flag', () => {
+      expect(EverywhereBaseCommand.baseFlags['verbose']).toBeDefined();
+    });
+
+    it('uses -v as the short char for verbose', () => {
+      expect(EverywhereBaseCommand.baseFlags['verbose'].char).toBe('v');
+    });
   });
 });
