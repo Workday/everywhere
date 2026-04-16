@@ -1,4 +1,4 @@
-import { Args } from '@oclif/core';
+import { Args, Flags } from '@oclif/core';
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 
@@ -16,8 +16,15 @@ import {
   generateIndex,
 } from '../../codegen/generator.js';
 import { pluginConfig } from '../../config.js';
+import { formatSchemas } from '../../format-schemas.js';
 
 const OUTPUT_DIR = 'data';
+
+type LoadResult = {
+  records: BusinessObjectFile[];
+  source: { kind: 'zip' | 'directory'; path: string };
+  persistExtendPath?: string;
+};
 
 export default class BindCommand extends EverywhereBaseCommand {
   static description =
@@ -33,47 +40,86 @@ export default class BindCommand extends EverywhereBaseCommand {
 
   static flags = {
     ...EverywhereBaseCommand.baseFlags,
+    'dry-run': Flags.boolean({
+      char: 'n',
+      description:
+        'Preview what would be generated without writing any files or updating saved config. Implies --verbose.',
+    }),
   };
 
   async run(): Promise<void> {
-    const { args } = await this.parse(BindCommand);
+    const { args, flags } = await this.parse(BindCommand);
     const pluginDir = await this.parsePluginDir();
     const everywhereDir = path.join(pluginDir, 'everywhere');
+    const dryRun = flags['dry-run'];
+    const verbose = flags.verbose || dryRun;
 
-    const records = await this.loadRecords(args['app-source'], pluginDir);
-
-    // Parse all business objects
-    const schemas = records.map((record) => parseBusinessObject(JSON.parse(record.content)));
-
-    // Generate output
+    const result = await this.loadRecords(args['app-source'], pluginDir);
+    const schemas = result.records.map((record) => parseBusinessObject(JSON.parse(record.content)));
     const outputDir = path.join(everywhereDir, OUTPUT_DIR);
-    fs.mkdirSync(outputDir, { recursive: true });
 
-    fs.writeFileSync(path.join(outputDir, 'models.ts'), generateModels(schemas));
-    fs.writeFileSync(path.join(outputDir, 'schema.ts'), generateSchema(schemas));
-    fs.writeFileSync(path.join(outputDir, 'index.ts'), generateIndex(schemas));
-
-    for (const schema of schemas) {
-      fs.writeFileSync(path.join(outputDir, `${schema.name}.ts`), generateModelHooks(schema));
+    if (verbose) {
+      this.log(`Source: ${result.source.path} (${result.source.kind})`);
+      this.log(`Output: ${outputDir}`);
+      const schemaBlock = formatSchemas(schemas);
+      if (schemaBlock) {
+        this.log('');
+        this.log(schemaBlock);
+      }
+      this.log('');
     }
 
-    this.log(
-      `Generated types for ${schemas.length} model(s): ${schemas.map((s) => s.name).join(', ')}`
-    );
+    if (result.persistExtendPath) {
+      if (dryRun) {
+        this.log(`Would save app path: ${result.persistExtendPath} (skipped — dry run)`);
+      } else {
+        pluginConfig().write({ extend: result.persistExtendPath });
+        this.log(`Saved app path: ${result.persistExtendPath}`);
+      }
+    }
+
+    // Run the generators unconditionally so dry-run surfaces any generator
+    // errors the same way a real bind would. Writes are guarded.
+    const modelsSrc = generateModels(schemas);
+    const schemaSrc = generateSchema(schemas);
+    const indexSrc = generateIndex(schemas);
+    const modelHooks = schemas.map((s) => ({
+      name: s.name,
+      src: generateModelHooks(s),
+    }));
+
+    if (!dryRun) {
+      fs.mkdirSync(outputDir, { recursive: true });
+      fs.writeFileSync(path.join(outputDir, 'models.ts'), modelsSrc);
+      fs.writeFileSync(path.join(outputDir, 'schema.ts'), schemaSrc);
+      fs.writeFileSync(path.join(outputDir, 'index.ts'), indexSrc);
+      for (const { name, src } of modelHooks) {
+        fs.writeFileSync(path.join(outputDir, `${name}.ts`), src);
+      }
+    }
+
+    const modelList = schemas.map((s) => s.name).join(', ');
+    if (dryRun) {
+      this.log(
+        `Dry run — no files written. Would have generated types for ${schemas.length} model(s): ${modelList}`
+      );
+    } else {
+      this.log(`Generated types for ${schemas.length} model(s): ${modelList}`);
+    }
     this.log(`Output: ${outputDir}`);
   }
 
-  private async loadRecords(
-    argSource: string | undefined,
-    pluginDir: string
-  ): Promise<BusinessObjectFile[]> {
+  private async loadRecords(argSource: string | undefined, pluginDir: string): Promise<LoadResult> {
     const config = pluginConfig();
 
     if (!argSource) {
       try {
         const saved = config.read();
         const appDir = saved.extend ? path.resolve(pluginDir, saved.extend) : pluginDir;
-        return loadBusinessObjects(appDir);
+        return {
+          records: loadBusinessObjects(appDir),
+          source: { kind: 'directory', path: appDir },
+        };
       } catch (err) {
         this.error(err instanceof Error ? err.message : String(err));
       }
@@ -83,12 +129,18 @@ export default class BindCommand extends EverywhereBaseCommand {
 
     try {
       if (appSource.endsWith('.zip') && fs.existsSync(appSource)) {
-        return await loadBusinessObjectsFromZip(appSource);
+        return {
+          records: await loadBusinessObjectsFromZip(appSource),
+          source: { kind: 'zip', path: appSource },
+        };
       }
 
       if (fs.existsSync(appSource) && fs.statSync(appSource).isDirectory()) {
-        config.write({ extend: appSource });
-        return loadBusinessObjects(appSource);
+        return {
+          records: loadBusinessObjects(appSource),
+          source: { kind: 'directory', path: appSource },
+          persistExtendPath: appSource,
+        };
       }
     } catch (err) {
       this.error(err instanceof Error ? err.message : String(err));

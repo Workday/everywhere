@@ -1,11 +1,11 @@
-interface FieldSchema {
+export interface FieldSchema {
   name: string;
   type: string;
   target?: string;
   precision?: string;
 }
 
-interface ModelSchema {
+export interface ModelSchema {
   name: string;
   label: string;
   collection: string;
