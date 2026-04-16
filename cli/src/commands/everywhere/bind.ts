@@ -60,8 +60,11 @@ export default class BindCommand extends EverywhereBaseCommand {
     if (verbose) {
       this.log(`Source: ${result.source.path} (${result.source.kind})`);
       this.log(`Output: ${outputDir}`);
-      this.log('');
-      this.log(formatSchemas(schemas));
+      const schemaBlock = formatSchemas(schemas);
+      if (schemaBlock) {
+        this.log('');
+        this.log(schemaBlock);
+      }
       this.log('');
     }
 

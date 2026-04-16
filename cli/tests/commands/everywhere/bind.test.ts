@@ -20,6 +20,10 @@ describe('everywhere bind', () => {
       expect(BindCommand.flags['plugin-dir']).toBe(EverywhereBaseCommand.baseFlags['plugin-dir']);
     });
 
+    it('inherits the verbose flag from the base command', () => {
+      expect(BindCommand.flags['verbose']).toBe(EverywhereBaseCommand.baseFlags['verbose']);
+    });
+
     it('defines a dry-run flag', () => {
       expect(BindCommand.flags['dry-run']).toBeDefined();
     });
