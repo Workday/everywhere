@@ -1,9 +1,45 @@
 import * as fs from 'node:fs';
+import * as fsp from 'node:fs/promises';
 import * as path from 'node:path';
+import JSZip from 'jszip';
 
 export interface BusinessObjectFile {
   name: string;
   content: string;
+}
+
+export async function loadBusinessObjectsFromZip(zipPath: string): Promise<BusinessObjectFile[]> {
+  const buffer = await fsp.readFile(zipPath);
+  const zip = await JSZip.loadAsync(buffer);
+
+  const entries: BusinessObjectFile[] = [];
+  let hasModelFolder = false;
+
+  for (const [entryPath, entry] of Object.entries(zip.files)) {
+    if (entry.dir) continue;
+
+    const match = entryPath.match(/^model\/([^/]+\.businessobject)$/);
+    if (!match) {
+      if (entryPath.startsWith('model/')) hasModelFolder = true;
+      continue;
+    }
+
+    hasModelFolder = true;
+    const content = await entry.async('string');
+    entries.push({ name: match[1], content });
+  }
+
+  if (!hasModelFolder) {
+    throw new Error(`No model/ folder found in ${zipPath}`);
+  }
+
+  if (entries.length === 0) {
+    throw new Error(`No .businessobject files found in ${zipPath}`);
+  }
+
+  entries.sort((a, b) => a.name.localeCompare(b.name));
+
+  return entries;
 }
 
 export function loadBusinessObjects(appDir: string): BusinessObjectFile[] {
