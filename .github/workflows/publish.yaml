@@ -21,11 +21,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v6
         with:
-          node-version: '22'
-          cache: 'npm'
-
-      - name: Upgrade npm for OIDC support
-        run: npm install -g npm@latest
+          node-version: 'lts/*'
 
       - name: Clear auth token for OIDC
         run: echo "NODE_AUTH_TOKEN=" >> $GITHUB_ENV
