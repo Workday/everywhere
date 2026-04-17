@@ -25,7 +25,7 @@ test: build
     cd examples && just setup
     npx vitest run
 
-# Ensure we are on a clean main branch
+# Verify no uncommitted changes to tracked files
 release-guard:
     #!/usr/bin/env bash
     branch=$(git rev-parse --abbrev-ref HEAD)
@@ -33,18 +33,14 @@ release-guard:
         echo "error: releases must be created from main (currently on '$branch')"
         exit 1
     fi
-    if [ -n "$(git status --porcelain)" ]; then
-        echo "error: working tree is dirty — commit or stash changes first"
-        exit 1
-    fi
+    test -z "$(git status --porcelain -uno)" || (echo "error: working tree is dirty"; exit 1)
 
-# Bump version, publish to registry, commit, tag, and push
-publish bump="patch": release-guard check test
+# Bump version, commit, tag, and push (CI handles npm publish)
+release bump="patch": release-guard check test
     #!/usr/bin/env bash
     npm version {{bump}} --no-git-tag-version
-    VERSION=$(node -p "require('./package.json').version")
+    VERSION=$(jq -r '.version' package.json)
     npx prettier --write package.json package-lock.json
-    npm publish
     git add package.json package-lock.json
     git commit -m "release v$VERSION"
     git tag -a "v$VERSION" -m "v$VERSION"

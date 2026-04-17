@@ -1,0 +1,40 @@
+name: Publish package to npm
+run-name: Publish ${{ github.ref_name }}
+
+on:
+  release:
+    types: [released]
+
+permissions:
+  contents: read
+  id-token: write
+
+jobs:
+  publish:
+    name: Publish package to npm
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v6
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: '22'
+          cache: 'npm'
+          registry-url: 'https://registry.npmjs.org/'
+
+      - name: Setup just
+        uses: extractions/setup-just@v4
+
+      - name: Install dependencies
+        run: just setup
+
+      - name: Build package
+        run: just build
+
+      - name: Publish to npm
+        run: npm publish --provenance --access public
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
