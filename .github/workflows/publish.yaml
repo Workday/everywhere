@@ -25,6 +25,9 @@ jobs:
           cache: 'npm'
           registry-url: 'https://registry.npmjs.org/'
 
+      - name: Clear auth token for OIDC
+        run: echo "NODE_AUTH_TOKEN=" >> $GITHUB_ENV
+
       - name: Setup just
         uses: extractions/setup-just@v4
 
