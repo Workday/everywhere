@@ -33,7 +33,6 @@
   "dependencies": {
     "@oclif/core": "4.10.4",
     "chalk": "^5.6.2",
-    "jiti": "^2.6.1",
     "jszip": "^3.10.1"
   },
   "devDependencies": {
