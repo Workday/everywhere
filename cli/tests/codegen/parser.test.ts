@@ -17,6 +17,7 @@ const COMPLEX_OBJECT = {
     name: 'workFromAnywhereRequests',
     label: 'Work From Anywhere Request',
   },
+  defaultSecurityDomains: ['ManageWorkFromAnywhere', 'ViewWorkFromAnywhere'],
   fields: [
     { id: 1, name: 'location', type: 'TEXT' },
     { id: 2, name: 'startDate', type: 'DATE', precision: 'DAY' },
@@ -28,6 +29,10 @@ const COMPLEX_OBJECT = {
       type: 'MULTI_INSTANCE',
       target: 'RightToWorkVerification',
     },
+  ],
+  derivedFields: [
+    { id: 1, name: 'displayName', type: 'TEXT' },
+    { id: 2, name: 'totalDays', type: 'DECIMAL' },
   ],
 };
 
@@ -59,6 +64,20 @@ describe('parseBusinessObject()', () => {
       const result = parseBusinessObject(SIMPLE_OBJECT);
 
       expect(result.collection).toBe('demoObjs');
+    });
+  });
+
+  describe('securityDomains', () => {
+    it('defaults to empty array when not present', () => {
+      const result = parseBusinessObject(SIMPLE_OBJECT);
+
+      expect(result.securityDomains).toEqual([]);
+    });
+
+    it('includes domains from defaultSecurityDomains', () => {
+      const result = parseBusinessObject(COMPLEX_OBJECT);
+
+      expect(result.securityDomains).toEqual(['ManageWorkFromAnywhere', 'ViewWorkFromAnywhere']);
     });
   });
 
@@ -103,6 +122,38 @@ describe('parseBusinessObject()', () => {
         type: 'MULTI_INSTANCE',
         target: 'RightToWorkVerification',
       });
+    });
+  });
+
+  describe('derivedFields', () => {
+    it('appends derived fields after regular fields', () => {
+      const result = parseBusinessObject(COMPLEX_OBJECT);
+      const regularNames = COMPLEX_OBJECT.fields.map((f) => f.name);
+      const derivedNames = COMPLEX_OBJECT.derivedFields.map((f) => f.name);
+
+      const allNames = result.fields.map((f) => f.name);
+      expect(allNames).toEqual([...regularNames, ...derivedNames]);
+    });
+
+    it('marks derived fields with isDerived: true', () => {
+      const result = parseBusinessObject(COMPLEX_OBJECT);
+      const derivedField = result.fields.find((f) => f.name === 'displayName');
+
+      expect(derivedField?.isDerived).toBe(true);
+    });
+
+    it('does not mark regular fields as derived', () => {
+      const result = parseBusinessObject(COMPLEX_OBJECT);
+      const regularField = result.fields.find((f) => f.name === 'location');
+
+      expect(regularField?.isDerived).toBeUndefined();
+    });
+
+    it('defaults to no derived fields when derivedFields is absent', () => {
+      const result = parseBusinessObject(SIMPLE_OBJECT);
+      const hasDerived = result.fields.some((f) => f.isDerived);
+
+      expect(hasDerived).toBe(false);
     });
   });
 });
