@@ -1,4 +1,5 @@
 import chalk from 'chalk';
+import { spawn } from 'node:child_process';
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -14,6 +15,26 @@ const SDK_PKG_PATH = path.resolve(THIS_DIR, '../../../../package.json');
 function getSdkVersion(): string {
   const pkg = JSON.parse(fs.readFileSync(SDK_PKG_PATH, 'utf-8')) as { version: string };
   return pkg.version;
+}
+
+export function runNpmInstall(cwd: string): Promise<void> {
+  return new Promise((resolve, reject) => {
+    const child = spawn('npm', ['install'], {
+      cwd,
+      stdio: 'inherit',
+      shell: true,
+    });
+    child.on('error', (err) => {
+      reject(new Error(`Failed to start npm install: ${err.message}`));
+    });
+    child.on('close', (code) => {
+      if (code === 0) {
+        resolve();
+      } else {
+        reject(new Error(`npm install failed with exit code ${code}`));
+      }
+    });
+  });
 }
 
 export default class InitCommand extends EverywhereBaseCommand {
@@ -110,7 +131,8 @@ export default class InitCommand extends EverywhereBaseCommand {
     fs.writeFileSync(tsxPath, renderStub(pkg.name));
     this.log(chalk.green('Created plugin.tsx'));
 
-    // Next-steps hint
-    this.log('Run `npm install` to install dependencies.');
+    // Run npm install
+    this.log('Installing dependencies...');
+    await runNpmInstall(pluginDir);
   }
 }
