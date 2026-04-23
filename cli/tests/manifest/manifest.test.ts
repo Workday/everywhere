@@ -99,4 +99,60 @@ describe('readPluginManifest', () => {
       expect(readPluginManifest(pluginDir).version).toBe('1.2.3');
     });
   });
+
+  describe('when the title field is absent', () => {
+    beforeEach(() => {
+      fs.writeFileSync(
+        path.join(pluginDir, 'package.json'),
+        JSON.stringify({ name: 'my-plugin', version: '1.2.3' }),
+        'utf-8'
+      );
+    });
+
+    it('returns undefined for title', () => {
+      expect(readPluginManifest(pluginDir).title).toBeUndefined();
+    });
+  });
+
+  describe('when the title field is not a string', () => {
+    beforeEach(() => {
+      fs.writeFileSync(
+        path.join(pluginDir, 'package.json'),
+        JSON.stringify({ name: 'my-plugin', version: '1.2.3', title: 42 }),
+        'utf-8'
+      );
+    });
+
+    it('returns undefined for title', () => {
+      expect(readPluginManifest(pluginDir).title).toBeUndefined();
+    });
+  });
+
+  describe('when the title field is an empty string', () => {
+    beforeEach(() => {
+      fs.writeFileSync(
+        path.join(pluginDir, 'package.json'),
+        JSON.stringify({ name: 'my-plugin', version: '1.2.3', title: '' }),
+        'utf-8'
+      );
+    });
+
+    it('returns undefined for title', () => {
+      expect(readPluginManifest(pluginDir).title).toBeUndefined();
+    });
+  });
+
+  describe('when the manifest has a title', () => {
+    beforeEach(() => {
+      fs.writeFileSync(
+        path.join(pluginDir, 'package.json'),
+        JSON.stringify({ name: 'my-plugin', version: '1.2.3', title: 'My Plugin' }),
+        'utf-8'
+      );
+    });
+
+    it('returns the title from the manifest', () => {
+      expect(readPluginManifest(pluginDir).title).toBe('My Plugin');
+    });
+  });
 });

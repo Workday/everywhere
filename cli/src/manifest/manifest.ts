@@ -4,12 +4,13 @@ import * as path from 'node:path';
 export interface PluginManifest {
   name: string;
   version: string;
+  title?: string;
 }
 
 export function readPluginManifest(pluginDir: string): PluginManifest {
   const pkgPath = path.join(pluginDir, 'package.json');
 
-  let pkg: { name?: unknown; version?: unknown };
+  let pkg: { name?: unknown; version?: unknown; title?: unknown };
 
   try {
     pkg = JSON.parse(fs.readFileSync(pkgPath, 'utf-8'));
@@ -29,5 +30,7 @@ export function readPluginManifest(pluginDir: string): PluginManifest {
     throw new Error('package.json is missing required field: version');
   }
 
-  return { name: pkg.name as string, version: pkg.version as string };
+  const title = typeof pkg.title === 'string' && pkg.title.length > 0 ? pkg.title : undefined;
+
+  return { name: pkg.name as string, version: pkg.version as string, title };
 }
