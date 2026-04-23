@@ -1,4 +1,5 @@
 import chalk from 'chalk';
+import { Flags } from '@oclif/core';
 import { spawn } from 'node:child_process';
 import * as fs from 'node:fs';
 import * as path from 'node:path';
@@ -42,12 +43,17 @@ export default class InitCommand extends EverywhereBaseCommand {
 
   static flags = {
     ...EverywhereBaseCommand.baseFlags,
+    title: Flags.string({
+      char: 'T',
+      description: 'Human-friendly display name for the plugin.',
+    }),
   };
 
   async run(): Promise<void> {
     const { flags } = await this.parse(InitCommand);
     const pluginDir = await this.parsePluginDir();
     const verbose = flags.verbose;
+    const title = flags.title;
 
     // Pre-check 1: package.json exists
     const pkgPath = path.join(pluginDir, 'package.json');
@@ -59,6 +65,7 @@ export default class InitCommand extends EverywhereBaseCommand {
     const pkg = JSON.parse(fs.readFileSync(pkgPath, 'utf-8')) as {
       name?: string;
       version?: string;
+      title?: string;
       dependencies?: Record<string, string>;
     };
     if (!pkg.name || typeof pkg.name !== 'string') {
@@ -110,12 +117,14 @@ export default class InitCommand extends EverywhereBaseCommand {
     }
 
     // Mutation 1: write package.json if anything was added
-    if (added.length > 0) {
-      const newDeps = { ...existingDeps };
+    if (added.length > 0 || title) {
+      const newPkg = { ...pkg, dependencies: { ...existingDeps } };
       for (const { name, version } of added) {
-        newDeps[name] = version;
+        newPkg.dependencies[name] = version;
       }
-      const newPkg = { ...pkg, dependencies: newDeps };
+      if (title) {
+        newPkg.title = title;
+      }
       fs.writeFileSync(pkgPath, JSON.stringify(newPkg, null, 2) + '\n');
       this.log(chalk.green('Updated package.json'));
     } else if (verbose) {

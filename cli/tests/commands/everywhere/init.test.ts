@@ -23,6 +23,16 @@ describe('everywhere init', () => {
     it('inherits the verbose flag from the base command', () => {
       expect(InitCommand.flags['verbose']).toBe(EverywhereBaseCommand.baseFlags['verbose']);
     });
+
+    it('has an optional title flag with short alias T', () => {
+      const flag = InitCommand.flags['title'];
+      expect(flag).toBeDefined();
+    });
+
+    it('uses T as the short alias for the title flag', () => {
+      const flag = InitCommand.flags['title'] as { char?: string };
+      expect(flag.char).toBe('T');
+    });
   });
 });
 
