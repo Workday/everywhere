@@ -1,5 +1,6 @@
 {
   "name": "employee-directory",
+  "title": "Directory",
   "version": "1.0.0",
   "description": "Search and manage employee records.",
   "private": true,

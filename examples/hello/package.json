@@ -1,5 +1,6 @@
 {
   "name": "hello-world",
+  "title": "Hello",
   "version": "1.0.0",
   "description": "A simple Hello World plugin for Workday Everywhere.",
   "private": true,
