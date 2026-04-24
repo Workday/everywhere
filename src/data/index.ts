@@ -1,4 +1,4 @@
-export type { FieldType, FieldSchema, ModelSchema } from './types.js';
+export type { FieldType, FieldSchema, ModelSchema, CurrencyValue } from './types.js';
 export type { DataResolver } from './resolver.js';
 export { HttpResolver } from './HttpResolver.js';
 export { DataProvider } from './DataContext.js';

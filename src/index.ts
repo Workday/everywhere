@@ -11,7 +11,7 @@ export type { NavigationProviderProps, NavigationState } from './hooks/index.js'
 export { useNavigate } from './hooks/index.js';
 export { useParams } from './hooks/index.js';
 
-export type { FieldType, FieldSchema, ModelSchema } from './data/index.js';
+export type { FieldType, FieldSchema, ModelSchema, CurrencyValue } from './data/index.js';
 export type { DataResolver } from './data/index.js';
 export { HttpResolver } from './data/index.js';
 export { DataProvider } from './data/index.js';
