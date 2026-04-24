@@ -1,0 +1,16 @@
+{
+  "name": "charitable-donations",
+  "version": "1.0.0",
+  "description": "Browse and manage charitable giving through Workday Extend.",
+  "private": true,
+  "scripts": {
+    "preview": "everywhere view",
+    "clean": "rm -rf node_modules"
+  },
+  "dependencies": {
+    "@workday/canvas-kit-react": "^11",
+    "@workday/everywhere": "file:../..",
+    "react": "^19",
+    "react-dom": "^19"
+  }
+}
