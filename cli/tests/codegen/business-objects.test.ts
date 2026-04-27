@@ -25,32 +25,36 @@ describe('loadBusinessObjects', () => {
     });
   });
 
-  describe('when the model directory has no .businessobject files', () => {
+  describe('when the model directory has no model artifacts', () => {
     it('throws an error naming the empty model directory', () => {
       const modelDir = path.join(tmpDir, 'model');
       fs.mkdirSync(modelDir);
       fs.writeFileSync(path.join(modelDir, 'README.md'), 'not a business object');
 
       expect(() => loadBusinessObjects(tmpDir)).toThrow(
-        `No .businessobject files found in ${modelDir}`
+        `No model artifacts (.businessobject, .attachment) found in ${modelDir}`
       );
     });
   });
 
   describe('when the model directory has mixed files', () => {
-    it('returns only the .businessobject entries', () => {
+    it('returns .businessobject and .attachment entries, ignoring others', () => {
       const modelDir = path.join(tmpDir, 'model');
       fs.mkdirSync(modelDir);
       fs.writeFileSync(path.join(modelDir, 'Foo.businessobject'), '{"name":"Foo"}');
-      fs.writeFileSync(path.join(modelDir, 'README.md'), 'not a business object');
+      fs.writeFileSync(path.join(modelDir, 'FooImage.attachment'), '{"name":"FooImage"}');
+      fs.writeFileSync(path.join(modelDir, 'README.md'), 'not a model artifact');
 
       const result = loadBusinessObjects(tmpDir);
 
-      expect(result).toEqual([{ name: 'Foo.businessobject', content: '{"name":"Foo"}' }]);
+      expect(result).toEqual([
+        { name: 'Foo.businessobject', content: '{"name":"Foo"}' },
+        { name: 'FooImage.attachment', content: '{"name":"FooImage"}' },
+      ]);
     });
   });
 
-  describe('when the model directory contains .businessobject files', () => {
+  describe('when the model directory contains only .businessobject files', () => {
     it('returns one entry per file with its contents', () => {
       const modelDir = path.join(tmpDir, 'model');
       fs.mkdirSync(modelDir);
@@ -62,6 +66,22 @@ describe('loadBusinessObjects', () => {
       expect(result).toEqual([
         { name: 'Bar.businessobject', content: '{"name":"Bar"}' },
         { name: 'Foo.businessobject', content: '{"name":"Foo"}' },
+      ]);
+    });
+  });
+
+  describe('when the model directory contains .attachment files', () => {
+    it('returns attachment entries alongside business objects', () => {
+      const modelDir = path.join(tmpDir, 'model');
+      fs.mkdirSync(modelDir);
+      fs.writeFileSync(path.join(modelDir, 'Charity.businessobject'), '{"name":"Charity"}');
+      fs.writeFileSync(path.join(modelDir, 'CharityLogo.attachment'), '{"name":"CharityLogo"}');
+
+      const result = loadBusinessObjects(tmpDir);
+
+      expect(result).toEqual([
+        { name: 'Charity.businessobject', content: '{"name":"Charity"}' },
+        { name: 'CharityLogo.attachment', content: '{"name":"CharityLogo"}' },
       ]);
     });
   });
@@ -104,6 +124,23 @@ describe('loadBusinessObjectsFromZip', () => {
     });
   });
 
+  describe('when the zip contains .attachment files in model/', () => {
+    it('returns attachment entries alongside business objects', async () => {
+      const zipPath = path.join(tmpDir, 'app.zip');
+      await writeZip(zipPath, {
+        'model/Charity.businessobject': '{"name":"Charity"}',
+        'model/CharityLogo.attachment': '{"name":"CharityLogo"}',
+      });
+
+      const result = await loadBusinessObjectsFromZip(zipPath);
+
+      expect(result).toEqual([
+        { name: 'Charity.businessobject', content: '{"name":"Charity"}' },
+        { name: 'CharityLogo.attachment', content: '{"name":"CharityLogo"}' },
+      ]);
+    });
+  });
+
   describe('when the zip has no model/ folder', () => {
     it('throws an error naming the zip path', async () => {
       const zipPath = path.join(tmpDir, 'app.zip');
@@ -117,7 +154,7 @@ describe('loadBusinessObjectsFromZip', () => {
     });
   });
 
-  describe('when the zip has a model/ folder but no .businessobject files', () => {
+  describe('when the zip has a model/ folder but no model artifacts', () => {
     it('throws an error naming the zip path', async () => {
       const zipPath = path.join(tmpDir, 'app.zip');
       await writeZip(zipPath, {
@@ -125,22 +162,26 @@ describe('loadBusinessObjectsFromZip', () => {
       });
 
       await expect(loadBusinessObjectsFromZip(zipPath)).rejects.toThrow(
-        `No .businessobject files found in ${zipPath}`
+        `No model artifacts (.businessobject, .attachment) found in ${zipPath}`
       );
     });
   });
 
   describe('when the zip has mixed files in model/', () => {
-    it('returns only the .businessobject entries', async () => {
+    it('returns only .businessobject and .attachment entries', async () => {
       const zipPath = path.join(tmpDir, 'app.zip');
       await writeZip(zipPath, {
         'model/Foo.businessobject': '{"name":"Foo"}',
-        'model/README.md': 'not a business object',
+        'model/FooImage.attachment': '{"name":"FooImage"}',
+        'model/README.md': 'not a model artifact',
       });
 
       const result = await loadBusinessObjectsFromZip(zipPath);
 
-      expect(result).toEqual([{ name: 'Foo.businessobject', content: '{"name":"Foo"}' }]);
+      expect(result).toEqual([
+        { name: 'Foo.businessobject', content: '{"name":"Foo"}' },
+        { name: 'FooImage.attachment', content: '{"name":"FooImage"}' },
+      ]);
     });
   });
 });

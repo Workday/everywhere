@@ -27,6 +27,37 @@ const DEPARTMENT_SCHEMA: ModelSchema = {
   fields: [{ name: 'name', type: 'TEXT' }],
 };
 
+const WORK_EVENT_SCHEMA: ModelSchema = {
+  name: 'WorkEvent',
+  label: 'Work Event',
+  collection: 'workEvents',
+  securityDomains: ['ManageCreateAnEvent', 'RegisterForEvents'],
+  fields: [
+    { name: 'name', type: 'TEXT' },
+    { name: 'cost', type: 'CURRENCY' },
+    { name: 'internalOnly', type: 'BOOLEAN' },
+    { name: 'proratedAmount', type: 'DECIMAL', isDerived: true },
+    { name: 'isWorkdayEvent', type: 'BOOLEAN', isDerived: true },
+  ],
+};
+
+const REGISTRANT_SCHEMA: ModelSchema = {
+  name: 'Registrant',
+  label: 'Registrant',
+  collection: 'registrants',
+  fields: [{ name: 'name', type: 'TEXT' }],
+};
+
+const WORK_EVENT_WITH_REGISTRANTS_SCHEMA: ModelSchema = {
+  name: 'WorkEvent',
+  label: 'Work Event',
+  collection: 'workEvents',
+  fields: [
+    { name: 'name', type: 'TEXT' },
+    { name: 'registrants', type: 'MULTI_INSTANCE', target: 'Registrant' },
+  ],
+};
+
 describe('generateModels()', () => {
   it('starts with the auto-generated comment', () => {
     const result = generateModels([EMPLOYEE_SCHEMA]);
@@ -70,10 +101,54 @@ describe('generateModels()', () => {
     expect(result).toContain('department: string;');
   });
 
-  it('maps MULTI_INSTANCE fields to string[]', () => {
+  it('maps MULTI_INSTANCE fields to string[] when target is not in the same app', () => {
     const result = generateModels([EMPLOYEE_SCHEMA]);
 
     expect(result).toContain('tasks: string[];');
+  });
+
+  it('maps MULTI_INSTANCE fields to typed array when target is a known model in the same app', () => {
+    const result = generateModels([WORK_EVENT_WITH_REGISTRANTS_SCHEMA, REGISTRANT_SCHEMA]);
+
+    expect(result).toContain('registrants: Registrant[];');
+  });
+
+  it('maps CURRENCY fields to CurrencyValue', () => {
+    const result = generateModels([WORK_EVENT_SCHEMA]);
+
+    expect(result).toContain('cost: CurrencyValue;');
+  });
+
+  it('imports CurrencyValue when any field uses CURRENCY', () => {
+    const result = generateModels([WORK_EVENT_SCHEMA]);
+
+    expect(result).toContain("import type { CurrencyValue } from '@workday/everywhere';");
+  });
+
+  it('does not import CurrencyValue when no CURRENCY fields exist', () => {
+    const result = generateModels([EMPLOYEE_SCHEMA]);
+
+    expect(result).not.toContain('CurrencyValue');
+  });
+
+  it('maps DECIMAL fields to number', () => {
+    const result = generateModels([WORK_EVENT_SCHEMA]);
+
+    expect(result).toContain('proratedAmount: number;');
+  });
+
+  it('marks derived fields as readonly', () => {
+    const result = generateModels([WORK_EVENT_SCHEMA]);
+
+    expect(result).toContain('readonly proratedAmount: number;');
+    expect(result).toContain('readonly isWorkdayEvent: boolean;');
+  });
+
+  it('does not mark regular fields as readonly', () => {
+    const result = generateModels([WORK_EVENT_SCHEMA]);
+
+    expect(result).not.toContain('readonly name:');
+    expect(result).not.toContain('readonly cost:');
   });
 });
 
@@ -100,6 +175,24 @@ describe('generateSchema()', () => {
     const result = generateSchema([EMPLOYEE_SCHEMA]);
 
     expect(result).toContain('Employee: {');
+  });
+
+  it('includes securityDomains in the schema', () => {
+    const result = generateSchema([WORK_EVENT_SCHEMA]);
+
+    expect(result).toContain('securityDomains: ["ManageCreateAnEvent","RegisterForEvents"]');
+  });
+
+  it('emits empty securityDomains array when none are defined', () => {
+    const result = generateSchema([EMPLOYEE_SCHEMA]);
+
+    expect(result).toContain('securityDomains: []');
+  });
+
+  it('marks derived fields with isDerived: true in schema', () => {
+    const result = generateSchema([WORK_EVENT_SCHEMA]);
+
+    expect(result).toContain('isDerived: true');
   });
 });
 

@@ -19,7 +19,7 @@ export async function loadBusinessObjectsFromZip(zipPath: string): Promise<Busin
     if (entryPath.startsWith('model/')) hasModelFolder = true;
     if (entry.dir) continue;
 
-    const match = entryPath.match(/^model\/([^/]+\.businessobject)$/);
+    const match = entryPath.match(/^model\/([^/]+\.(?:businessobject|attachment))$/);
     if (!match) continue;
 
     const content = await entry.async('string');
@@ -31,7 +31,7 @@ export async function loadBusinessObjectsFromZip(zipPath: string): Promise<Busin
   }
 
   if (entries.length === 0) {
-    throw new Error(`No .businessobject files found in ${zipPath}`);
+    throw new Error(`No model artifacts (.businessobject, .attachment) found in ${zipPath}`);
   }
 
   entries.sort((a, b) => (a.name < b.name ? -1 : a.name > b.name ? 1 : 0));
@@ -46,10 +46,12 @@ export function loadBusinessObjects(appDir: string): BusinessObjectFile[] {
     throw new Error(`No model/ directory found in ${appDir}`);
   }
 
-  const files = fs.readdirSync(modelDir).filter((f) => f.endsWith('.businessobject'));
+  const files = fs
+    .readdirSync(modelDir)
+    .filter((f) => f.endsWith('.businessobject') || f.endsWith('.attachment'));
 
   if (files.length === 0) {
-    throw new Error(`No .businessobject files found in ${modelDir}`);
+    throw new Error(`No model artifacts (.businessobject, .attachment) found in ${modelDir}`);
   }
 
   files.sort();
