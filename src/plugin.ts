@@ -2,7 +2,8 @@ import type { PluginConfig, PluginDefinition } from './types.js';
 
 export function plugin(config?: PluginConfig): PluginDefinition {
   return {
-    pages: config?.pages ?? [],
+    routes: config?.routes ?? [],
+    defaultRoute: config?.defaultRoute,
     provider: config?.provider,
   };
 }
