@@ -89,7 +89,21 @@ function CharityRow({ charity, onClick }: { charity: Charity; onClick: () => voi
 export default function CharityListPage() {
   const navigate = useNavigate();
   const { id } = useParams();
-  const { data: charities } = useCharities();
+  const { data: charities, error } = useCharities();
+
+  if (error) {
+    return (
+      <Flex flexDirection="column" gap="s" padding="s">
+        <Card>
+          <Card.Body>
+            <Text typeLevel="body.small" color="cinnamon500">
+              {error.message}
+            </Text>
+          </Card.Body>
+        </Card>
+      </Flex>
+    );
+  }
 
   if (id) {
     return <CharityDetail />;

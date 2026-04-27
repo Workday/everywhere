@@ -75,16 +75,30 @@ export class TridentResolver implements DataResolver {
       body: JSON.stringify(variables ? { query, variables } : { query }),
     });
 
+    if (response.status === 401 || response.status === 403) {
+      throw new Error(
+        `Trident auth failed (${response.status}): bearer token is expired or invalid. Update BEARER_TOKEN in plugin.tsx.`
+      );
+    }
+
     if (!response.ok) {
       throw new Error(`Trident ${response.status}: ${response.statusText}`);
     }
 
     const body = (await response.json()) as {
       data?: Record<string, unknown>;
-      errors?: { message: string }[];
+      errors?: { message: string; extensions?: { code?: string } }[];
     };
 
     if (body.errors?.length) {
+      const isAuthError = body.errors.some((e) =>
+        ['UNAUTHENTICATED', 'FORBIDDEN', 'UNAUTHORIZED'].includes(e.extensions?.code ?? '')
+      );
+      if (isAuthError) {
+        throw new Error(
+          'Trident auth error: bearer token is expired or invalid. Update BEARER_TOKEN in plugin.tsx.'
+        );
+      }
       throw new Error(body.errors.map((e) => e.message).join('; '));
     }
 

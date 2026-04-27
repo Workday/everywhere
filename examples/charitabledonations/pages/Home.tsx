@@ -22,7 +22,21 @@ function StatCard({ label, value }: { label: string; value: string }) {
 
 export default function HomePage() {
   const navigate = useNavigate();
-  const { data: charities } = useCharities();
+  const { data: charities, error } = useCharities();
+
+  if (error) {
+    return (
+      <Flex flexDirection="column" gap="s" padding="s">
+        <Card>
+          <Card.Body>
+            <Text typeLevel="body.small" color="cinnamon500">
+              {error.message}
+            </Text>
+          </Card.Body>
+        </Card>
+      </Flex>
+    );
+  }
 
   const stats = useMemo(() => {
     if (!Array.isArray(charities)) return { total: 0, matched: 0, workdayMatched: 0 };
