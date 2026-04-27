@@ -4,30 +4,30 @@ import type { PluginDefinition } from '../types.js';
 
 export interface PluginRendererProps {
   plugin: PluginDefinition;
-  activePageId: string;
-  onNavigate?: (pageId: string) => void;
+  activeRouteId: string;
+  onNavigate?: (routeId: string) => void;
 }
 
-export function PluginRenderer({ plugin, activePageId, onNavigate }: PluginRendererProps) {
-  const activePage = plugin.pages.find((p) => p.id === activePageId);
+export function PluginRenderer({ plugin, activeRouteId, onNavigate }: PluginRendererProps) {
+  const activeRoute = plugin.routes.find((r) => r.id === activeRouteId);
 
-  if (!activePage) {
-    return <div style={{ padding: 16, color: '#888' }}>No page found</div>;
+  if (!activeRoute) {
+    return <div style={{ padding: 16, color: '#888' }}>No route found</div>;
   }
 
-  const ActivePageComponent = activePage.component;
+  const ActiveComponent = activeRoute.component;
 
   return (
     <StyleBoundary provider={plugin.provider}>
       <NavigationProvider
-        initialView={activePageId}
-        onNavigate={(view) => {
-          if (plugin.pages.some((p) => p.id === view)) {
-            onNavigate?.(view);
+        initialRouteId={activeRouteId}
+        onNavigate={(routeId) => {
+          if (plugin.routes.some((r) => r.id === routeId)) {
+            onNavigate?.(routeId);
           }
         }}
       >
-        <ActivePageComponent />
+        <ActiveComponent />
       </NavigationProvider>
     </StyleBoundary>
   );
