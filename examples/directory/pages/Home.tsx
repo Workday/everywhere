@@ -1,6 +1,7 @@
 import { useMemo } from 'react';
 import { useNavigate } from '@workday/everywhere';
 import { Card, Flex, Grid, Heading, SecondaryButton, Text } from '@workday/canvas-kit-react';
+import { employees } from '../routes.js';
 import { useEmployees } from '../everywhere/data/Employee.js';
 import { useDepartments } from '../everywhere/data/Department.js';
 
@@ -79,7 +80,7 @@ export default function HomePage() {
             Quick Actions
           </Heading>
           <Flex gap="s">
-            <SecondaryButton onClick={() => navigate('employees')}>
+            <SecondaryButton onClick={() => navigate(employees)}>
               View All Employees
             </SecondaryButton>
           </Flex>
