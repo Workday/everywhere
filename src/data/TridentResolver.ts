@@ -58,7 +58,9 @@ export class TridentResolver implements DataResolver {
 
   // Scalar + derived fields only — SINGLE/MULTI_INSTANCE need nested selections handled separately.
   private selectionSet(schema: ModelSchema): string {
-    const fields = schema.fields.filter((f) => SCALAR_TYPES.has(f.type)).map((f) => f.name);
+    const fields = schema.fields
+      .filter((f) => SCALAR_TYPES.has(f.type))
+      .map((f) => (f.type === 'CURRENCY' ? `${f.name} { amount currency }` : f.name));
     return ['workdayID { id type }', 'descriptor', ...fields].join('\n      ');
   }
 
