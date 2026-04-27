@@ -114,7 +114,7 @@ const BEARER_TOKEN = 'YOUR_BEARER_TOKEN'; // replace before running
 const resolver = new TridentResolver(
   TRIDENT_ENDPOINT,
   BEARER_TOKEN,
-  'yourApp_mcwslt', // referenceId — drives all GraphQL naming
+  'YourAppReferenceId', // replace before running, found in manifest.json in the app bundle
   schemas
 );
 
@@ -133,7 +133,7 @@ export default plugin({
 ```
 
 > **Bearer token:** Tokens expire. When a request fails due to auth, the error message will tell you
-> to update `BEARER_TOKEN`. In production, wire this up to a proper auth flow via `everywhere auth`.
+> to update `BEARER_TOKEN`.
 
 ### 3. Use data hooks in your pages
 
@@ -159,60 +159,6 @@ rendering to distinguish loading from empty.
 > **React hooks rule:** Call all hooks (including `useMemo`) before any early `return`. Returning
 > early before a hook call causes a "Rendered fewer hooks than expected" crash.
 
-### 4. Navigate between pages
-
-Use `useNavigate` and `useParams` for client-side routing:
-
-```tsx
-import { useNavigate, useParams } from '@workday/everywhere';
-
-// Navigate to a detail page, passing an id param
-navigate('events/detail', { id: event.id });
-
-// Read the param on the detail page
-const { id } = useParams();
-```
-
-### 5. Set up Canvas Kit
-
-Include Canvas tokens CSS in your `plugin.tsx` so Canvas Kit components render correctly:
-
-```tsx
-import '@workday/canvas-tokens-web/css/base/_variables.css';
-import '@workday/canvas-tokens-web/css/system/_variables.css';
-```
-
-If you see a 404 for `@workday/canvas-kit-react` during `npm install`, add an `.npmrc` to your
-project root so the `@workday` scope resolves through Workday's Artifactory proxy (which mirrors the
-public npm registry):
-
-```
-@workday:registry=https://artifactory.workday.com/artifactory/api/npm/npm-virtual/
-```
-
-## Trident GraphQL Naming Conventions
-
-Understanding the naming conventions helps when debugging GraphQL errors or writing custom queries.
-All names are derived from the `referenceId` in `appManifest.json` (e.g. `createAWorkEvent_mcwslt`).
-
-| Concept           | Pattern                                                     | Example                                                 |
-| ----------------- | ----------------------------------------------------------- | ------------------------------------------------------- |
-| Query field       | `{referenceId}_{ModelName}`                                 | `createAWorkEvent_mcwslt_WorkEvent`                     |
-| DataSource key    | `{referenceId}_{collection}`                                | `createAWorkEvent_mcwslt_workEvents`                    |
-| Create mutation   | `{referenceId}_create{ModelName}`                           | `createAWorkEvent_mcwslt_createWorkEvent`               |
-| Update mutation   | `{referenceId}_update{ModelName}`                           | `createAWorkEvent_mcwslt_updateWorkEvent`               |
-| Delete mutation   | `{referenceId}_delete{ModelName}`                           | `createAWorkEvent_mcwslt_deleteWorkEvent`               |
-| GraphQL type      | `{PascalCase(referenceId)}_{ModelName}`                     | `CreateAWorkEvent_mcwslt_WorkEvent`                     |
-| DataSources type  | `{PascalCase(referenceId)}_{ModelName}_DataSources`         | `CreateAWorkEvent_mcwslt_WorkEvent_DataSources`         |
-| Create input type | `{PascalCase(referenceId)}_{ModelName}Summary_Create_Input` | `CreateAWorkEvent_mcwslt_WorkEventSummary_Create_Input` |
-
-> **Note:** The query field uses the model name (PascalCase singular), not the collection name. The
-> DataSource key is the full `{referenceId}_{collection}` — including the referenceId prefix.
-
-> **Note:** Trident restricts `__type` introspection for app-specific INPUT_OBJECT types, so
-> DataSource field names cannot be discovered via introspection and must follow the convention
-> above.
-
 ## CLI Reference
 
 All commands accept `-D <path>` to specify the plugin directory (defaults to the current working
@@ -227,7 +173,6 @@ directory).
 | `everywhere install` | Build and install a plugin to a local directory    |
 | `everywhere info`    | Show plugin details from package.json              |
 | `everywhere bind`    | Generate TypeScript types from Extend models       |
-| `everywhere auth`    | Manage authentication with Workday servers         |
 
 ## Contributing
 
