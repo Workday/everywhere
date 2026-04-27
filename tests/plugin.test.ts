@@ -1,34 +1,40 @@
 import { describe, it, expect } from 'vitest';
 import type { ComponentType } from 'react';
 import { plugin } from '../src/plugin.js';
+import { route } from '../src/route.js';
+
+const TestComponent: ComponentType = () => null;
+const home = route('home', { component: TestComponent });
 
 describe('plugin()', () => {
-  it('returns an object when called with no arguments', () => {
-    const result = plugin();
+  describe('routes', () => {
+    it('returns the provided routes', () => {
+      const result = plugin({ routes: [home], defaultRoute: home });
 
-    expect(result).toBeDefined();
-  });
-
-  it('returns an object when called with an empty config', () => {
-    const result = plugin({});
-
-    expect(result).toBeDefined();
-  });
-
-  describe('pages', () => {
-    it('returns the provided pages', () => {
-      const TestPage: ComponentType = () => null;
-      const pages = [{ id: 'home', title: 'Home', component: TestPage }];
-      const result = plugin({ pages });
-
-      expect(result.pages).toEqual(pages);
+      expect(result.routes).toEqual([home]);
     });
 
     describe('when omitted', () => {
       it('defaults to an empty array', () => {
         const result = plugin();
 
-        expect(result.pages).toEqual([]);
+        expect(result.routes).toEqual([]);
+      });
+    });
+  });
+
+  describe('defaultRoute', () => {
+    it('returns the provided defaultRoute', () => {
+      const result = plugin({ routes: [home], defaultRoute: home });
+
+      expect(result.defaultRoute).toBe(home);
+    });
+
+    describe('when omitted', () => {
+      it('returns undefined', () => {
+        const result = plugin();
+
+        expect(result.defaultRoute).toBeUndefined();
       });
     });
   });
@@ -37,7 +43,7 @@ describe('plugin()', () => {
     it('returns the provided provider', () => {
       const TestProvider: ComponentType<{ children: React.ReactNode }> = ({ children }) =>
         children as React.ReactElement;
-      const result = plugin({ provider: TestProvider });
+      const result = plugin({ provider: TestProvider, routes: [home], defaultRoute: home });
 
       expect(result.provider).toBe(TestProvider);
     });
@@ -55,7 +61,7 @@ describe('plugin()', () => {
     it('contains only declared properties', () => {
       const result = plugin();
 
-      expect(Object.keys(result)).toEqual(['pages', 'provider']);
+      expect(Object.keys(result)).toEqual(['routes', 'defaultRoute', 'provider']);
     });
   });
 });
