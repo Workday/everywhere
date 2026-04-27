@@ -107,12 +107,12 @@ export class TridentResolver implements DataResolver {
 
   async find<T>(model: string, filter?: Record<string, unknown>): Promise<T[]> {
     const schema = this.schema(model);
-    const { collection } = schema;
-    const opName = `${this.referenceId}_${collection}`;
-
+    const opName = `${this.referenceId}_${model}`;
+    // DataSource key pattern from Trident spike: {referenceId}_{collection}
+    const dsKey = `${this.referenceId}_${schema.collection}`;
     const dataSourceLiteral = filter
-      ? `{${collection}: {filter: {${collection}Filter: ${toGQLLiteral(filter)}}}}`
-      : `{${collection}: {}}`;
+      ? `{${dsKey}: {filter: {${dsKey}Filter: ${toGQLLiteral(filter)}}}}`
+      : `{${dsKey}: {}}`;
 
     const query = `query Find${model} {
   ${opName}(dataSource: ${dataSourceLiteral}) {
