@@ -56,11 +56,29 @@ export class TridentResolver implements DataResolver {
     return s;
   }
 
+  // Lazily resolved: introspect CurrencyValue field names on first CURRENCY query.
+  private currencyFieldsPromise: Promise<string> | null = null;
+
+  private currencySubselection(): Promise<string> {
+    if (!this.currencyFieldsPromise) {
+      this.currencyFieldsPromise = this.execute<{
+        __type: { fields: { name: string }[] } | null;
+      }>('{ __type(name: "CurrencyValue") { fields { name } } }').then((result) => {
+        const names = result.__type?.fields?.map((f) => f.name) ?? [];
+        console.log('[TridentResolver] CurrencyValue fields:', names);
+        return names.length > 0 ? names.join(' ') : 'value currency';
+      });
+    }
+    return this.currencyFieldsPromise;
+  }
+
   // Scalar + derived fields only — SINGLE/MULTI_INSTANCE need nested selections handled separately.
-  private selectionSet(schema: ModelSchema): string {
+  private async selectionSetFor(schema: ModelSchema): Promise<string> {
+    const hasCurrency = schema.fields.some((f) => f.type === 'CURRENCY');
+    const currencyFields = hasCurrency ? await this.currencySubselection() : '';
     const fields = schema.fields
       .filter((f) => SCALAR_TYPES.has(f.type))
-      .map((f) => (f.type === 'CURRENCY' ? `${f.name} { amount currency }` : f.name));
+      .map((f) => (f.type === 'CURRENCY' ? `${f.name} { ${currencyFields} }` : f.name));
     return ['workdayID { id type }', 'descriptor', ...fields].join('\n      ');
   }
 
@@ -116,10 +134,11 @@ export class TridentResolver implements DataResolver {
       ? `{${dsKey}: {filter: {${dsKey}Filter: ${toGQLLiteral(filter)}}}}`
       : `{${dsKey}: {}}`;
 
+    const selectionSet = await this.selectionSetFor(schema);
     const query = `query Find${model} {
   ${opName}(dataSource: ${dataSourceLiteral}) {
     data {
-      ${this.selectionSet(schema)}
+      ${selectionSet}
     }
   }
 }`;
@@ -146,9 +165,10 @@ export class TridentResolver implements DataResolver {
     const inputType = `${this.graphPrefix}_${capitalize(collection)}Summary_Create_Input`;
     const mutationName = `${this.referenceId}_create${model}`;
 
+    const selectionSet = await this.selectionSetFor(schema);
     const query = `mutation Create${model}($input: ${inputType}!) {
   ${mutationName}(input: $input) {
-    ${this.selectionSet(schema)}
+    ${selectionSet}
   }
 }`;
 
@@ -165,9 +185,10 @@ export class TridentResolver implements DataResolver {
     const inputType = `${this.graphPrefix}_${capitalize(collection)}Summary_Update_Input`;
     const mutationName = `${this.referenceId}_update${model}`;
 
+    const selectionSet = await this.selectionSetFor(schema);
     const query = `mutation Update${model}($id: String!, $input: ${inputType}!) {
   ${mutationName}(id: $id, input: $input) {
-    ${this.selectionSet(schema)}
+    ${selectionSet}
   }
 }`;
 
