@@ -71,6 +71,148 @@ npx everywhere build
 
 This produces a `dist/<name>-<version>.zip` containing `package.json` and the bundled `plugin.js`.
 
+## Connecting to Workday Data
+
+Plugins can connect directly to Workday's Trident GraphQL API to read and write data from Extend
+business objects.
+
+### 1. Generate types from your bundle
+
+Point `everywhere bind` at your downloaded Extend bundle directory (the folder containing the
+`model/` subfolder):
+
+```sh
+npx @workday/everywhere bind /path/to/your-bundle
+```
+
+This reads all `.businessobject` and `.attachment` model files and generates into
+`everywhere/data/`:
+
+- **`models.ts`** — TypeScript interfaces for each model
+- **`schema.ts`** — Runtime schema used by `TridentResolver` to build GraphQL queries
+- **`<ModelName>.ts`** — `useModelName()`, `useModelName(id)`, and `useModelNameMutation()` hooks
+
+Generated types reflect the full model: scalar fields, `SINGLE_INSTANCE` / `MULTI_INSTANCE`
+references, derived fields (marked `readonly`), and `CurrencyValue` for `CURRENCY` fields.
+
+> **Note:** Run `bind` again whenever you update the bundle. The output directory is saved so you
+> can re-run with just `npx @workday/everywhere bind`.
+
+### 2. Add `TridentResolver` to your plugin
+
+`TridentResolver` translates hook calls into Trident GraphQL requests. Add it to your `plugin.tsx`:
+
+```tsx
+import { plugin, DataProvider, TridentResolver } from '@workday/everywhere';
+import { CanvasProvider } from '@workday/canvas-kit-react';
+import { schemas } from './everywhere/data/schema.js';
+
+// The referenceId comes from appManifest.json in your bundle.
+const TRIDENT_ENDPOINT = 'https://api.us.wcp.workday.com/graphql/v5';
+const BEARER_TOKEN = 'YOUR_BEARER_TOKEN'; // replace before running
+
+const resolver = new TridentResolver(
+  TRIDENT_ENDPOINT,
+  BEARER_TOKEN,
+  'yourApp_mcwslt', // referenceId — drives all GraphQL naming
+  schemas
+);
+
+function AppProvider({ children }) {
+  return (
+    <CanvasProvider>
+      <DataProvider resolver={resolver}>{children}</DataProvider>
+    </CanvasProvider>
+  );
+}
+
+export default plugin({
+  provider: AppProvider,
+  pages: [ ... ],
+});
+```
+
+> **Bearer token:** Tokens expire. When a request fails due to auth, the error message will tell you
+> to update `BEARER_TOKEN`. In production, wire this up to a proper auth flow via `everywhere auth`.
+
+### 3. Use data hooks in your pages
+
+The generated hooks work like `useSWR` — they fetch on mount and return `{ data, error }`:
+
+```tsx
+import { useWorkEvents } from '../everywhere/data/WorkEvent.js';
+
+export default function EventListPage() {
+  const { data: events, error } = useWorkEvents();
+
+  if (error) return <Text color="cinnamon500">{error.message}</Text>;
+
+  return (
+    <>{Array.isArray(events) && events.map((event) => <div key={event.id}>{event.name}</div>)}</>
+  );
+}
+```
+
+`data` is `null` while loading and an array once resolved. Check `Array.isArray(data)` before
+rendering to distinguish loading from empty.
+
+> **React hooks rule:** Call all hooks (including `useMemo`) before any early `return`. Returning
+> early before a hook call causes a "Rendered fewer hooks than expected" crash.
+
+### 4. Navigate between pages
+
+Use `useNavigate` and `useParams` for client-side routing:
+
+```tsx
+import { useNavigate, useParams } from '@workday/everywhere';
+
+// Navigate to a detail page, passing an id param
+navigate('events/detail', { id: event.id });
+
+// Read the param on the detail page
+const { id } = useParams();
+```
+
+### 5. Set up Canvas Kit
+
+Include Canvas tokens CSS in your `plugin.tsx` so Canvas Kit components render correctly:
+
+```tsx
+import '@workday/canvas-tokens-web/css/base/_variables.css';
+import '@workday/canvas-tokens-web/css/system/_variables.css';
+```
+
+If you see a 404 for `@workday/canvas-kit-react` during `npm install`, add an `.npmrc` to your
+project root so the `@workday` scope resolves through Workday's Artifactory proxy (which mirrors the
+public npm registry):
+
+```
+@workday:registry=https://artifactory.workday.com/artifactory/api/npm/npm-virtual/
+```
+
+## Trident GraphQL Naming Conventions
+
+Understanding the naming conventions helps when debugging GraphQL errors or writing custom queries.
+All names are derived from the `referenceId` in `appManifest.json` (e.g. `createAWorkEvent_mcwslt`).
+
+| Concept           | Pattern                                                     | Example                                                 |
+| ----------------- | ----------------------------------------------------------- | ------------------------------------------------------- |
+| Query field       | `{referenceId}_{ModelName}`                                 | `createAWorkEvent_mcwslt_WorkEvent`                     |
+| DataSource key    | `{referenceId}_{collection}`                                | `createAWorkEvent_mcwslt_workEvents`                    |
+| Create mutation   | `{referenceId}_create{ModelName}`                           | `createAWorkEvent_mcwslt_createWorkEvent`               |
+| Update mutation   | `{referenceId}_update{ModelName}`                           | `createAWorkEvent_mcwslt_updateWorkEvent`               |
+| Delete mutation   | `{referenceId}_delete{ModelName}`                           | `createAWorkEvent_mcwslt_deleteWorkEvent`               |
+| GraphQL type      | `{PascalCase(referenceId)}_{ModelName}`                     | `CreateAWorkEvent_mcwslt_WorkEvent`                     |
+| DataSources type  | `{PascalCase(referenceId)}_{ModelName}_DataSources`         | `CreateAWorkEvent_mcwslt_WorkEvent_DataSources`         |
+| Create input type | `{PascalCase(referenceId)}_{ModelName}Summary_Create_Input` | `CreateAWorkEvent_mcwslt_WorkEventSummary_Create_Input` |
+
+> **Note:** The query field uses the model name (PascalCase singular), not the collection name. The
+> DataSource key is the full `{referenceId}_{collection}` — including the referenceId prefix.
+
+> **Note:** Trident restricts `__type` introspection for app-specific INPUT_OBJECT types, so
+> DataSource field names cannot be discovered via introspection and must follow the convention
+> above.
+
 ## CLI Reference
 
 All commands accept `-D <path>` to specify the plugin directory (defaults to the current working
