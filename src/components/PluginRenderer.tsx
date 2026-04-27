@@ -1,4 +1,4 @@
-import { NavigationProvider } from '../hooks/index.js';
+import { NavigationProvider } from '../hooks/NavigationContext.js';
 import { StyleBoundary } from './StyleBoundary.js';
 import type { PluginDefinition } from '../types.js';
 
