@@ -1,0 +1,23 @@
+---
+description: TDD and test-structure requirements for TypeScript changes
+globs:
+  - "**/*.ts"
+  - "**/*.tsx"
+alwaysApply: false
+---
+
+# TypeScript TDD Protocol
+
+Follow strict test-driven development for implementation work in this repository.
+
+## Required Workflow
+
+1. Test first: write a failing test before changing production code for behavior.
+2. Minimal implementation: add only the smallest code needed to make the failing test pass.
+3. Red-green-refactor: work in cycles and do not skip red or green.
+
+## Test Shape Requirements
+
+4. Use behavior-driven style with `describe` and `it`; test names should read like specifications.
+5. Use one expectation/assertion per test case.
+6. When behavior branches, use one `describe` block per branch and nest describes to mirror behavior structure.
