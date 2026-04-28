@@ -110,11 +110,16 @@ would force every consumer to remember to surface it, and silently dropping esbu
 was an early oversight. Printing at the source guarantees authors see every diagnostic regardless of
 which entry point invoked the bundler.
 
-This is a breaking change to the build module's exported API. The build module is internal — it is
-not re-exported from `@workday/everywhere` and has no external users. The only in-tree consumers are
-the CLI commands `cli/src/commands/everywhere/{build,install,publish}.ts`, which import it directly
-from the SDK's compiled `dist/build/`. Each is updated to pass the new `PluginBundle` shape through
-to `packagePlugin`. No deprecation path is needed.
+This is a breaking change to the canonical build module API in `cli/src/build/`. The in-tree
+consumers are the CLI commands `cli/src/commands/everywhere/{build,install,publish}.ts`, which
+import it directly and are updated to pass the new `PluginBundle` shape through to `packagePlugin`.
+
+The deprecated `@workday/everywhere/build` subpath export at `src/build/index.ts` is a thin shim
+that proxies to the canonical implementation via dynamic import. To preserve its pre-existing
+contract (`bundlePlugin(): Promise<string>` and `PackageOptions { bundleCode: string }`), the shim
+extracts `.js` from the new `PluginBundle` and wraps incoming `bundleCode` strings into a minimal
+`PluginBundle` (no css, no assets) before delegating. External callers of the deprecated surface
+keep their existing behavior — JS-only zips, no warning array — alongside the deprecation notice.
 
 ### Packager changes
 
@@ -156,10 +161,10 @@ outside this repository.
 
 ### Dev viewer changes
 
-The dev viewer (`cli/src/viewer/`, launched by `everywhere view`) does not implement the fetch-and-link
-contract. It is a Vite dev server that loads plugin source directly via the `virtual:plugin-entry`
-alias and never consumes the zip. Vite's native CSS pipeline handles styles when they appear in the
-module graph.
+The dev viewer (`cli/src/viewer/`, launched by `everywhere view`) does not implement the
+fetch-and-link contract. It is a Vite dev server that loads plugin source directly via the
+`virtual:plugin-entry` alias and never consumes the zip. Vite's native CSS pipeline handles styles
+when they appear in the module graph.
 
 To wire `plugin.css` into the dev viewer's module graph without requiring authors to import it from
 JS, the `everywhere view` command exposes a new `virtual:plugin-styles` alias. The dev viewer's
