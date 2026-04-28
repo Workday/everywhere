@@ -56,5 +56,5 @@ Examples: `feat/email-notifications`, `fix/sidebar-delete-width`, `chore/update-
 ### Test-Driven Development
 
 We follow TDD for all implementation work. Tests are written first in a behavior-driven style using
-`describe`/`it` blocks with one expectation per test case. See [CLAUDE.md](.claude/CLAUDE.md) for the full
-TDD protocol.
+`describe`/`it` blocks with one expectation per test case. See [CLAUDE.md](.claude/CLAUDE.md) for
+the full TDD protocol.
