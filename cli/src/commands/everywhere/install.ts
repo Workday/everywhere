@@ -3,7 +3,7 @@ import { join, resolve } from 'node:path';
 
 import { Flags } from '@oclif/core';
 
-import { bundlePlugin, packagePlugin, slugify } from '../../../../dist/build/index.js';
+import { bundlePlugin, packagePlugin, slugify } from '../../build/index.js';
 import { pluginConfig } from '../../config.js';
 import EverywhereBaseCommand from './base.js';
 

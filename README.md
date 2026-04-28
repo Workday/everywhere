@@ -87,6 +87,17 @@ directory).
 | `everywhere bind`    | Generate TypeScript types from Extend models       |
 | `everywhere auth`    | Manage authentication with Workday servers         |
 
+## API Boundaries
+
+- Use `@workday/everywhere` (and `@workday/everywhere/data` or `@workday/everywhere/hooks`) for
+  plugin runtime code.
+- Treat CLI modules under `cli/src/**` as internal implementation details.
+- `@workday/everywhere/build` is a deprecated compatibility surface; prefer CLI commands such as
+  `everywhere build`.
+
+See [`docs/cli-sdk-boundary.md`](docs/cli-sdk-boundary.md) for the boundary policy and deprecation
+direction.
+
 ## Contributing
 
 See [CONTRIBUTING.md](CONTRIBUTING.md) for development setup and guidelines.
