@@ -28,16 +28,11 @@ export default class ViewCommand extends EverywhereBaseCommand {
     const pluginDir = await this.parsePluginDir();
     const pluginEntry = this.resolvePluginEntry(pluginDir);
 
-    // Locate the SDK package root (where dist/viewer/ lives).
-    // Compiled path: cli/dist/commands/everywhere/view.js → 4 levels up = SDK root.
-    const sdkRoot = path.resolve(
-      fileURLToPath(new URL('.', import.meta.url)),
-      '..',
-      '..',
-      '..',
-      '..'
-    );
-    const viewerDir = path.join(sdkRoot, 'dist', 'viewer');
+    // Compiled path: cli/dist/commands/everywhere/view.js.
+    // From there, ../../ points at cli/dist and ../../viewer is the built viewer app.
+    const cliDistRoot = path.resolve(fileURLToPath(new URL('.', import.meta.url)), '..', '..');
+    const viewerDir = path.join(cliDistRoot, 'viewer');
+    const sdkRoot = path.resolve(cliDistRoot, '..', '..');
 
     this.log(`Plugin: ${pluginEntry}`);
     this.log(`Starting viewer on port ${flags.port}...`);
