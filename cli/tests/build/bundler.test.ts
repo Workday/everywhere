@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { join } from 'node:path';
-import { bundlePlugin } from '../../src/build/bundler.js';
+import { bundlePlugin } from '../../src/build/index.js';
 
 const FIXTURE_DIR = join(import.meta.dirname, 'fixtures', 'minimal-plugin');
 

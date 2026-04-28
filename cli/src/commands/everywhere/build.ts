@@ -1,7 +1,7 @@
 import * as fs from 'node:fs';
 import { join, relative } from 'node:path';
 
-import { bundlePlugin, packagePlugin, slugify } from '../../../../dist/build/index.js';
+import { bundlePlugin, packagePlugin, slugify } from '../../build/index.js';
 import EverywhereBaseCommand from './base.js';
 
 export default class BuildCommand extends EverywhereBaseCommand {

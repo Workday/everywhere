@@ -1,6 +1,6 @@
-import { NavigationProvider } from '../hooks/index.js';
-import { StyleBoundary } from './StyleBoundary.js';
-import type { PluginDefinition } from '../types.js';
+import { NavigationProvider } from '../../../dist/hooks/index.js';
+import { StyleBoundary } from '../../../dist/components/StyleBoundary.js';
+import type { PluginDefinition } from '../../../dist/index.js';
 
 export interface PluginRendererProps {
   plugin: PluginDefinition;

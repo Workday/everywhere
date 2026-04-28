@@ -1,7 +1,7 @@
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 
-import * as plugins from '../../../../dist/build/index.js';
+import * as plugins from '../../build/index.js';
 import { type AppConfig, appConfig } from '../../config.js';
 import { type PluginManifest, readPluginManifest } from '../../manifest/manifest.js';
 import {
