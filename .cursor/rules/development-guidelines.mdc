@@ -1,9 +1,9 @@
 ---
-description: Core repository standards for Workday Everywhere SDK changes
+description: Always-on development guidelines for Workday Everywhere SDK changes
 alwaysApply: true
 ---
 
-# Workday Everywhere SDK Core Standards
+# Development Guidelines
 
 ## Project Context
 
@@ -47,4 +47,4 @@ TypeScript imports must use `.js` extensions for local module imports in emitted
 
 ## Testing Process
 
-For TypeScript implementation and test edits, follow the strict TDD rule in `typescript-tdd.mdc`.
+For TypeScript implementation and test edits, follow the strict TDD rule in `tdd.mdc`.
