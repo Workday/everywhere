@@ -8,6 +8,9 @@
 
 // NOTE: PackageOptions and PackageResult mirror the canonical declarations in
 // cli/src/build/packager.ts. Keep these in sync until this shim is removed.
+// The shape preserved here is the *pre-PluginBundle* contract: callers of the
+// deprecated surface still pass `bundleCode` and receive bundled JS as a
+// string. The shim adapts that contract to the new canonical signatures.
 export interface PackageOptions {
   pluginDir: string;
   bundleCode: string;
@@ -21,9 +24,23 @@ export interface PackageResult {
   size: number;
 }
 
+interface CliPluginBundle {
+  js: string;
+  css?: string;
+  assets: Array<{ path: string; contents: Uint8Array }>;
+}
+
+interface CliPackageOptions {
+  pluginDir: string;
+  bundle: CliPluginBundle;
+  outputDir: string;
+  slug: string;
+  version: string;
+}
+
 interface CliBuildModule {
-  bundlePlugin(cwd: string): Promise<string>;
-  packagePlugin(options: PackageOptions): Promise<PackageResult>;
+  bundlePlugin(cwd: string): Promise<CliPluginBundle>;
+  packagePlugin(options: CliPackageOptions): Promise<PackageResult>;
 }
 
 const CLI_BUILD_SPECIFIER = '../../cli/dist/build/index.js';
@@ -54,13 +71,20 @@ async function loadCliBuildModule(): Promise<CliBuildModule> {
 export async function bundlePlugin(cwd: string): Promise<string> {
   warnDeprecated();
   const cliBuild = await loadCliBuildModule();
-  return cliBuild.bundlePlugin(cwd);
+  const bundle = await cliBuild.bundlePlugin(cwd);
+  return bundle.js;
 }
 
 export async function packagePlugin(options: PackageOptions): Promise<PackageResult> {
   warnDeprecated();
   const cliBuild = await loadCliBuildModule();
-  return cliBuild.packagePlugin(options);
+  return cliBuild.packagePlugin({
+    pluginDir: options.pluginDir,
+    bundle: { js: options.bundleCode, assets: [] },
+    outputDir: options.outputDir,
+    slug: options.slug,
+    version: options.version,
+  });
 }
 
 // NOTE: This implementation must mirror cli/src/build/slug.ts exactly. It is

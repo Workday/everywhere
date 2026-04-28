@@ -69,7 +69,8 @@ Package your plugin into a distributable zip file:
 npx everywhere build
 ```
 
-This produces a `dist/<name>-<version>.zip` containing `package.json` and the bundled `plugin.js`.
+This produces a `dist/<name>-<version>.zip` containing `package.json`, the bundled `plugin.js`, and
+when present `plugin.css` plus any hashed static assets under `assets/`.
 
 ## CLI Reference
 

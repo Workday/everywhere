@@ -2,6 +2,9 @@ import { createRoot } from 'react-dom/client';
 import { TeamsShell } from './TeamsShell.js';
 import type { PluginDefinition } from '../../../dist/index.js';
 import './viewer.css';
+// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+// @ts-ignore — virtual module resolved at runtime by Vite
+import 'virtual:plugin-styles';
 
 // Resolved via Vite aliases to the developer's plugin files.
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment

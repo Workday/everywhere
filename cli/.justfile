@@ -7,7 +7,7 @@ setup:
 # Build to dist/
 build: setup
     npx tsc
-    cp src/viewer/index.html src/viewer/viewer.css dist/viewer/
+    cp src/viewer/index.html src/viewer/viewer.css src/viewer/empty-plugin-styles.css dist/viewer/
     npx oclif manifest
 
 # Run static checks

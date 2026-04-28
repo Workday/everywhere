@@ -24,14 +24,17 @@ export default class BuildCommand extends EverywhereBaseCommand {
     if (!pkg.version) this.error('package.json is missing required field: version');
 
     this.log('Bundling plugin...');
-    const code = await bundlePlugin(pluginDir);
+    const bundle = await bundlePlugin(pluginDir);
+    for (const w of bundle.warnings) {
+      this.warn(w);
+    }
 
     this.log('Packaging...');
     const slug = slugify(pkg.name);
     const outputDir = join(pluginDir, 'dist');
     const result = await packagePlugin({
       pluginDir,
-      bundleCode: code,
+      bundle,
       outputDir,
       slug,
       version: pkg.version,
