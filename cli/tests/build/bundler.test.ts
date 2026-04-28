@@ -1,4 +1,4 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, vi } from 'vitest';
 import { join } from 'node:path';
 import { mkdtemp, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
@@ -108,17 +108,21 @@ describe('bundlePlugin()', () => {
   });
 
   describe('when an emitted asset exceeds the advisory size threshold', () => {
-    it('adds a warning describing the asset', async () => {
+    it('writes a warning to stderr describing the asset', async () => {
+      const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
       const dir = await mkdtemp(join(tmpdir(), 'bundler-big-asset-'));
       try {
         await writeFile(join(dir, 'package.json'), MINIMAL_PKG);
         await writeFile(join(dir, 'plugin.tsx'), MINIMAL_PLUGIN_TSX);
         await writeFile(join(dir, 'huge.png'), Buffer.alloc(5 * 1024 * 1024 + 1));
 
-        const bundle = await bundlePlugin(dir);
+        await bundlePlugin(dir);
 
-        expect(bundle.warnings.some((w) => w.includes('huge') && w.includes('exceeds'))).toBe(true);
+        expect(
+          warn.mock.calls.some(([msg]) => typeof msg === 'string' && /huge.*exceeds/.test(msg))
+        ).toBe(true);
       } finally {
+        warn.mockRestore();
         await rm(dir, { recursive: true, force: true });
       }
     });

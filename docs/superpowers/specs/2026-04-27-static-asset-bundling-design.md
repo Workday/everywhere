@@ -98,23 +98,23 @@ interface PluginBundle {
   js: string;
   css?: string;
   assets: Array<{ path: string; contents: Uint8Array }>;
-  warnings: string[];
 }
 
 function bundlePlugin(cwd: string): Promise<PluginBundle>;
 ```
 
-The `warnings` array carries advisory messages produced during the build (e.g. oversized assets; see
-"Error handling" below). The bundler does not log these itself — the CLI commands that consume
-`bundlePlugin` are responsible for surfacing them to the user. This keeps the bundler pure and
-testable without capturing stdout.
+Advisory messages produced during the build (e.g. oversized assets; see "Error handling" below) are
+written directly to stderr by the bundler — via `console.warn(...)` for SDK-generated advisories and
+via esbuild's `logLevel: 'warning'` for esbuild's own diagnostics. Returning a `warnings` array
+would force every consumer to remember to surface it, and silently dropping esbuild's own warnings
+was an early oversight. Printing at the source guarantees authors see every diagnostic regardless of
+which entry point invoked the bundler.
 
 This is a breaking change to the build module's exported API. The build module is internal — it is
 not re-exported from `@workday/everywhere` and has no external users. The only in-tree consumers are
 the CLI commands `cli/src/commands/everywhere/{build,install,publish}.ts`, which import it directly
 from the SDK's compiled `dist/build/`. Each is updated to pass the new `PluginBundle` shape through
-to `packagePlugin` and to print any `bundle.warnings` via `this.warn(...)`. No deprecation path is
-needed.
+to `packagePlugin`. No deprecation path is needed.
 
 ### Packager changes
 
@@ -191,10 +191,9 @@ serving as the canonical reference.
 - **JS `import '*.css'`:** bundler error pointing to the convention.
 - **`@import` or `url()` that fails to resolve:** esbuild's normal resolution error surfaces with
   file and line.
-- **Asset larger than 5MB:** the bundler appends a warning string to `PluginBundle.warnings`
-  identifying the asset; not an error. CLI commands print these warnings after bundling. (Threshold
-  chosen as a rough sanity bound for what belongs in a plugin bundle vs. external hosting; revisit
-  if it proves noisy.)
+- **Asset larger than 5MB:** the bundler writes a warning to stderr via `console.warn(...)`
+  identifying the asset; not an error. (Threshold chosen as a rough sanity bound for what belongs in
+  a plugin bundle vs. external hosting; revisit if it proves noisy.)
 
 ## Testing
 
@@ -207,8 +206,7 @@ serving as the canonical reference.
 - Plugin with JS-side `import logo from './logo.png'` produces a hashed asset and the JS contains
   the rewritten URL string.
 - Plugin with JS-side `import './styles.css'` produces a build error.
-- Plugin with an asset over the size threshold produces a non-empty `warnings` array identifying the
-  asset.
+- Plugin with an asset over the size threshold writes a warning to stderr identifying the asset.
 
 `tests/build/packager.test.ts` covers:
 

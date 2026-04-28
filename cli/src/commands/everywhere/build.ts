@@ -25,9 +25,6 @@ export default class BuildCommand extends EverywhereBaseCommand {
 
     this.log('Bundling plugin...');
     const bundle = await bundlePlugin(pluginDir);
-    for (const w of bundle.warnings) {
-      this.warn(w);
-    }
 
     this.log('Packaging...');
     const slug = slugify(pkg.name);

@@ -8,7 +8,6 @@ import { packagePlugin } from '../../src/build/index.js';
 const emptyBundle = (js: string) => ({
   js,
   assets: [] as Array<{ path: string; contents: Uint8Array }>,
-  warnings: [] as string[],
 });
 
 let tempDir: string;
@@ -145,7 +144,6 @@ describe('packagePlugin()', () => {
         pluginDir,
         bundle: {
           js: 'export default {};',
-          warnings: [],
           assets: [{ path: 'assets/logo-AB12.png', contents: png }],
         },
         outputDir,

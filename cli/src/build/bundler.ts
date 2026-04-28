@@ -32,7 +32,6 @@ export interface PluginBundle {
   js: string;
   css?: string;
   assets: Array<{ path: string; contents: Uint8Array }>;
-  warnings: string[];
 }
 
 async function findPluginEntry(cwd: string): Promise<string> {
@@ -113,16 +112,14 @@ function splitBuildOutputs(
   return { js, css, assets };
 }
 
-function collectAssetSizeWarnings(assets: Array<{ path: string; contents: Uint8Array }>): string[] {
-  const warnings: string[] = [];
+function warnAboutLargeAssets(assets: Array<{ path: string; contents: Uint8Array }>): void {
   for (const { path: assetPath, contents } of assets) {
     if (contents.byteLength > ASSET_SIZE_WARN_BYTES) {
-      warnings.push(
+      console.warn(
         `Asset "${assetPath}" is ${contents.byteLength} bytes (exceeds ${ASSET_SIZE_WARN_BYTES} byte advisory threshold).`
       );
     }
   }
-  return warnings;
 }
 
 function sharedBuildOptions(outdir: string, nodePaths: string[]): esbuild.BuildOptions {
@@ -137,6 +134,7 @@ function sharedBuildOptions(outdir: string, nodePaths: string[]): esbuild.BuildO
     target: 'es2020',
     minify: false,
     sourcemap: false,
+    logLevel: 'warning',
     external: EXTERNAL_PACKAGES,
     loader: FILE_LOADERS,
     assetNames: ASSET_NAMES,
@@ -172,7 +170,7 @@ export async function bundlePlugin(cwd: string): Promise<PluginBundle> {
   }
 
   const assets = [...jsAssets, ...cssAssets];
-  const warnings = collectAssetSizeWarnings(assets);
+  warnAboutLargeAssets(assets);
 
-  return { js, css, assets, warnings };
+  return { js, css, assets };
 }
