@@ -1,9 +1,9 @@
 ---
-description: Always-on development guidelines for Workday Everywhere SDK changes
+description: Always-on conventions for Workday Everywhere SDK changes
 alwaysApply: true
 ---
 
-# Development Guidelines
+# Conventions
 
 ## Project Context
 
