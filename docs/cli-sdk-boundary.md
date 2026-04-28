@@ -10,12 +10,13 @@ should depend on and what exists only to support CLI behavior.
 
 ## Plugin-author API (supported contract)
 
-Plugin authors should import runtime APIs from:
+Plugin authors and host integrators should import runtime APIs from:
 
 - `@workday/everywhere`
 - `@workday/everywhere/data`
 - `@workday/everywhere/hooks`
-- `@workday/everywhere/components` (advanced usage)
+- `@workday/everywhere/components` — including `StyleBoundary` and `PluginRenderer` for hosts that
+  embed plugins outside the standard CLI dev viewer
 
 These entry points are versioned as part of the SDK public contract.
 
@@ -24,11 +25,12 @@ These entry points are versioned as part of the SDK public contract.
 The following areas are implementation details for the CLI and are not plugin-author APIs:
 
 - `cli/src/build/**` (bundle/package pipeline used by `everywhere build|install|publish`)
-- `cli/src/viewer/**` (dev viewer used by `everywhere view`)
+- `cli/src/viewer/**` (dev viewer shell used by `everywhere view`)
 - command internals under `cli/src/commands/**`
-- host renderer internals such as `PluginRenderer` (no longer exported from SDK barrels)
 
-These may change without preserving source-level compatibility for external consumers.
+These may change without preserving source-level compatibility for external consumers. The dev
+viewer consumes the SDK's public components (e.g. `PluginRenderer`) rather than maintaining its own
+copy.
 
 ## Transitional Build API
 

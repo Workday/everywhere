@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import type { PluginDefinition } from '../../../dist/index.js';
-import { PluginRenderer } from './PluginRenderer.js';
+import { PluginRenderer } from '../../../dist/components/index.js';
 
 interface TeamsShellProps {
   plugin: PluginDefinition;
