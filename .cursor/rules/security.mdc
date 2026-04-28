@@ -1,0 +1,50 @@
+---
+description: Public OSS security guardrails — prevent accidental leaks and unsafe dependencies
+alwaysApply: true
+---
+
+# Security (public repository)
+
+This project is **public**. Agents must avoid changes that expose secrets, private infrastructure, or non-public dependency surfaces. These guardrails align with **OpenSSF Scorecard**-style hygiene; do not regress that posture.
+
+## Do not introduce
+
+- **Secrets:** passwords, API keys, tokens, private keys, OAuth secrets, or credential-bearing connection strings—in source, tests, fixtures, examples, or config checked into the repo.
+- **Non-public references:** hostnames or URLs for private corporate infrastructure (e.g. private source control, CI, artifact, wiki, or ticketing portals). Prefer neutral placeholders in docs and examples.
+- **Non-public packages or registries:** dependencies that exist only in private registries not published for public use, or `.npmrc`/CI config that points to private registries. Use the same public npm patterns as the rest of this repo. Do not copy dependency names from non-public libraries into `package.json` unless they are verified public packages.
+
+## Examples and fixtures
+
+- In `examples/`, tests, and docs, use **obviously placeholder** values (`example-token`, `your-tenant-here`, `replace-me`). Never use realistic-looking strings that could be mistaken for live credentials.
+
+## Dependencies
+
+- Prefer **maintained, public** packages; avoid typosquatting-prone names and unusual registry sources.
+- **Verify before adding:** for any new dependency, check `npmjs.com` for publisher, age, weekly downloads, and a working repository link.
+- Do not add **lifecycle scripts** (`preinstall`, `install`, `postinstall`, `prepare`) that pull artifacts from non-standard hosts or run untrusted code at install time. Existing lifecycle scripts (e.g. `prepare: husky`) should not be expanded without maintainer review.
+
+## Workflows and CI
+
+- **Pin third-party GitHub Actions to commit SHAs**, not floating tags (e.g. `actions/checkout@<sha>`, not `@v4`).
+- Keep workflow `permissions:` **least-privilege**; default to read-only and grant per-job only what is needed.
+- Do not add `pull_request_target` triggers without explicit maintainer review—they run with write access to the base repo.
+- Never echo `${{ secrets.* }}` to logs; reference secrets only in the steps that need them.
+
+## Outbound network calls
+
+- Do not introduce new **outbound network calls** from SDK or CLI runtime code (telemetry, version checks, analytics, crash reporting) without maintainer sign-off. Surprise network traffic is a privacy and supply-chain concern for downstream consumers.
+
+## Logging hygiene
+
+- Do not log credentials, auth tokens, cookies, full request/response bodies, or full request headers. Redact at the boundary.
+
+## Git history, commits, and comments
+
+- Do not paste **credentials, private ticket URLs, or confidential** context into commit messages, PR descriptions, code comments, or issue text that will publish to the public remote.
+
+## Reporting
+
+- The repo currently has **no `SECURITY.md`**. Do not invent a security contact path or add a `SECURITY.md` on your own; if you believe one is needed, raise it with maintainers.
+- If a `SECURITY.md` or GitHub Security policy is published in the future, defer to it.
+
+These rules complement `.cursor/rules/conventions.mdc`, `.cursor/rules/oss.mdc`, and `.claude/CLAUDE.md`.

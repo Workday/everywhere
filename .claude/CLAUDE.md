@@ -107,3 +107,160 @@ We follow **test-driven development (TDD)** for all implementation work:
 
 6. **One describe per branch.** When a code path branches on a condition, each branch is captured in
    its own `describe` block. Nest `describe` blocks to reflect the structure of the behavior.
+
+## Agent alignment (Cursor + Claude)
+
+Cursor loads `.cursor/rules/conventions.mdc`, `security.mdc`, and `oss.mdc` (always on), plus
+`tdd.mdc` for TypeScript edits. This file carries the matching Claude Code narrative below.
+
+---
+
+## Security (public OSS)
+
+The following applies to **agent-assisted changes** on this **public** OSS repo so we avoid
+accidental violations of common open-source security practice (aligned with OpenSSF-style concerns:
+secrets, supply chain, and disclosure).
+
+### Intent
+
+- **Security through obscurity is not the goal**, but the repo must not leak confidential data or
+  routes to attack surfaces (dependency confusion, leaked credentials, or non-public tooling).
+- Rules here are **guardrails**, not an exhaustive security review checklist.
+
+### What must never enter the codebase or published git metadata
+
+1. **Secrets** — No credentials, API keys, tokens, private keys, or live connection strings in
+   source, tests, examples, or committed config. Use env vars and **obviously placeholder** values
+   (`example-token`, `your-tenant-here`) in documentation, examples, and fixtures—never
+   realistic-looking strings.
+2. **Private systems and domains** — Avoid real hostnames or URLs for private infrastructure
+   (including private corporate domains and private Git/CI/artifact/wiki portals). Use fictional
+   placeholders where examples need a URL.
+3. **Non-public dependencies** — Do not add packages or registry configuration meant for private
+   registry flows. This package is public (`@workday/everywhere` on public npm); new deps must be
+   **publicly resolvable** the same way existing ones are. Be alert to **dependency confusion**: do
+   not transcribe non-public package names from other repos without verifying they are legitimate
+   public packages.
+4. **Sensitive narrative in commits and comments** — Avoid embedding confidential details, private
+   links, or authentication artifacts in commit messages, PR text, or comments that sync to the
+   public repository.
+
+### Dependencies and maintenance
+
+- When you touch **`package.json`** or lockfiles, keep choices consistent with **public npm** and
+  routine dependency hygiene (prefer current, supported versions consistent with project
+  constraints).
+- **Verify new dependencies on `npmjs.com`** (publisher, age, weekly downloads, working repo link)
+  before adding.
+- Do not add **lifecycle scripts** (`preinstall`, `install`, `postinstall`, `prepare`) that fetch
+  from non-public infrastructure or run untrusted code at install time. Existing lifecycle scripts
+  (e.g. `prepare: husky`) should not be expanded without maintainer review.
+
+### Workflows and CI
+
+- **Pin third-party GitHub Actions to commit SHAs**, not floating tags (e.g.
+  `actions/checkout@<sha>`, not `@v4`).
+- Keep workflow `permissions:` **least-privilege**; default to read-only and grant per-job only what
+  is needed.
+- Do not add `pull_request_target` triggers without explicit maintainer review—they run with write
+  access to the base repo.
+- Never echo `${{ secrets.* }}` to logs; reference secrets only in the steps that need them.
+
+### Outbound network calls
+
+- Do not introduce new **outbound network calls** from SDK or CLI runtime code (telemetry, version
+  checks, analytics, crash reporting) without maintainer sign-off. Surprise network traffic is a
+  privacy and supply-chain concern for downstream consumers.
+
+### Logging hygiene
+
+- Do not log credentials, auth tokens, cookies, full request/response bodies, or full request
+  headers. Redact at the boundary.
+
+### Vulnerability disclosure
+
+- The repo currently has **no `SECURITY.md`**. Do not add one or invent a security contact path; if
+  you believe one is needed, raise it with maintainers.
+- If a `SECURITY.md` or GitHub Security policy is published later, defer to it. Do not guess email
+  aliases or private queues.
+
+### Review and automation
+
+- Agents must not bypass required review or approval gates before merge.
+- Security scanning tools (e.g. secret scanning, SAST) may run in CI—write code that passes
+  reasonable static checks (no secrets in tree).
+
+### Scorecard and maturity
+
+- A healthy public repo aligns with **OpenSSF Scorecard**-style practices over time (branch
+  protection, dependency updates, security policy). Agent changes should **not regress** obvious
+  hygiene (e.g. committing secrets, weakening dependency sources).
+
+When in doubt, **omit non-public specifics** and **use public-safe placeholders**.
+
+---
+
+## Public OSS quality and onboarding
+
+These expectations align with common **public release** hygiene (good first impression, reproducible
+builds, clear legal posture).
+
+### README and documentation
+
+- The **README** should stay **interesting, accurate, and sufficient for onboarding**: what the
+  project is, how to try it quickly, and where to read more (`CONTRIBUTING.md` for dev setup
+  including `just test`, etc.).
+- When workflow commands change, **update the docs you touch** so a newcomer is not misled.
+
+### Tests
+
+- The project expects **automated tests**; agents follow the TDD protocol above.
+- **Describe how to run tests** in README or CONTRIBUTING (this repo documents commands in
+  CONTRIBUTING—keep that section current).
+
+### Generated API / reference docs
+
+- Use **TypeScript-appropriate** doc generators when maintainers add them.
+- Keep doc generation **documented and repeatable** if outputs are checked in.
+
+### Code cleanliness
+
+- **Delete old commented-out code** rather than leaving large disabled blocks.
+- Avoid committing **debug leftovers** or scratch paths.
+
+### LICENSE and CONTRIBUTING
+
+- **`LICENSE`** and **`CONTRIBUTING.md`** reflect maintainer-approved repository policy—agents must
+  not rewrite them casually or substitute another license.
+- External contribution policy text is **maintainer-owned**. This repo currently **does not accept
+  external pull requests** (see `CONTRIBUTING.md`)—do not add CLA, DCO, or external-contribution
+  scaffolding without maintainer direction.
+
+### Per-file headers
+
+- If maintainers adopt **copyright/license headers**, match the **same license as `LICENSE`** and
+  team conventions; do not copy boilerplate from unrelated projects (wrong license or year).
+
+### Contributors
+
+- Attribution files (**CONTRIBUTORS**, etc.) are optional but **preserve existing entries**; add
+  names only when directed.
+
+### Release and publishing (context)
+
+- **CI** should run tests automatically (e.g. GitHub Actions); if README has CI badges, they should
+  match **real** status.
+- **Publishing** for this ecosystem is **public npm**; mirroring into private registries or
+  switching private consumers to OSS artifacts is **post-release organizational work** (artifact
+  review and private distribution)—not something to encode in application source without maintainer
+  request.
+
+### Naming and trademarks
+
+- **Renames, logos, and public branding** need **Legal / trademark** clearance—agents do not rename
+  the product or add unofficial logos.
+
+### Team review
+
+- Non-trivial releases benefit from **peer review** before merging to the default branch; agents do
+  not replace that process.

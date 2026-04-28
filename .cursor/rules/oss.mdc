@@ -1,0 +1,51 @@
+---
+description: Public OSS quality — README, tests, docs, hygiene, and legal artifacts
+alwaysApply: true
+---
+
+# Public repository quality
+
+This is a **public** project. Agent edits should keep it approachable for newcomers and free of cruft.
+
+## README and onboarding
+
+- Treat the **README** as the primary first impression: clear purpose, quick start, and paths to deeper docs.
+- Users should be able to **get running** from README plus linked docs (e.g. `CONTRIBUTING.md`). When you change install, build, or test flows, **update those docs** so commands stay accurate.
+
+## Tests
+
+- **Do not weaken or skip tests** to land changes; follow project TDD expectations in `.claude/CLAUDE.md` and `tdd.mdc`.
+- If you add or rename test commands, ensure **README or CONTRIBUTING** documents how to run them.
+
+## Generated documentation
+
+- Use **TypeScript-appropriate** doc generators when maintainers add them.
+- When generated docs exist in-repo, **keep generation steps** documented and outputs consistent with source changes.
+
+## Code hygiene
+
+- **Remove** stale **commented-out code** and abandoned blocks instead of accumulating dead snippets.
+- Do not leave temporary debug logging or non-public notes in committed source.
+
+## Legal and attribution files
+
+- **`LICENSE`** and **`CONTRIBUTING.md`** are maintainer-governed policy files. Do not replace them with ad-hoc text or wrong licenses; **Apache-2.0** and contribution terms must stay authoritative.
+- This repo currently **does not accept external pull requests** (see `CONTRIBUTING.md`); do not add CLA, DCO, or external-contribution scaffolding without maintainer direction.
+- If the repo has **`CONTRIBUTORS`** or similar, **do not strip attributions**; add entries only when maintainers ask.
+
+## File-level copyright / license headers
+
+- Follow **existing** project convention. Do not bulk-paste headers from other repos or wrong years/licenses; if headers are added, they must match **`LICENSE`** and maintainer direction.
+
+## Git history (humans)
+
+- **Squashing** history to strip non-public messages is a **maintainer/release** step before exposing a fork or mirror. Agents still must avoid sensitive content in **new** commits (see `security.mdc`).
+
+## Naming and trademarks
+
+- Product **names and logos** require **maintainer / Legal** approval—do not rename the project or add branding in docs without explicit direction.
+
+## CI and publishing (maintainers)
+
+- Prefer **modern CI** (e.g. GitHub Actions) that runs tests on changes; if README has CI badges, they should reflect the **actual** pipelines.
+- Public packages belong on **public registries** (e.g. npm for this project); private mirror registries are an organizational consumption concern, not something agents configure here.
