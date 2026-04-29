@@ -27,20 +27,20 @@ function StatCard({ label, value, subtitle }: { label: string; value: string; su
 
 export default function HomePage() {
   const navigate = useNavigate();
-  const { data: employees } = useEmployees();
+  const { data: employeeData } = useEmployees();
   const { data: departments } = useDepartments();
 
-  const totalEmployees = employees?.length ?? 0;
+  const totalEmployees = Array.isArray(employeeData) ? employeeData.length : 0;
 
   const deptStats = useMemo(() => {
     if (!departments || !Array.isArray(departments)) return [];
     return departments.map((dept) => {
-      const count = Array.isArray(employees)
-        ? employees.filter((e) => e.department === dept.name).length
+      const count = Array.isArray(employeeData)
+        ? employeeData.filter((e) => e.department === dept.name).length
         : Number(dept.headcount);
       return { ...dept, count };
     });
-  }, [employees, departments, totalEmployees]);
+  }, [employeeData, departments, totalEmployees]);
 
   return (
     <Flex flexDirection="column" gap="m" padding="s">
