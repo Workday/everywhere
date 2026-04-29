@@ -17,14 +17,14 @@ vi.mock('../../../src/config.js', () => ({
   setPluginDir: vi.fn(),
 }));
 
-vi.mock('../../../../dist/build/index.js', () => ({
+vi.mock('../../../src/build/index.js', () => ({
   bundlePlugin: vi.fn(),
   packagePlugin: vi.fn(),
   slugify: vi.fn(),
 }));
 
 import { appConfig } from '../../../src/config.js';
-import * as plugins from '../../../../dist/build/index.js';
+import * as plugins from '../../../src/build/index.js';
 
 describe('everywhere publish', () => {
   describe('when accessing the description', () => {

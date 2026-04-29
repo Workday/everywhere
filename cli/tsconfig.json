@@ -14,7 +14,8 @@
     "noUnusedLocals": true,
     "noUnusedParameters": true,
     "sourceMap": true,
-    "inlineSources": true
+    "inlineSources": true,
+    "jsx": "react-jsx"
   },
   "include": ["src/**/*"]
 }

@@ -1,6 +1,6 @@
 import { createRoot } from 'react-dom/client';
 import { TeamsShell } from './TeamsShell.js';
-import type { PluginDefinition } from '../types.js';
+import type { PluginDefinition } from '../../../dist/index.js';
 import './viewer.css';
 
 // Resolved via Vite aliases to the developer's plugin files.

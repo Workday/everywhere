@@ -3,7 +3,7 @@ import { join } from 'node:path';
 import { mkdtemp, rm, readFile, mkdir, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import JSZip from 'jszip';
-import { packagePlugin } from '../../src/build/packager.js';
+import { packagePlugin } from '../../src/build/index.js';
 
 let tempDir: string;
 let pluginDir: string;
