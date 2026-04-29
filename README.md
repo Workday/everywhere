@@ -108,11 +108,13 @@ import { CanvasProvider } from '@workday/canvas-kit-react';
 import { schemas } from './everywhere/data/schema.js';
 
 // The referenceId comes from appManifest.json in your bundle.
-const TRIDENT_ENDPOINT = 'https://api.us.wcp.workday.com/graphql/v5';
+const TRIDENT_ENDPOINT = 'https://api.us.wcp.workday.com';
+const TRIDENT_PATH = '/graphql/v5';
 const BEARER_TOKEN = 'YOUR_BEARER_TOKEN'; // replace before running
 
 const resolver = new TridentResolver(
   TRIDENT_ENDPOINT,
+  TRIDENT_PATH,
   BEARER_TOKEN,
   'YourAppReferenceId', // replace before running, found in manifest.json in the app bundle
   schemas

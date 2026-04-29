@@ -39,11 +39,12 @@ export class TridentResolver implements DataResolver {
 
   constructor(
     endpoint: string,
+    path: string,
     bearerToken: string,
     referenceId: string,
     schemas: Record<string, ModelSchema>
   ) {
-    this.endpoint = endpoint;
+    this.endpoint = `${endpoint}${path}`;
     this.bearerToken = bearerToken;
     this.referenceId = referenceId;
     this.graphPrefix = referenceIdToGraphPrefix(referenceId);
