@@ -1,59 +1,39 @@
 import { describe, it, expect } from 'vitest';
 import { renderToStaticMarkup } from 'react-dom/server';
 import type { FC } from 'react';
-import { NavigationProvider, useNavigate, useParams } from '../../src/hooks/index.js';
+import { route } from '../../src/route.js';
+import { useNavigate } from '../../src/hooks/useNavigate.js';
+import { useParams } from '../../src/hooks/useParams.js';
 
-describe('useParams', () => {
-  describe('when no params are set', () => {
-    it('returns an empty object', () => {
-      let captured: Record<string, string> = { unexpected: 'value' };
-      const Test: FC = () => {
-        captured = useParams();
-        return null;
-      };
-      renderToStaticMarkup(
-        <NavigationProvider>
-          <Test />
-        </NavigationProvider>
-      );
-
-      expect(captured).toEqual({});
-    });
-  });
-
-  describe('when params are provided via initial state', () => {
-    it('returns the params', () => {
-      let captured: Record<string, string> = {};
-      const Test: FC = () => {
-        captured = useParams();
-        return null;
-      };
-      renderToStaticMarkup(
-        <NavigationProvider initialView="detail" initialParams={{ id: '42' }}>
-          <Test />
-        </NavigationProvider>
-      );
-
-      expect(captured).toEqual({ id: '42' });
-    });
-  });
-});
+const TestComponent: FC = () => null;
+const home = route('home', { component: TestComponent });
 
 describe('useNavigate', () => {
-  describe('when called', () => {
-    it('returns a function', () => {
+  describe('when called outside a NavigationContext.Provider', () => {
+    it('returns a function (the no-op default)', () => {
       let navigateFn: unknown = null;
       const Test: FC = () => {
         navigateFn = useNavigate();
         return null;
       };
-      renderToStaticMarkup(
-        <NavigationProvider>
-          <Test />
-        </NavigationProvider>
-      );
+      renderToStaticMarkup(<Test />);
 
       expect(typeof navigateFn).toBe('function');
+    });
+  });
+});
+
+describe('useParams', () => {
+  describe('when no params are set in context', () => {
+    it('returns an empty object', () => {
+      let captured: Record<string, string> = { unexpected: 'value' };
+      const Test: FC = () => {
+        captured = useParams(home);
+        return null;
+      };
+      renderToStaticMarkup(<Test />);
+
+      expect(captured).toEqual({});
     });
   });
 });
