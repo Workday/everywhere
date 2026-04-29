@@ -72,6 +72,96 @@ npx everywhere build
 This produces a `dist/<name>-<version>.zip` containing `package.json`, the bundled `plugin.js`, and
 when present `plugin.css` plus any hashed static assets under `assets/`.
 
+## Connecting to Workday Data
+
+Plugins can connect directly to Workday's Trident GraphQL API to read and write data from Extend
+business objects.
+
+### 1. Generate types from your bundle
+
+Point `everywhere bind` at your downloaded Extend bundle directory (the folder containing the
+`model/` subfolder):
+
+```sh
+npx @workday/everywhere bind /path/to/your-bundle
+```
+
+This reads all `.businessobject` and `.attachment` model files and generates into
+`everywhere/data/`:
+
+- **`models.ts`** — TypeScript interfaces for each model
+- **`schema.ts`** — Runtime schema used by `TridentResolver` to build GraphQL queries
+- **`<ModelName>.ts`** — `useModelName()`, `useModelName(id)`, and `useModelNameMutation()` hooks
+
+Generated types reflect the full model: scalar fields, `SINGLE_INSTANCE` / `MULTI_INSTANCE`
+references, derived fields (marked `readonly`), and `CurrencyValue` for `CURRENCY` fields.
+
+> **Note:** Run `bind` again whenever you update the bundle. The output directory is saved so you
+> can re-run with just `npx @workday/everywhere bind`.
+
+### 2. Add `TridentResolver` to your plugin
+
+`TridentResolver` translates hook calls into Trident GraphQL requests. Add it to your `plugin.tsx`:
+
+```tsx
+import { plugin, DataProvider, TridentResolver } from '@workday/everywhere';
+import { CanvasProvider } from '@workday/canvas-kit-react';
+import { schemas } from './everywhere/data/schema.js';
+
+// The referenceId comes from appManifest.json in your bundle.
+const TRIDENT_ENDPOINT = 'https://api.us.wcp.workday.com';
+const TRIDENT_PATH = '/graphql/v5';
+const BEARER_TOKEN = 'YOUR_BEARER_TOKEN'; // replace before running
+
+const resolver = new TridentResolver(
+  TRIDENT_ENDPOINT,
+  TRIDENT_PATH,
+  BEARER_TOKEN,
+  'YourAppReferenceId', // replace before running, found in manifest.json in the app bundle
+  schemas
+);
+
+function AppProvider({ children }) {
+  return (
+    <CanvasProvider>
+      <DataProvider resolver={resolver}>{children}</DataProvider>
+    </CanvasProvider>
+  );
+}
+
+export default plugin({
+  provider: AppProvider,
+  pages: [ ... ],
+});
+```
+
+> **Bearer token:** Tokens expire. When a request fails due to auth, the error message will tell you
+> to update `BEARER_TOKEN`.
+
+### 3. Use data hooks in your pages
+
+The generated hooks work like `useSWR` — they fetch on mount and return `{ data, error }`:
+
+```tsx
+import { useWorkEvents } from '../everywhere/data/WorkEvent.js';
+
+export default function EventListPage() {
+  const { data: events, error } = useWorkEvents();
+
+  if (error) return <Text color="cinnamon500">{error.message}</Text>;
+
+  return (
+    <>{Array.isArray(events) && events.map((event) => <div key={event.id}>{event.name}</div>)}</>
+  );
+}
+```
+
+`data` is `null` while loading and an array once resolved. Check `Array.isArray(data)` before
+rendering to distinguish loading from empty.
+
+> **React hooks rule:** Call all hooks (including `useMemo`) before any early `return`. Returning
+> early before a hook call causes a "Rendered fewer hooks than expected" crash.
+
 ## CLI Reference
 
 All commands accept `-D <path>` to specify the plugin directory (defaults to the current working
