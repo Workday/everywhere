@@ -9,9 +9,8 @@ interface TeamsShellProps {
 }
 
 export function TeamsShell({ plugin, name, version }: TeamsShellProps) {
-  const [activeRouteId, setActiveRouteId] = useState(
-    plugin.defaultRoute?.id ?? plugin.routes[0]?.id ?? ''
-  );
+  const [routeId, setRouteId] = useState(plugin.defaultRoute?.id ?? plugin.routes[0]?.id ?? '');
+  const [params, setParams] = useState<Record<string, string>>({});
 
   if (plugin.routes.length === 0) {
     return (
@@ -35,8 +34,11 @@ export function TeamsShell({ plugin, name, version }: TeamsShellProps) {
             <button
               key={r.id}
               className="viewer-tab"
-              data-active={activeRouteId === r.id}
-              onClick={() => setActiveRouteId(r.id)}
+              data-active={routeId === r.id}
+              onClick={() => {
+                setRouteId(r.id);
+                setParams({});
+              }}
             >
               {r.id}
             </button>
@@ -46,8 +48,12 @@ export function TeamsShell({ plugin, name, version }: TeamsShellProps) {
       <main className="viewer-content">
         <PluginRenderer
           plugin={plugin}
-          activeRouteId={activeRouteId}
-          onNavigate={setActiveRouteId}
+          routeId={routeId}
+          params={params}
+          onNavigate={(id, p) => {
+            setRouteId(id);
+            setParams(p);
+          }}
         />
       </main>
     </div>

@@ -4,6 +4,8 @@ export { plugin } from './plugin.js';
 
 export { StyleBoundary } from './components/index.js';
 export type { StyleBoundaryProps } from './components/index.js';
+export { PluginRenderer } from './components/index.js';
+export type { PluginRendererProps } from './components/index.js';
 
 export { useNavigate } from './hooks/index.js';
 export { useParams } from './hooks/index.js';
