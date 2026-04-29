@@ -2,12 +2,14 @@ import JSZip from 'jszip';
 import { join } from 'node:path';
 import { mkdir, readFile, writeFile } from 'node:fs/promises';
 
+import type { PluginBundle } from './bundler.js';
+
 // NOTE: PackageOptions and PackageResult are mirrored in src/build/index.ts
 // (the deprecated @workday/everywhere/build shim). Keep both in sync until
 // that shim is removed.
 export interface PackageOptions {
   pluginDir: string;
-  bundleCode: string;
+  bundle: PluginBundle;
   outputDir: string;
   slug: string;
   version: string;
@@ -19,13 +21,21 @@ export interface PackageResult {
 }
 
 export async function packagePlugin(options: PackageOptions): Promise<PackageResult> {
-  const { pluginDir, bundleCode, outputDir, slug, version } = options;
+  const { pluginDir, bundle, outputDir, slug, version } = options;
 
   const pkgJson = await readFile(join(pluginDir, 'package.json'), 'utf-8');
 
   const zip = new JSZip();
   zip.file('package.json', pkgJson);
-  zip.file('plugin.js', bundleCode);
+  zip.file('plugin.js', bundle.js);
+
+  if (bundle.css !== undefined) {
+    zip.file('plugin.css', bundle.css);
+  }
+
+  for (const { path: assetPath, contents } of bundle.assets) {
+    zip.file(assetPath.split('\\').join('/'), contents);
+  }
 
   const content = await zip.generateAsync({ type: 'uint8array' });
 

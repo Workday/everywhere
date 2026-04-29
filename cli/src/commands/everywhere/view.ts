@@ -1,4 +1,5 @@
 import { Flags } from '@oclif/core';
+import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import * as vite from 'vite';
@@ -52,6 +53,9 @@ export default class ViewCommand extends EverywhereBaseCommand {
         alias: {
           'virtual:plugin-entry': pluginEntry,
           'virtual:plugin-package': path.join(pluginDir, 'package.json'),
+          'virtual:plugin-styles': fs.existsSync(path.join(pluginDir, 'plugin.css'))
+            ? path.resolve(pluginDir, 'plugin.css')
+            : path.join(viewerDir, 'empty-plugin-styles.css'),
         },
         dedupe: ['react', 'react-dom'],
       },

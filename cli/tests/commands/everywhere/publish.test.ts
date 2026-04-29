@@ -209,7 +209,10 @@ describe('everywhere publish', () => {
         vi.mocked(appConfig).mockReturnValue(
           makeConfigProvider(loggedInConfig) as ConfigProvider<AppConfig>
         );
-        vi.mocked(plugins.bundlePlugin).mockResolvedValue('(()=>{})();');
+        vi.mocked(plugins.bundlePlugin).mockResolvedValue({
+          js: '(()=>{})();',
+          assets: [],
+        });
         vi.mocked(plugins.slugify).mockReturnValue('my-test-plugin');
         vi.mocked(plugins.packagePlugin).mockResolvedValue({
           filePath: path.join(pluginDir, 'dist', 'my-test-plugin.zip'),
@@ -239,7 +242,7 @@ describe('everywhere publish', () => {
 
         expect(plugins.packagePlugin).toHaveBeenCalledWith({
           pluginDir,
-          bundleCode: '(()=>{})();',
+          bundle: { js: '(()=>{})();', assets: [] },
           outputDir: path.join(pluginDir, 'dist'),
           slug: 'my-test-plugin',
           version: '2.3.4',
@@ -304,7 +307,10 @@ describe('everywhere publish', () => {
         vi.mocked(appConfig).mockReturnValue(
           makeConfigProvider(loggedInConfig) as ConfigProvider<AppConfig>
         );
-        vi.mocked(plugins.bundlePlugin).mockResolvedValue('(()=>{})();');
+        vi.mocked(plugins.bundlePlugin).mockResolvedValue({
+          js: '(()=>{})();',
+          assets: [],
+        });
         vi.mocked(plugins.slugify).mockReturnValue('my-test-plugin');
         vi.mocked(plugins.packagePlugin).mockResolvedValue({
           filePath: path.join(pluginDir, 'dist', 'my-test-plugin.zip'),

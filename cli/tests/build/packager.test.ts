@@ -5,6 +5,11 @@ import { tmpdir } from 'node:os';
 import JSZip from 'jszip';
 import { packagePlugin } from '../../src/build/index.js';
 
+const emptyBundle = (js: string) => ({
+  js,
+  assets: [] as Array<{ path: string; contents: Uint8Array }>,
+});
+
 let tempDir: string;
 let pluginDir: string;
 
@@ -27,7 +32,7 @@ describe('packagePlugin()', () => {
     const outputDir = join(tempDir, 'dist');
     const result = await packagePlugin({
       pluginDir,
-      bundleCode: 'export default {};',
+      bundle: emptyBundle('export default {};'),
       outputDir,
       slug: 'test-plugin',
       version: '1.0.0',
@@ -40,7 +45,7 @@ describe('packagePlugin()', () => {
     const outputDir = join(tempDir, 'dist');
     const result = await packagePlugin({
       pluginDir,
-      bundleCode: 'export default {};',
+      bundle: emptyBundle('export default {};'),
       outputDir,
       slug: 'test-plugin',
       version: '1.0.0',
@@ -56,7 +61,7 @@ describe('packagePlugin()', () => {
     const outputDir = join(tempDir, 'dist');
     const result = await packagePlugin({
       pluginDir,
-      bundleCode: 'export default {};',
+      bundle: emptyBundle('export default {};'),
       outputDir,
       slug: 'test-plugin',
       version: '1.0.0',
@@ -72,7 +77,7 @@ describe('packagePlugin()', () => {
     const outputDir = join(tempDir, 'dist');
     const result = await packagePlugin({
       pluginDir,
-      bundleCode: 'export default {};',
+      bundle: emptyBundle('export default {};'),
       outputDir,
       slug: 'test-plugin',
       version: '1.0.0',
@@ -85,12 +90,72 @@ describe('packagePlugin()', () => {
     const nestedDir = join(tempDir, 'nested', 'output');
     const result = await packagePlugin({
       pluginDir,
-      bundleCode: 'export default {};',
+      bundle: emptyBundle('export default {};'),
       outputDir: nestedDir,
       slug: 'test-plugin',
       version: '1.0.0',
     });
 
     expect(result.size).toBeGreaterThan(0);
+  });
+
+  describe('when the bundle includes css', () => {
+    it('writes plugin.css into the zip', async () => {
+      const outputDir = join(tempDir, 'dist');
+      const result = await packagePlugin({
+        pluginDir,
+        bundle: { ...emptyBundle('export default {};'), css: 'body { margin: 0; }' },
+        outputDir,
+        slug: 'test-plugin',
+        version: '1.0.0',
+      });
+
+      const zipData = await readFile(result.filePath);
+      const zip = await JSZip.loadAsync(zipData);
+      const file = zip.file('plugin.css');
+
+      expect(await file?.async('string')).toBe('body { margin: 0; }');
+    });
+  });
+
+  describe('when the bundle has no css', () => {
+    it('omits plugin.css from the zip', async () => {
+      const outputDir = join(tempDir, 'dist');
+      const result = await packagePlugin({
+        pluginDir,
+        bundle: emptyBundle('export default {};'),
+        outputDir,
+        slug: 'test-plugin',
+        version: '1.0.0',
+      });
+
+      const zipData = await readFile(result.filePath);
+      const zip = await JSZip.loadAsync(zipData);
+
+      expect(zip.file('plugin.css')).toBeNull();
+    });
+  });
+
+  describe('when the bundle includes binary assets', () => {
+    it('writes each asset at its declared path', async () => {
+      const outputDir = join(tempDir, 'dist');
+      const png = new Uint8Array([1, 2, 3, 4]);
+      const result = await packagePlugin({
+        pluginDir,
+        bundle: {
+          js: 'export default {};',
+          assets: [{ path: 'assets/logo-AB12.png', contents: png }],
+        },
+        outputDir,
+        slug: 'test-plugin',
+        version: '1.0.0',
+      });
+
+      const zipData = await readFile(result.filePath);
+      const zip = await JSZip.loadAsync(zipData);
+      const entry = zip.file('assets/logo-AB12.png');
+
+      expect(entry).not.toBeNull();
+    });
   });
 });
