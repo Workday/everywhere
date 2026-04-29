@@ -1,5 +1,5 @@
 import chalk from 'chalk';
-import EverywhereBaseCommand from '../base.js';
+import EverywhereBaseCommand from '../../../lib/command.js';
 import { appConfig } from '../../../config.js';
 
 export default class AuthLogoutCommand extends EverywhereBaseCommand {

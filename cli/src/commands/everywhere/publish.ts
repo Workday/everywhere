@@ -9,7 +9,7 @@ import {
   type RegistryUploadResult,
   uploadToRegistry,
 } from '../../registry/registry.js';
-import EverywhereBaseCommand from './base.js';
+import EverywhereBaseCommand from '../../lib/command.js';
 
 export default class PublishCommand extends EverywhereBaseCommand {
   static override description = 'Builds and publishes your plugin to the Workday plugin registry.';

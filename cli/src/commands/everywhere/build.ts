@@ -2,7 +2,7 @@ import * as fs from 'node:fs';
 import { join, relative } from 'node:path';
 
 import { bundlePlugin, packagePlugin, slugify } from '../../build/index.js';
-import EverywhereBaseCommand from './base.js';
+import EverywhereBaseCommand from '../../lib/command.js';
 
 export default class BuildCommand extends EverywhereBaseCommand {
   static description = 'Build a plugin bundle.';
