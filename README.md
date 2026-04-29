@@ -175,6 +175,7 @@ directory).
 | `everywhere install` | Build and install a plugin to a local directory    |
 | `everywhere info`    | Show plugin details from package.json              |
 | `everywhere bind`    | Generate TypeScript types from Extend models       |
+| `everywhere auth`    | Manage authentication with Workday servers         |
 
 ## API Boundaries
 
