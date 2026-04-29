@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import AuthTokenCommand from '../../../../src/commands/everywhere/auth/token.js';
-import EverywhereBaseCommand from '../../../../src/commands/everywhere/base.js';
+import EverywhereBaseCommand from '../../../../src/lib/command.js';
 
 describe('everywhere auth token', () => {
   it('exists as a command class', () => {

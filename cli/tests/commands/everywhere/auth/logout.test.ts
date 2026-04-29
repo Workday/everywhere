@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import LogoutCommand from '../../../../src/commands/everywhere/auth/logout.js';
-import EverywhereBaseCommand from '../../../../src/commands/everywhere/base.js';
+import EverywhereBaseCommand from '../../../../src/lib/command.js';
 
 describe('everywhere auth logout', () => {
   it('exists as a command class', () => {

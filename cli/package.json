@@ -19,6 +19,7 @@
     "everywhere"
   ],
   "oclif": {
+    "bin": "@workday/everywhere",
     "commands": "./dist/commands",
     "topicSeparator": " ",
     "topics": {

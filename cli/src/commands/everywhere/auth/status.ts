@@ -1,5 +1,5 @@
 import chalk from 'chalk';
-import EverywhereBaseCommand from '../base.js';
+import EverywhereBaseCommand from '../../../lib/command.js';
 import { appConfig } from '../../../config.js';
 import { DEFAULT_GATEWAY, DEFAULT_HTTPS } from '../../../auth/defaults.js';
 import { getTokenExpiryStatus, decodeToken } from '../../../auth/token.js';

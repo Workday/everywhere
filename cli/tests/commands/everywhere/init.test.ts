@@ -1,10 +1,16 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import InitCommand from '../../../src/commands/everywhere/init.js';
-import EverywhereBaseCommand from '../../../src/commands/everywhere/base.js';
+import EverywhereBaseCommand from '../../../src/lib/command.js';
 
 describe('everywhere init', () => {
   it('exists as a command class', () => {
     expect(InitCommand).toBeDefined();
+  });
+
+  describe('visibility', () => {
+    it('is not hidden from command listings', () => {
+      expect(InitCommand.hidden).not.toBe(true);
+    });
   });
 
   describe('description', () => {
