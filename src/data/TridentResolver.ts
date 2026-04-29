@@ -45,7 +45,7 @@ export class TridentResolver implements DataResolver {
     schemas: Record<string, ModelSchema>
   ) {
     this.endpoint = `${endpoint}${path}`;
-    this.bearerToken = bearerToken;
+    this.bearerToken = bearerToken; // look at config file for bearer token
     this.referenceId = referenceId;
     this.graphPrefix = referenceIdToGraphPrefix(referenceId);
     this.schemaMap = new Map(Object.entries(schemas));
