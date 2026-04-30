@@ -8,7 +8,10 @@ export interface NavigationState {
 
 export interface NavigationContextValue {
   state: NavigationState;
-  navigate: (route: RouteDefinition<any>, params?: Record<string, string>) => void;
+  navigate: (
+    route: RouteDefinition<Record<string, string>>,
+    params?: Record<string, string>
+  ) => void;
 }
 
 export const NavigationContext = createContext<NavigationContextValue>({

@@ -21,10 +21,11 @@ const MINIMAL_PKG = JSON.stringify({
   },
 });
 
-const MINIMAL_PLUGIN_TSX = `import { plugin } from '@workday/everywhere';
+const MINIMAL_PLUGIN_TSX = `import { plugin, route } from '@workday/everywhere';
 import huge from './huge.png';
 function HomePage() { return <img src={huge} alt="" />; }
-export default plugin({ pages: [{ id: 'home', title: 'Home', component: HomePage }] });`;
+const home = route('home', { component: HomePage });
+export default plugin({ defaultRoute: home, routes: [home] });`;
 
 describe('bundlePlugin()', () => {
   it('returns non-empty bundled JavaScript', async () => {
@@ -98,6 +99,10 @@ describe('bundlePlugin()', () => {
   });
 
   describe('when JavaScript imports a css file', () => {
+    // esbuild prints the formatted [ERROR] block from the reject-css-from-js plugin
+    // to stderr before throwing. That output leaks into the test runner. We accept
+    // the noise rather than silence esbuild's logger, which would also hide useful
+    // diagnostics when end users run `everywhere build`.
     it('fails with a message that points authors to plugin.css', async () => {
       await expect(bundlePlugin(JS_IMPORTS_CSS_FIXTURE)).rejects.toThrow(/plugin\.css/);
     });

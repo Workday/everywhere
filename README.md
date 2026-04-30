@@ -107,9 +107,10 @@ references, derived fields (marked `readonly`), and `CurrencyValue` for `CURRENC
 `TridentResolver` translates hook calls into Trident GraphQL requests. Add it to your `plugin.tsx`:
 
 ```tsx
-import { plugin, DataProvider, TridentResolver } from '@workday/everywhere';
+import { plugin, route, DataProvider, TridentResolver } from '@workday/everywhere';
 import { CanvasProvider } from '@workday/canvas-kit-react';
 import { schemas } from './everywhere/data/schema.js';
+import EventListPage from './pages/EventList.js';
 
 // The referenceId comes from appManifest.json in your bundle.
 const TRIDENT_ENDPOINT = 'https://api.us.wcp.workday.com';
@@ -132,9 +133,12 @@ function AppProvider({ children }) {
   );
 }
 
+const events = route('events', { component: EventListPage });
+
 export default plugin({
   provider: AppProvider,
-  pages: [ ... ],
+  defaultRoute: events,
+  routes: [events],
 });
 ```
 
