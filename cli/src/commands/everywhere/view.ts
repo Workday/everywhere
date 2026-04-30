@@ -5,6 +5,8 @@ import { fileURLToPath } from 'node:url';
 import * as vite from 'vite';
 
 import { dataServicePlugin } from '../../data/vite-data-plugin.js';
+import { appConfig } from '../../config.js';
+import { DEFAULT_GATEWAY, DEFAULT_HTTPS } from '../../auth/defaults.js';
 import EverywhereBaseCommand from './base.js';
 
 export default class ViewCommand extends EverywhereBaseCommand {
@@ -35,13 +37,36 @@ export default class ViewCommand extends EverywhereBaseCommand {
     const viewerDir = path.join(cliDistRoot, 'viewer');
     const sdkRoot = path.resolve(cliDistRoot, '..', '..');
 
+    const auth = appConfig().read().auth ?? {};
+    const scheme = (auth.https ?? DEFAULT_HTTPS) ? 'https' : 'http';
+    const gateway = auth.gateway ?? DEFAULT_GATEWAY;
+    const tridentEndpoint = `${scheme}://${gateway}/graphql/v5`;
+    const tridentToken = auth.token ?? '';
+
     this.log(`Plugin: ${pluginEntry}`);
     this.log(`Starting viewer on port ${flags.port}...`);
 
     const server = await vite.createServer({
       root: viewerDir,
       configFile: false,
-      plugins: [dataServicePlugin(pluginDir)],
+      plugins: [
+        dataServicePlugin(pluginDir),
+        {
+          name: 'we-trident-globals',
+          transformIndexHtml() {
+            return [
+              {
+                tag: 'script',
+                injectTo: 'head-prepend' as const,
+                children: [
+                  `globalThis.__WE_TRIDENT_ENDPOINT__ = ${JSON.stringify(tridentEndpoint)};`,
+                  `globalThis.__WE_TRIDENT_TOKEN__ = ${JSON.stringify(tridentToken)};`,
+                ].join('\n'),
+              },
+            ];
+          },
+        },
+      ],
       server: {
         port: flags.port,
         open: flags.open,

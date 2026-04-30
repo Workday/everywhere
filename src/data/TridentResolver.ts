@@ -49,8 +49,13 @@ export class TridentResolver implements DataResolver {
     schemas: Record<string, ModelSchema>,
     options?: TridentResolverOptions
   ) {
-    this.endpoint = options?.endpoint ?? '/_we/trident';
-    this.bearerToken = options?.bearerToken ?? null;
+    const g = globalThis as Record<string, unknown>;
+    const devEndpoint =
+      typeof g['__WE_TRIDENT_ENDPOINT__'] === 'string' ? g['__WE_TRIDENT_ENDPOINT__'] : null;
+    const devToken =
+      typeof g['__WE_TRIDENT_TOKEN__'] === 'string' ? g['__WE_TRIDENT_TOKEN__'] : null;
+    this.endpoint = options?.endpoint ?? devEndpoint ?? '/_we/trident';
+    this.bearerToken = options?.bearerToken ?? devToken;
     this.referenceId = referenceId;
     this.graphPrefix = referenceIdToGraphPrefix(referenceId);
     this.schemaMap = new Map(Object.entries(schemas));
