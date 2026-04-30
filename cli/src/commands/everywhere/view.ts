@@ -8,6 +8,7 @@ import { dataServicePlugin } from '../../data/vite-data-plugin.js';
 import { appConfig } from '../../config.js';
 import { DEFAULT_GATEWAY, DEFAULT_HTTPS } from '../../auth/defaults.js';
 import EverywhereBaseCommand from '../../lib/command.js';
+import { UserConfig } from 'vite';
 
 export default class ViewCommand extends EverywhereBaseCommand {
   static description = 'Preview a Workday Everywhere plugin in the browser.';
@@ -24,6 +25,12 @@ export default class ViewCommand extends EverywhereBaseCommand {
       default: true,
       allowNo: true,
     }),
+    'mock-data': Flags.boolean({
+      description:
+        'Whether or not to forward requests to the actual GraphQL server or use local, mock data',
+      default: true,
+      allowNo: true,
+    }),
   };
 
   async run(): Promise<void> {
@@ -37,42 +44,45 @@ export default class ViewCommand extends EverywhereBaseCommand {
     const viewerDir = path.join(cliDistRoot, 'viewer');
     const sdkRoot = path.resolve(cliDistRoot, '..', '..');
 
-    const auth = appConfig().read().auth ?? {};
-    const scheme = (auth.https ?? DEFAULT_HTTPS) ? 'https' : 'http';
-    const gateway = auth.gateway ?? DEFAULT_GATEWAY;
-    const tridentEndpoint = `${scheme}://${gateway}/graphql/v5`;
-    const tridentToken = auth.token ?? '';
+    const {
+      gateway = DEFAULT_GATEWAY,
+      https = DEFAULT_HTTPS,
+      token,
+    } = appConfig().read().auth ?? {};
+    const scheme = https ? 'https' : 'http';
+    const apiServer = `${scheme}://${gateway}`;
 
     this.log(`Plugin: ${pluginEntry}`);
     this.log(`Starting viewer on port ${flags.port}...`);
 
+    const plugins: UserConfig['plugins'] = flags['mock-data'] ? [dataServicePlugin(pluginDir)] : [];
+    const overrides: UserConfig['server'] = flags['mock-data']
+      ? {}
+      : {
+          proxy: {
+            '/api/data/graphql': {
+              target: apiServer,
+              changeOrigin: true,
+              configure: (proxy, _options) => {
+                proxy.on('proxyReq', (proxyReq, _req, _res) => {
+                  proxyReq.setHeader('Authorization', `Bearer ${token}`);
+                });
+              },
+            },
+          },
+        };
+
     const server = await vite.createServer({
       root: viewerDir,
       configFile: false,
-      plugins: [
-        dataServicePlugin(pluginDir),
-        {
-          name: 'we-trident-globals',
-          transformIndexHtml() {
-            return [
-              {
-                tag: 'script',
-                injectTo: 'head-prepend' as const,
-                children: [
-                  `globalThis.__WE_TRIDENT_ENDPOINT__ = ${JSON.stringify(tridentEndpoint)};`,
-                  `globalThis.__WE_TRIDENT_TOKEN__ = ${JSON.stringify(tridentToken)};`,
-                ].join('\n'),
-              },
-            ];
-          },
-        },
-      ],
+      plugins,
       server: {
         port: flags.port,
         open: flags.open,
         fs: {
           allow: [pluginDir, sdkRoot],
         },
+        ...overrides,
       },
       resolve: {
         alias: {

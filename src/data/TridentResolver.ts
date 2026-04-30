@@ -39,23 +39,12 @@ export interface TridentResolverOptions {
 
 export class TridentResolver implements DataResolver {
   private readonly endpoint: string;
-  private readonly bearerToken: string | null;
   private readonly referenceId: string;
   private readonly graphPrefix: string;
   private readonly schemaMap: Map<string, ModelSchema>;
 
-  constructor(
-    referenceId: string,
-    schemas: Record<string, ModelSchema>,
-    options?: TridentResolverOptions
-  ) {
-    const g = globalThis as Record<string, unknown>;
-    const devEndpoint =
-      typeof g['__WE_TRIDENT_ENDPOINT__'] === 'string' ? g['__WE_TRIDENT_ENDPOINT__'] : null;
-    const devToken =
-      typeof g['__WE_TRIDENT_TOKEN__'] === 'string' ? g['__WE_TRIDENT_TOKEN__'] : null;
-    this.endpoint = options?.endpoint ?? devEndpoint ?? '/_we/trident';
-    this.bearerToken = options?.bearerToken ?? devToken;
+  constructor(referenceId: string, schemas: Record<string, ModelSchema>) {
+    this.endpoint = `${window.location.origin}/api/data/graphql`;
     this.referenceId = referenceId;
     this.graphPrefix = referenceIdToGraphPrefix(referenceId);
     this.schemaMap = new Map(Object.entries(schemas));
@@ -99,10 +88,6 @@ export class TridentResolver implements DataResolver {
       'wd-graphql-developer-info': 'false',
       'x-api-gateway-originator': 'ROBOT',
     };
-
-    if (this.bearerToken) {
-      headers['authorization'] = `Bearer ${this.bearerToken}`;
-    }
 
     const response = await fetch(this.endpoint, {
       method: 'POST',
