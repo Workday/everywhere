@@ -1,6 +1,12 @@
+import type { RouteDefinition } from '../route.js';
 import { useNavigationContext } from './NavigationContext.js';
 
-export function useNavigate(): (view: string, params?: Record<string, string>) => void {
+type NavigateFn = <P extends Record<string, string>>(
+  route: RouteDefinition<P>,
+  ...args: keyof P extends never ? [] : [params: P]
+) => void;
+
+export function useNavigate(): NavigateFn {
   const { navigate } = useNavigationContext();
-  return navigate;
+  return navigate as NavigateFn;
 }

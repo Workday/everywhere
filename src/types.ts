@@ -1,17 +1,16 @@
 import type { ComponentType, ReactNode } from 'react';
+import type { RouteDefinition } from './route.js';
 
-export interface PageConfig {
-  id: string;
-  title: string;
-  component: ComponentType;
-}
+export type { RouteConfig, RouteDefinition } from './route.js';
 
 export interface PluginConfig {
-  pages?: PageConfig[];
+  routes?: RouteDefinition<any>[];
+  defaultRoute?: RouteDefinition<Record<string, never>>;
   provider?: ComponentType<{ children: ReactNode }>;
 }
 
 export interface PluginDefinition {
-  pages: PageConfig[];
+  routes: RouteDefinition<any>[];
+  defaultRoute: RouteDefinition<Record<string, never>> | undefined;
   provider?: ComponentType<{ children: ReactNode }>;
 }

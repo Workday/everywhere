@@ -29,10 +29,10 @@ npx @workday/everywhere init
 The `init` command adds `@workday/everywhere`, `react`, and `react-dom` to your `package.json`,
 creates a starter `plugin.tsx`, and runs `npm install` automatically.
 
-The generated `plugin.tsx` defines your plugin's pages:
+The generated `plugin.tsx` defines your plugin's routes:
 
 ```tsx
-import { plugin } from '@workday/everywhere';
+import { plugin, route } from '@workday/everywhere';
 
 function HomePage() {
   return (
@@ -43,13 +43,16 @@ function HomePage() {
   );
 }
 
+const home = route('home', { component: HomePage });
+
 export default plugin({
-  pages: [{ id: 'home', title: 'Home', component: HomePage }],
+  defaultRoute: home,
+  routes: [home],
 });
 ```
 
-Each page has an `id`, `title`, and React `component`. Add more pages to the `pages` array to create
-multi-page plugins.
+Each route has an `id` and a React `component`. The `defaultRoute` is what loads when the plugin
+first opens. Add more routes and use `useNavigate()` to navigate between them.
 
 ### 2. Preview
 
