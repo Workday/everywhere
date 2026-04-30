@@ -1,6 +1,8 @@
 import * as path from 'node:path';
 import type { IncomingMessage, ServerResponse } from 'node:http';
 import { handleGraphQL } from './graphql-handler.js';
+import { proxyTrident } from './trident-proxy.js';
+import { appConfig } from '../config.js';
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type VitePlugin = any;
@@ -40,6 +42,16 @@ export function dataServicePlugin(pluginDir: string): VitePlugin {
           res.end(JSON.stringify(result));
         }
       );
+
+      server.middlewares.use('/_we/trident', async (req: IncomingMessage, res: ServerResponse) => {
+        if (req.method !== 'POST') {
+          res.writeHead(405, { 'Content-Type': 'application/json' });
+          res.end(JSON.stringify({ error: 'Method not allowed' }));
+          return;
+        }
+
+        await proxyTrident(req, res, appConfig().read());
+      });
     },
   };
 }

@@ -4,10 +4,6 @@ import type { ModelSchema } from '../../src/data/types.js';
 
 const SCHEMA: ModelSchema = { fields: [], collection: 'things', securityDomains: [] };
 
-function makeResolver(endpoint: string, path: string) {
-  return new TridentResolver(endpoint, path, 'token', 'app_ns1', { Thing: SCHEMA });
-}
-
 function mockFetch(data: unknown[] = []) {
   return vi.fn().mockResolvedValue({
     ok: true,
@@ -17,25 +13,60 @@ function mockFetch(data: unknown[] = []) {
 }
 
 describe('TridentResolver', () => {
-  describe('when a base endpoint and path are provided', () => {
-    it('sends requests to the concatenated URL', async () => {
+  describe('when constructed with only referenceId and schemas', () => {
+    it('sends requests to the dev proxy endpoint by default', async () => {
       globalThis.fetch = mockFetch();
 
-      await makeResolver('https://api.us.wcp.workday.com', '/graphql/v5').find('Thing');
+      await new TridentResolver('app_ns1', { Thing: SCHEMA }).find('Thing');
+
+      expect((globalThis.fetch as ReturnType<typeof vi.fn>).mock.calls[0][0]).toBe('/_we/trident');
+    });
+
+    it('does not send an Authorization header', async () => {
+      globalThis.fetch = mockFetch();
+
+      await new TridentResolver('app_ns1', { Thing: SCHEMA }).find('Thing');
+
+      const headers = (globalThis.fetch as ReturnType<typeof vi.fn>).mock.calls[0][1]
+        .headers as Record<string, string>;
+      expect(headers['authorization']).toBeUndefined();
+    });
+  });
+
+  describe('when a custom endpoint is provided via options', () => {
+    it('sends requests to that endpoint', async () => {
+      globalThis.fetch = mockFetch();
+
+      await new TridentResolver(
+        'app_ns1',
+        { Thing: SCHEMA },
+        {
+          endpoint: 'https://api.us.wcp.workday.com/graphql/v5',
+        }
+      ).find('Thing');
 
       expect((globalThis.fetch as ReturnType<typeof vi.fn>).mock.calls[0][0]).toBe(
         'https://api.us.wcp.workday.com/graphql/v5'
       );
     });
+  });
 
-    it('uses a relative path as the full fetch URL when endpoint is empty', async () => {
+  describe('when a bearerToken is provided via options', () => {
+    it('sends the token in the Authorization header', async () => {
       globalThis.fetch = mockFetch();
 
-      await makeResolver('', '/api/data/graphql').find('Thing');
+      await new TridentResolver(
+        'app_ns1',
+        { Thing: SCHEMA },
+        {
+          endpoint: 'https://api.us.wcp.workday.com/graphql/v5',
+          bearerToken: 'my-token',
+        }
+      ).find('Thing');
 
-      expect((globalThis.fetch as ReturnType<typeof vi.fn>).mock.calls[0][0]).toBe(
-        '/api/data/graphql'
-      );
+      const headers = (globalThis.fetch as ReturnType<typeof vi.fn>).mock.calls[0][1]
+        .headers as Record<string, string>;
+      expect(headers['authorization']).toBe('Bearer my-token');
     });
   });
 });

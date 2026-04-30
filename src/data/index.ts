@@ -2,6 +2,7 @@ export type { FieldType, FieldSchema, ModelSchema, CurrencyValue } from './types
 export type { DataResolver } from './resolver.js';
 export { HttpResolver } from './HttpResolver.js';
 export { TridentResolver } from './TridentResolver.js';
+export type { TridentResolverOptions } from './TridentResolver.js';
 export { DataProvider } from './DataContext.js';
 export type { DataProviderProps } from './DataContext.js';
 export { useQuery } from './useQuery.js';

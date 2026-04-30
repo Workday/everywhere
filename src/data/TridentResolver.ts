@@ -30,22 +30,27 @@ function toGQLLiteral(value: unknown): string {
 
 const SCALAR_TYPES = new Set(['TEXT', 'BOOLEAN', 'DATE', 'CURRENCY', 'DECIMAL', 'NUMERIC']);
 
+export interface TridentResolverOptions {
+  /** Full GraphQL endpoint URL. Defaults to `/_we/trident` (dev proxy injected by `everywhere view`). */
+  endpoint?: string;
+  /** Bearer token for direct calls. Omit when using the dev proxy — the proxy injects auth from the stored login. */
+  bearerToken?: string;
+}
+
 export class TridentResolver implements DataResolver {
   private readonly endpoint: string;
-  private readonly bearerToken: string;
+  private readonly bearerToken: string | null;
   private readonly referenceId: string;
   private readonly graphPrefix: string;
   private readonly schemaMap: Map<string, ModelSchema>;
 
   constructor(
-    endpoint: string,
-    path: string,
-    bearerToken: string,
     referenceId: string,
-    schemas: Record<string, ModelSchema>
+    schemas: Record<string, ModelSchema>,
+    options?: TridentResolverOptions
   ) {
-    this.endpoint = `${endpoint}${path}`;
-    this.bearerToken = bearerToken; // look at config file for bearer token
+    this.endpoint = options?.endpoint ?? '/_we/trident';
+    this.bearerToken = options?.bearerToken ?? null;
     this.referenceId = referenceId;
     this.graphPrefix = referenceIdToGraphPrefix(referenceId);
     this.schemaMap = new Map(Object.entries(schemas));
@@ -66,7 +71,6 @@ export class TridentResolver implements DataResolver {
         __type: { fields: { name: string }[] } | null;
       }>('{ __type(name: "CurrencyValue") { fields { name } } }').then((result) => {
         const names = result.__type?.fields?.map((f) => f.name) ?? [];
-        console.log('[TridentResolver] CurrencyValue fields:', names);
         return names.length > 0 ? names.join(' ') : 'value currency';
       });
     }
@@ -84,21 +88,26 @@ export class TridentResolver implements DataResolver {
   }
 
   private async execute<T>(query: string, variables?: Record<string, unknown>): Promise<T> {
+    const headers: Record<string, string> = {
+      accept: 'application/json',
+      'content-type': 'application/json',
+      'wd-graphql-developer-info': 'false',
+      'x-api-gateway-originator': 'ROBOT',
+    };
+
+    if (this.bearerToken) {
+      headers['authorization'] = `Bearer ${this.bearerToken}`;
+    }
+
     const response = await fetch(this.endpoint, {
       method: 'POST',
-      headers: {
-        accept: 'application/json',
-        authorization: `Bearer ${this.bearerToken}`,
-        'content-type': 'application/json',
-        'wd-graphql-developer-info': 'false',
-        'x-api-gateway-originator': 'ROBOT',
-      },
+      headers,
       body: JSON.stringify(variables ? { query, variables } : { query }),
     });
 
     if (response.status === 401 || response.status === 403) {
       throw new Error(
-        `Trident auth failed (${response.status}): bearer token is expired or invalid. Update BEARER_TOKEN in plugin.tsx.`
+        `Trident auth failed (${response.status}): token is expired or invalid. Run: npx @workday/everywhere auth login`
       );
     }
 
@@ -117,7 +126,7 @@ export class TridentResolver implements DataResolver {
       );
       if (isAuthError) {
         throw new Error(
-          'Trident auth error: bearer token is expired or invalid. Update BEARER_TOKEN in plugin.tsx.'
+          'Trident auth error: token is expired or invalid. Run: npx @workday/everywhere auth login'
         );
       }
       throw new Error(body.errors.map((e) => e.message).join('; '));
