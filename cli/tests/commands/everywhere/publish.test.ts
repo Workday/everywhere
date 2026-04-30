@@ -5,7 +5,7 @@ import * as fs from 'node:fs';
 import * as os from 'node:os';
 import * as path from 'node:path';
 import PublishCommand from '../../../src/commands/everywhere/publish.js';
-import EverywhereBaseCommand from '../../../src/commands/everywhere/base.js';
+import EverywhereBaseCommand from '../../../src/lib/command.js';
 
 vi.mock('node:fs', async (importOriginal) => {
   const actual = await importOriginal<typeof import('node:fs')>();

@@ -1,6 +1,7 @@
-import { plugin } from '@workday/everywhere';
+import { plugin, route } from '@workday/everywhere';
 import logo from './dot.png';
 function HomePage() {
   return <img src={logo} alt="" />;
 }
-export default plugin({ pages: [{ id: 'home', title: 'Home', component: HomePage }] });
+const home = route('home', { component: HomePage });
+export default plugin({ defaultRoute: home, routes: [home] });

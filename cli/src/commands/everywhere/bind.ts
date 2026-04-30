@@ -2,7 +2,7 @@ import { Args, Flags } from '@oclif/core';
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 
-import EverywhereBaseCommand from './base.js';
+import EverywhereBaseCommand from '../../lib/command.js';
 import {
   loadBusinessObjects,
   loadBusinessObjectsFromZip,

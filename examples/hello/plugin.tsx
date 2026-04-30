@@ -1,4 +1,4 @@
-import { plugin } from '@workday/everywhere';
+import { plugin, route } from '@workday/everywhere';
 
 function HomePage() {
   return (
@@ -9,6 +9,9 @@ function HomePage() {
   );
 }
 
+const home = route('home', { component: HomePage });
+
 export default plugin({
-  pages: [{ id: 'home', title: 'Home', component: HomePage }],
+  defaultRoute: home,
+  routes: [home],
 });

@@ -1,6 +1,7 @@
 import { useMemo } from 'react';
 import { useNavigate } from '@workday/everywhere';
 import { Card, Flex, Grid, Heading, SecondaryButton, Text } from '@workday/canvas-kit-react';
+import { employees } from '../routes.js';
 import { useEmployees } from '../everywhere/data/Employee.js';
 import { useDepartments } from '../everywhere/data/Department.js';
 
@@ -26,20 +27,20 @@ function StatCard({ label, value, subtitle }: { label: string; value: string; su
 
 export default function HomePage() {
   const navigate = useNavigate();
-  const { data: employees } = useEmployees();
+  const { data: employeeData } = useEmployees();
   const { data: departments } = useDepartments();
 
-  const totalEmployees = employees?.length ?? 0;
+  const totalEmployees = Array.isArray(employeeData) ? employeeData.length : 0;
 
   const deptStats = useMemo(() => {
     if (!departments || !Array.isArray(departments)) return [];
     return departments.map((dept) => {
-      const count = Array.isArray(employees)
-        ? employees.filter((e) => e.department === dept.name).length
+      const count = Array.isArray(employeeData)
+        ? employeeData.filter((e) => e.department === dept.name).length
         : Number(dept.headcount);
       return { ...dept, count };
     });
-  }, [employees, departments, totalEmployees]);
+  }, [employeeData, departments, totalEmployees]);
 
   return (
     <Flex flexDirection="column" gap="m" padding="s">
@@ -79,7 +80,7 @@ export default function HomePage() {
             Quick Actions
           </Heading>
           <Flex gap="s">
-            <SecondaryButton onClick={() => navigate('employees')}>
+            <SecondaryButton onClick={() => navigate(employees)}>
               View All Employees
             </SecondaryButton>
           </Flex>

@@ -1,47 +1,23 @@
-import { createContext, type ReactNode, useContext, useState } from 'react';
+import { createContext, useContext } from 'react';
+import type { RouteDefinition } from '../route.js';
 
 export interface NavigationState {
-  view: string;
+  routeId: string;
   params: Record<string, string>;
 }
 
 export interface NavigationContextValue {
   state: NavigationState;
-  navigate: (view: string, params?: Record<string, string>) => void;
+  navigate: (
+    route: RouteDefinition<Record<string, string>>,
+    params?: Record<string, string>
+  ) => void;
 }
 
-const NavigationContext = createContext<NavigationContextValue>({
-  state: { view: '', params: {} },
+export const NavigationContext = createContext<NavigationContextValue>({
+  state: { routeId: '', params: {} },
   navigate: () => {},
 });
-
-export interface NavigationProviderProps {
-  initialView?: string;
-  initialParams?: Record<string, string>;
-  onNavigate?: (view: string, params?: Record<string, string>) => void;
-  children: ReactNode;
-}
-
-export function NavigationProvider({
-  initialView = '',
-  initialParams = {},
-  onNavigate,
-  children,
-}: NavigationProviderProps) {
-  const [state, setState] = useState<NavigationState>({
-    view: initialView,
-    params: initialParams,
-  });
-
-  const navigate = (view: string, params?: Record<string, string>) => {
-    setState({ view, params: params ?? {} });
-    onNavigate?.(view, params);
-  };
-
-  return (
-    <NavigationContext.Provider value={{ state, navigate }}>{children}</NavigationContext.Provider>
-  );
-}
 
 export function useNavigationContext(): NavigationContextValue {
   return useContext(NavigationContext);

@@ -21,13 +21,20 @@ describe('renderStub', () => {
   });
 
   describe('regardless of name', () => {
-    it('imports plugin from @workday/everywhere', () => {
-      expect(renderStub('anything')).toContain("import { plugin } from '@workday/everywhere';");
+    it('imports plugin and route from @workday/everywhere', () => {
+      expect(renderStub('anything')).toContain(
+        "import { plugin, route } from '@workday/everywhere';"
+      );
     });
 
-    it('calls plugin() with a pages array containing a home page', () => {
+    it('defines a home route using route()', () => {
       const result = renderStub('anything');
-      expect(result).toContain("pages: [{ id: 'home', title: 'Home', component: HomePage }]");
+      expect(result).toContain("const home = route('home', { component: HomePage });");
+    });
+
+    it('calls plugin() with routes and defaultRoute', () => {
+      const result = renderStub('anything');
+      expect(result).toContain('defaultRoute: home,');
     });
 
     it('ends with a single newline', () => {

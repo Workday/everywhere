@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import AuthStatusCommand from '../../../../src/commands/everywhere/auth/status.js';
-import EverywhereBaseCommand from '../../../../src/commands/everywhere/base.js';
+import EverywhereBaseCommand from '../../../../src/lib/command.js';
 
 describe('everywhere auth status', () => {
   it('exists as a command class', () => {

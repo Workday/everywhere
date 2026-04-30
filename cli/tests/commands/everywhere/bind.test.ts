@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import BindCommand from '../../../src/commands/everywhere/bind.js';
-import EverywhereBaseCommand from '../../../src/commands/everywhere/base.js';
+import EverywhereBaseCommand from '../../../src/lib/command.js';
 
 describe('everywhere bind', () => {
   it('exists as a command class', () => {

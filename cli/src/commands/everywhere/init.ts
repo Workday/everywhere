@@ -5,7 +5,7 @@ import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-import EverywhereBaseCommand from './base.js';
+import EverywhereBaseCommand from '../../lib/command.js';
 import { renderStub } from '../../init-template.js';
 
 const THIS_DIR = path.dirname(fileURLToPath(import.meta.url));

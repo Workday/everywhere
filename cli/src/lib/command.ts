@@ -2,13 +2,11 @@ import { Command, Flags } from '@oclif/core';
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 
-import { setPluginDir } from '../../config.js';
+import { setPluginDir } from '../config.js';
 
 const PLUGIN_EXTENSIONS = ['.tsx', '.ts'];
 
 export default abstract class EverywhereBaseCommand extends Command {
-  static hidden = true;
-
   static baseFlags = {
     'plugin-dir': Flags.directory({
       char: 'D',

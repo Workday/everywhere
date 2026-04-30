@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import BuildCommand from '../../../src/commands/everywhere/build';
-import EverywhereBaseCommand from '../../../src/commands/everywhere/base';
+import EverywhereBaseCommand from '../../../src/lib/command.js';
 
 describe('everywhere build', () => {
   it('exists as a command class', () => {

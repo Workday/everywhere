@@ -5,7 +5,7 @@ import { Flags } from '@oclif/core';
 
 import { bundlePlugin, packagePlugin, slugify } from '../../build/index.js';
 import { pluginConfig } from '../../config.js';
-import EverywhereBaseCommand from './base.js';
+import EverywhereBaseCommand from '../../lib/command.js';
 
 export default class InstallCommand extends EverywhereBaseCommand {
   static description = 'Build and install a plugin to a local directory.';

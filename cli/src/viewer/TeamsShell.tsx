@@ -9,16 +9,17 @@ interface TeamsShellProps {
 }
 
 export function TeamsShell({ plugin, name, version }: TeamsShellProps) {
-  const [activePageId, setActivePageId] = useState(plugin.pages[0]?.id ?? '');
+  const [routeId, setRouteId] = useState(plugin.defaultRoute?.id ?? plugin.routes[0]?.id ?? '');
+  const [params, setParams] = useState<Record<string, string>>({});
 
-  if (plugin.pages.length === 0) {
+  if (plugin.routes.length === 0) {
     return (
       <div className="viewer-shell">
         <header className="viewer-header">
           <span className="viewer-header-name">{name}</span>
           <span className="viewer-header-version">v{version}</span>
         </header>
-        <div className="viewer-empty">No pages defined in this plugin.</div>
+        <div className="viewer-empty">No routes defined in this plugin.</div>
       </div>
     );
   }
@@ -29,20 +30,31 @@ export function TeamsShell({ plugin, name, version }: TeamsShellProps) {
         <span className="viewer-header-name">{name}</span>
         <span className="viewer-header-version">v{version}</span>
         <nav className="viewer-tabs">
-          {plugin.pages.map((page) => (
+          {plugin.routes.map((r) => (
             <button
-              key={page.id}
+              key={r.id}
               className="viewer-tab"
-              data-active={activePageId === page.id}
-              onClick={() => setActivePageId(page.id)}
+              data-active={routeId === r.id}
+              onClick={() => {
+                setRouteId(r.id);
+                setParams({});
+              }}
             >
-              {page.title}
+              {r.id}
             </button>
           ))}
         </nav>
       </header>
       <main className="viewer-content">
-        <PluginRenderer plugin={plugin} activePageId={activePageId} onNavigate={setActivePageId} />
+        <PluginRenderer
+          plugin={plugin}
+          routeId={routeId}
+          params={params}
+          onNavigate={(id, p) => {
+            setRouteId(id);
+            setParams(p);
+          }}
+        />
       </main>
     </div>
   );

@@ -7,7 +7,7 @@ import * as vite from 'vite';
 import { dataServicePlugin } from '../../data/vite-data-plugin.js';
 import { appConfig } from '../../config.js';
 import { DEFAULT_GATEWAY, DEFAULT_HTTPS } from '../../auth/defaults.js';
-import EverywhereBaseCommand from './base.js';
+import EverywhereBaseCommand from '../../lib/command.js';
 
 export default class ViewCommand extends EverywhereBaseCommand {
   static description = 'Preview a Workday Everywhere plugin in the browser.';
