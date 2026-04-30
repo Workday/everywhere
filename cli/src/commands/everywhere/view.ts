@@ -5,6 +5,7 @@ import { fileURLToPath } from 'node:url';
 import * as vite from 'vite';
 
 import { dataServicePlugin } from '../../data/vite-data-plugin.js';
+import { resolveProxyAuth } from '../../data/proxy-auth.js';
 import { appConfig } from '../../config.js';
 import { DEFAULT_GATEWAY, DEFAULT_HTTPS } from '../../auth/defaults.js';
 import EverywhereBaseCommand from '../../lib/command.js';
@@ -64,8 +65,11 @@ export default class ViewCommand extends EverywhereBaseCommand {
               target: apiServer,
               changeOrigin: true,
               configure: (proxy, _options) => {
-                proxy.on('proxyReq', (proxyReq, _req, _res) => {
-                  proxyReq.setHeader('Authorization', `Bearer ${token}`);
+                proxy.on('proxyReq', (proxyReq, req, _res) => {
+                  const tokenToInject = resolveProxyAuth(req.headers, token);
+                  if (tokenToInject) {
+                    proxyReq.setHeader('Authorization', `Bearer ${tokenToInject}`);
+                  }
                 });
               },
             },

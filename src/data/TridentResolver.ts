@@ -30,13 +30,6 @@ function toGQLLiteral(value: unknown): string {
 
 const SCALAR_TYPES = new Set(['TEXT', 'BOOLEAN', 'DATE', 'CURRENCY', 'DECIMAL', 'NUMERIC']);
 
-export interface TridentResolverOptions {
-  /** Full GraphQL endpoint URL. Defaults to `/_we/trident` (dev proxy injected by `everywhere view`). */
-  endpoint?: string;
-  /** Bearer token for direct calls. Omit when using the dev proxy — the proxy injects auth from the stored login. */
-  bearerToken?: string;
-}
-
 export class TridentResolver implements DataResolver {
   private readonly endpoint: string;
   private readonly referenceId: string;
