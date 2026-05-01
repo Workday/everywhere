@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { TridentResolver } from '../../src/data/TridentResolver.js';
 import type { ModelSchema } from '../../src/data/types.js';
 
@@ -13,9 +13,11 @@ function mockFetch(data: unknown[] = []) {
 }
 
 beforeEach(() => {
-  (globalThis as Record<string, unknown>)['window'] = {
-    location: { origin: 'https://tenant.workday.com' },
-  };
+  vi.stubGlobal('window', { location: { origin: 'https://tenant.workday.com' } });
+});
+
+afterEach(() => {
+  vi.unstubAllGlobals();
 });
 
 describe('TridentResolver', () => {

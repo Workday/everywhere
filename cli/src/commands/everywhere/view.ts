@@ -28,8 +28,8 @@ export default class ViewCommand extends EverywhereBaseCommand {
     }),
     'mock-data': Flags.boolean({
       description:
-        'Whether or not to forward requests to the actual GraphQL server or use local, mock data',
-      default: true,
+        'Use local mock data instead of forwarding requests to the real GraphQL API. Defaults to false — real API is used when auth login credentials are present.',
+      default: false,
       allowNo: true,
     }),
   };
