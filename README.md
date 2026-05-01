@@ -148,19 +148,13 @@ export default plugin({
 });
 ```
 
-The resolver defaults to `/_we/trident`, which `everywhere view` proxies to your configured gateway
-with your stored token. For production deployments or direct calls, pass an explicit endpoint and
-token via `options`:
+The resolver sends requests to `/api/data/graphql` on the current origin. During local development,
+`everywhere view --no-mock-data` proxies that path to your configured gateway using the stored
+token. In production the Workday shell handles the same path — no token management needed in your
+plugin code.
 
-```tsx
-const resolver = new TridentResolver('your-app-referenceId', schemas, {
-  endpoint: 'https://api.us.wcp.workday.com/graphql/v5',
-  bearerToken: process.env.TRIDENT_TOKEN,
-});
-```
-
-> **Token expiry:** If a request fails due to an expired token, re-run `everywhere auth login`. The
-> error message will prompt you.
+> **Token expiry:** If a request fails due to an expired token during local development, re-run
+> `everywhere auth login`. The error message will prompt you.
 
 ### 4. Use data hooks in your pages
 
