@@ -201,8 +201,3 @@ export class GraphQLResolver implements DataResolver {
     await this.execute(query, { id });
   }
 }
-
-/** @deprecated Use {@link GraphQLResolver} instead. */
-export const TridentResolver = GraphQLResolver;
-/** @deprecated Use {@link GraphQLResolver} instead. */
-export type TridentResolver = GraphQLResolver;

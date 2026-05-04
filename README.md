@@ -77,8 +77,8 @@ when present `plugin.css` plus any hashed static assets under `assets/`.
 
 ## Connecting to Workday Data
 
-Plugins can connect directly to Workday's Trident GraphQL API to read and write data from Extend
-business objects.
+Plugins can connect directly to Workday's GraphQL API to read and write data from Extend business
+objects.
 
 ### 1. Log in
 
@@ -112,7 +112,7 @@ This reads all `.businessobject` and `.attachment` model files and generates int
 `everywhere/data/`:
 
 - **`models.ts`** — TypeScript interfaces for each model
-- **`schema.ts`** — Runtime schema used by `TridentResolver` to build GraphQL queries
+- **`schema.ts`** — Runtime schema used by `GraphQLResolver` to build GraphQL queries
 - **`<ModelName>.ts`** — `useModelName()`, `useModelName(id)`, and `useModelNameMutation()` hooks
 
 Generated types reflect the full model: scalar fields, `SINGLE_INSTANCE` / `MULTI_INSTANCE`
@@ -121,19 +121,19 @@ references, derived fields (marked `readonly`), and `CurrencyValue` for `CURRENC
 > **Note:** Run `bind` again whenever you update the bundle. The output directory is saved so you
 > can re-run with just `npx @workday/everywhere bind`.
 
-### 3. Add `TridentResolver` to your plugin
+### 3. Add `GraphQLResolver` to your plugin
 
-`TridentResolver` translates hook calls into Trident GraphQL requests. During local development it
-routes requests through the `everywhere view` dev server, which injects your stored credentials
+`GraphQLResolver` translates hook calls into GraphQL requests. During local development it routes
+requests through the `everywhere view` dev server, which injects your stored credentials
 automatically — no tokens in source code.
 
 ```tsx
-import { plugin, route, DataProvider, TridentResolver } from '@workday/everywhere';
+import { plugin, route, DataProvider, GraphQLResolver } from '@workday/everywhere';
 import { schemas } from './everywhere/data/schema.js';
 import EventListPage from './pages/EventList.js';
 
 // referenceId comes from appManifest.json in your Extend bundle.
-const resolver = new TridentResolver('your-app-referenceId', schemas);
+const resolver = new GraphQLResolver('your-app-referenceId', schemas);
 
 function AppProvider({ children }) {
   return <DataProvider resolver={resolver}>{children}</DataProvider>;
