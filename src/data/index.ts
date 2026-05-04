@@ -1,7 +1,7 @@
 export type { FieldType, FieldSchema, ModelSchema, CurrencyValue } from './types.js';
 export type { DataResolver } from './resolver.js';
 export { HttpResolver } from './HttpResolver.js';
-export { TridentResolver } from './TridentResolver.js';
+export { GraphQLResolver } from './GraphQLResolver.js';
 export { DataProvider } from './DataContext.js';
 export type { DataProviderProps } from './DataContext.js';
 export { useQuery } from './useQuery.js';

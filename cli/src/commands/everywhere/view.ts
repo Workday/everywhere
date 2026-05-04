@@ -5,7 +5,11 @@ import { fileURLToPath } from 'node:url';
 import * as vite from 'vite';
 
 import { dataServicePlugin } from '../../data/vite-data-plugin.js';
+import { isUnauthenticated } from '../../data/proxy-auth.js';
+import { appConfig } from '../../config.js';
+import { DEFAULT_GATEWAY, DEFAULT_HTTPS } from '../../auth/defaults.js';
 import EverywhereBaseCommand from '../../lib/command.js';
+import { UserConfig } from 'vite';
 
 export default class ViewCommand extends EverywhereBaseCommand {
   static description = 'Preview a Workday Everywhere plugin in the browser.';
@@ -22,6 +26,12 @@ export default class ViewCommand extends EverywhereBaseCommand {
       default: true,
       allowNo: true,
     }),
+    'mock-data': Flags.boolean({
+      description:
+        'Use local mock data instead of forwarding requests to the real GraphQL API. Defaults to false — real API is used when auth login credentials are present.',
+      default: false,
+      allowNo: true,
+    }),
   };
 
   async run(): Promise<void> {
@@ -35,19 +45,47 @@ export default class ViewCommand extends EverywhereBaseCommand {
     const viewerDir = path.join(cliDistRoot, 'viewer');
     const sdkRoot = path.resolve(cliDistRoot, '..', '..');
 
+    const {
+      gateway = DEFAULT_GATEWAY,
+      https = DEFAULT_HTTPS,
+      token,
+    } = appConfig().read().auth ?? {};
+    const scheme = https ? 'https' : 'http';
+    const apiServer = `${scheme}://${gateway}`;
+
     this.log(`Plugin: ${pluginEntry}`);
     this.log(`Starting viewer on port ${flags.port}...`);
+
+    const plugins: UserConfig['plugins'] = flags['mock-data'] ? [dataServicePlugin(pluginDir)] : [];
+    const overrides: UserConfig['server'] = flags['mock-data']
+      ? {}
+      : {
+          proxy: {
+            '/api/data/graphql': {
+              target: apiServer,
+              changeOrigin: true,
+              configure: (proxy, _options) => {
+                proxy.on('proxyReq', (proxyReq, req, _res) => {
+                  if (isUnauthenticated(req.headers) && token) {
+                    proxyReq.setHeader('Authorization', `Bearer ${token}`);
+                  }
+                });
+              },
+            },
+          },
+        };
 
     const server = await vite.createServer({
       root: viewerDir,
       configFile: false,
-      plugins: [dataServicePlugin(pluginDir)],
+      plugins,
       server: {
         port: flags.port,
         open: flags.open,
         fs: {
           allow: [pluginDir, sdkRoot],
         },
+        ...overrides,
       },
       resolve: {
         alias: {

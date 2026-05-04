@@ -1,6 +1,6 @@
 {
-  "name": "@workday/wdcli-plugin-everywhere",
-  "description": "wdcli plugin for managing Workday Everywhere plugins",
+  "name": "@workday/everywhere",
+  "description": "CLI for managing Workday Everywhere plugins",
   "version": "0.1.0",
   "author": "Workday",
   "license": "UNLICENSED",

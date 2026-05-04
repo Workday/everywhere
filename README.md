@@ -77,10 +77,29 @@ when present `plugin.css` plus any hashed static assets under `assets/`.
 
 ## Connecting to Workday Data
 
-Plugins can connect directly to Workday's Trident GraphQL API to read and write data from Extend
-business objects.
+Plugins can connect directly to Workday's GraphQL API to read and write data from Extend business
+objects.
 
-### 1. Generate types from your bundle
+### 1. Log in
+
+Authenticate with your Workday tenant once. This stores your credentials locally so you never need
+to paste tokens into plugin code:
+
+```sh
+npx @workday/everywhere auth login
+```
+
+You will be prompted to enter your API gateway hostname and paste an access token. Credentials are
+saved to `~/.config/@workday/everywhere/config.json` and injected automatically by
+`everywhere view`.
+
+To check your current login status:
+
+```sh
+npx @workday/everywhere auth status
+```
+
+### 2. Generate types from your bundle
 
 Point `everywhere bind` at your downloaded Extend bundle directory (the folder containing the
 `model/` subfolder):
@@ -93,7 +112,7 @@ This reads all `.businessobject` and `.attachment` model files and generates int
 `everywhere/data/`:
 
 - **`models.ts`** — TypeScript interfaces for each model
-- **`schema.ts`** — Runtime schema used by `TridentResolver` to build GraphQL queries
+- **`schema.ts`** — Runtime schema used by `GraphQLResolver` to build GraphQL queries
 - **`<ModelName>.ts`** — `useModelName()`, `useModelName(id)`, and `useModelNameMutation()` hooks
 
 Generated types reflect the full model: scalar fields, `SINGLE_INSTANCE` / `MULTI_INSTANCE`
@@ -102,35 +121,22 @@ references, derived fields (marked `readonly`), and `CurrencyValue` for `CURRENC
 > **Note:** Run `bind` again whenever you update the bundle. The output directory is saved so you
 > can re-run with just `npx @workday/everywhere bind`.
 
-### 2. Add `TridentResolver` to your plugin
+### 3. Add `GraphQLResolver` to your plugin
 
-`TridentResolver` translates hook calls into Trident GraphQL requests. Add it to your `plugin.tsx`:
+`GraphQLResolver` translates hook calls into GraphQL requests. During local development it routes
+requests through the `everywhere view` dev server, which injects your stored credentials
+automatically — no tokens in source code.
 
 ```tsx
-import { plugin, route, DataProvider, TridentResolver } from '@workday/everywhere';
-import { CanvasProvider } from '@workday/canvas-kit-react';
+import { plugin, route, DataProvider, GraphQLResolver } from '@workday/everywhere';
 import { schemas } from './everywhere/data/schema.js';
 import EventListPage from './pages/EventList.js';
 
-// The referenceId comes from appManifest.json in your bundle.
-const TRIDENT_ENDPOINT = 'https://api.us.wcp.workday.com';
-const TRIDENT_PATH = '/graphql/v5';
-const BEARER_TOKEN = 'YOUR_BEARER_TOKEN'; // replace before running
-
-const resolver = new TridentResolver(
-  TRIDENT_ENDPOINT,
-  TRIDENT_PATH,
-  BEARER_TOKEN,
-  'YourAppReferenceId', // replace before running, found in manifest.json in the app bundle
-  schemas
-);
+// referenceId comes from appManifest.json in your Extend bundle.
+const resolver = new GraphQLResolver('your-app-referenceId', schemas);
 
 function AppProvider({ children }) {
-  return (
-    <CanvasProvider>
-      <DataProvider resolver={resolver}>{children}</DataProvider>
-    </CanvasProvider>
-  );
+  return <DataProvider resolver={resolver}>{children}</DataProvider>;
 }
 
 const events = route('events', { component: EventListPage });
@@ -142,10 +148,15 @@ export default plugin({
 });
 ```
 
-> **Bearer token:** Tokens expire. When a request fails due to auth, the error message will tell you
-> to update `BEARER_TOKEN`.
+The resolver sends requests to `/api/data/graphql` on the current origin. During local development,
+`everywhere view --no-mock-data` proxies that path to your configured gateway using the stored
+token. In production the Workday shell handles the same path — no token management needed in your
+plugin code.
 
-### 3. Use data hooks in your pages
+> **Token expiry:** If a request fails due to an expired token during local development, re-run
+> `everywhere auth login`. The error message will prompt you.
+
+### 4. Use data hooks in your pages
 
 The generated hooks work like `useSWR` — they fetch on mount and return `{ data, error }`:
 

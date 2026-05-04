@@ -30,22 +30,14 @@ function toGQLLiteral(value: unknown): string {
 
 const SCALAR_TYPES = new Set(['TEXT', 'BOOLEAN', 'DATE', 'CURRENCY', 'DECIMAL', 'NUMERIC']);
 
-export class TridentResolver implements DataResolver {
+export class GraphQLResolver implements DataResolver {
   private readonly endpoint: string;
-  private readonly bearerToken: string;
   private readonly referenceId: string;
   private readonly graphPrefix: string;
   private readonly schemaMap: Map<string, ModelSchema>;
 
-  constructor(
-    endpoint: string,
-    path: string,
-    bearerToken: string,
-    referenceId: string,
-    schemas: Record<string, ModelSchema>
-  ) {
-    this.endpoint = `${endpoint}${path}`;
-    this.bearerToken = bearerToken; // look at config file for bearer token
+  constructor(referenceId: string, schemas: Record<string, ModelSchema>, endpoint?: string) {
+    this.endpoint = endpoint ?? `${globalThis.window?.location.origin ?? ''}/api/data/graphql`;
     this.referenceId = referenceId;
     this.graphPrefix = referenceIdToGraphPrefix(referenceId);
     this.schemaMap = new Map(Object.entries(schemas));
@@ -53,7 +45,7 @@ export class TridentResolver implements DataResolver {
 
   private schema(model: string): ModelSchema {
     const s = this.schemaMap.get(model);
-    if (!s) throw new Error(`TridentResolver: no schema registered for model "${model}"`);
+    if (!s) throw new Error(`GraphQLResolver: no schema registered for model "${model}"`);
     return s;
   }
 
@@ -66,7 +58,6 @@ export class TridentResolver implements DataResolver {
         __type: { fields: { name: string }[] } | null;
       }>('{ __type(name: "CurrencyValue") { fields { name } } }').then((result) => {
         const names = result.__type?.fields?.map((f) => f.name) ?? [];
-        console.log('[TridentResolver] CurrencyValue fields:', names);
         return names.length > 0 ? names.join(' ') : 'value currency';
       });
     }
@@ -84,26 +75,25 @@ export class TridentResolver implements DataResolver {
   }
 
   private async execute<T>(query: string, variables?: Record<string, unknown>): Promise<T> {
+    const headers: Record<string, string> = {
+      accept: 'application/json',
+      'content-type': 'application/json',
+    };
+
     const response = await fetch(this.endpoint, {
       method: 'POST',
-      headers: {
-        accept: 'application/json',
-        authorization: `Bearer ${this.bearerToken}`,
-        'content-type': 'application/json',
-        'wd-graphql-developer-info': 'false',
-        'x-api-gateway-originator': 'ROBOT',
-      },
+      headers,
       body: JSON.stringify(variables ? { query, variables } : { query }),
     });
 
     if (response.status === 401 || response.status === 403) {
       throw new Error(
-        `Trident auth failed (${response.status}): bearer token is expired or invalid. Update BEARER_TOKEN in plugin.tsx.`
+        `GraphQL auth failed (${response.status}): token is expired or invalid. Run: npx @workday/everywhere auth login`
       );
     }
 
     if (!response.ok) {
-      throw new Error(`Trident ${response.status}: ${response.statusText}`);
+      throw new Error(`GraphQL request failed ${response.status}: ${response.statusText}`);
     }
 
     const body = (await response.json()) as {
@@ -117,7 +107,7 @@ export class TridentResolver implements DataResolver {
       );
       if (isAuthError) {
         throw new Error(
-          'Trident auth error: bearer token is expired or invalid. Update BEARER_TOKEN in plugin.tsx.'
+          'GraphQL auth error: token is expired or invalid. Run: npx @workday/everywhere auth login'
         );
       }
       throw new Error(body.errors.map((e) => e.message).join('; '));
@@ -129,7 +119,6 @@ export class TridentResolver implements DataResolver {
   async find<T>(model: string, filter?: Record<string, unknown>): Promise<T[]> {
     const schema = this.schema(model);
     const opName = `${this.referenceId}_${model}`;
-    // DataSource key pattern from Trident spike: {referenceId}_{collection}
     const dsKey = `${this.referenceId}_${schema.collection}`;
     const dataSourceLiteral = filter
       ? `{${dsKey}: {filter: {${dsKey}Filter: ${toGQLLiteral(filter)}}}}`
@@ -162,7 +151,6 @@ export class TridentResolver implements DataResolver {
   async create<T>(model: string, input: Omit<T, 'id'>): Promise<T> {
     const schema = this.schema(model);
     const { collection } = schema;
-    // Convention confirmed in spike: {GraphPrefix}_{CapitalizedCollection}Summary_Create_Input
     const inputType = `${this.graphPrefix}_${capitalize(collection)}Summary_Create_Input`;
     const mutationName = `${this.referenceId}_create${model}`;
 
