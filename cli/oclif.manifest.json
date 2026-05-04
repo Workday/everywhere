@@ -1,0 +1,528 @@
+{
+  "commands": {
+    "everywhere:base": {
+      "aliases": [],
+      "args": {},
+      "flags": {
+        "plugin-dir": {
+          "char": "D",
+          "description": "Plugin directory (defaults to current working directory).",
+          "name": "plugin-dir",
+          "hasDynamicHelp": false,
+          "multiple": false,
+          "type": "option"
+        },
+        "verbose": {
+          "char": "v",
+          "description": "Show detailed output.",
+          "name": "verbose",
+          "allowNo": false,
+          "type": "boolean"
+        }
+      },
+      "hasDynamicHelp": false,
+      "hidden": true,
+      "hiddenAliases": [],
+      "id": "everywhere:base",
+      "pluginAlias": "@workday/everywhere",
+      "pluginName": "@workday/everywhere",
+      "pluginType": "core",
+      "strict": true,
+      "enableJsonFlag": false,
+      "isESM": true,
+      "relativePath": [
+        "dist",
+        "commands",
+        "everywhere",
+        "base.js"
+      ]
+    },
+    "everywhere:bind": {
+      "aliases": [],
+      "args": {
+        "app-source": {
+          "description": "Path to a directory containing a model/ subfolder, or a .zip archive with the same structure. Directory paths are saved for future runs.",
+          "name": "app-source",
+          "required": false
+        }
+      },
+      "description": "Generate TypeScript types and data hooks from Workday Extend business object models.",
+      "flags": {
+        "plugin-dir": {
+          "char": "D",
+          "description": "Plugin directory (defaults to current working directory).",
+          "name": "plugin-dir",
+          "hasDynamicHelp": false,
+          "multiple": false,
+          "type": "option"
+        },
+        "verbose": {
+          "char": "v",
+          "description": "Show detailed output.",
+          "name": "verbose",
+          "allowNo": false,
+          "type": "boolean"
+        },
+        "dry-run": {
+          "char": "n",
+          "description": "Preview what would be generated without writing any files or updating saved config. Implies --verbose.",
+          "name": "dry-run",
+          "allowNo": false,
+          "type": "boolean"
+        }
+      },
+      "hasDynamicHelp": false,
+      "hiddenAliases": [],
+      "id": "everywhere:bind",
+      "pluginAlias": "@workday/everywhere",
+      "pluginName": "@workday/everywhere",
+      "pluginType": "core",
+      "strict": true,
+      "enableJsonFlag": false,
+      "isESM": true,
+      "relativePath": [
+        "dist",
+        "commands",
+        "everywhere",
+        "bind.js"
+      ]
+    },
+    "everywhere:build": {
+      "aliases": [],
+      "args": {},
+      "description": "Build a plugin bundle.",
+      "flags": {
+        "plugin-dir": {
+          "char": "D",
+          "description": "Plugin directory (defaults to current working directory).",
+          "name": "plugin-dir",
+          "hasDynamicHelp": false,
+          "multiple": false,
+          "type": "option"
+        },
+        "verbose": {
+          "char": "v",
+          "description": "Show detailed output.",
+          "name": "verbose",
+          "allowNo": false,
+          "type": "boolean"
+        }
+      },
+      "hasDynamicHelp": false,
+      "hiddenAliases": [],
+      "id": "everywhere:build",
+      "pluginAlias": "@workday/everywhere",
+      "pluginName": "@workday/everywhere",
+      "pluginType": "core",
+      "strict": true,
+      "enableJsonFlag": false,
+      "isESM": true,
+      "relativePath": [
+        "dist",
+        "commands",
+        "everywhere",
+        "build.js"
+      ]
+    },
+    "everywhere:info": {
+      "aliases": [],
+      "args": {},
+      "description": "Show details for a Workday Everywhere plugin.",
+      "flags": {
+        "plugin-dir": {
+          "char": "D",
+          "description": "Plugin directory (defaults to current working directory).",
+          "name": "plugin-dir",
+          "hasDynamicHelp": false,
+          "multiple": false,
+          "type": "option"
+        },
+        "verbose": {
+          "char": "v",
+          "description": "Show detailed output.",
+          "name": "verbose",
+          "allowNo": false,
+          "type": "boolean"
+        }
+      },
+      "hasDynamicHelp": false,
+      "hiddenAliases": [],
+      "id": "everywhere:info",
+      "pluginAlias": "@workday/everywhere",
+      "pluginName": "@workday/everywhere",
+      "pluginType": "core",
+      "strict": true,
+      "enableJsonFlag": false,
+      "isESM": true,
+      "relativePath": [
+        "dist",
+        "commands",
+        "everywhere",
+        "info.js"
+      ]
+    },
+    "everywhere:init": {
+      "aliases": [],
+      "args": {},
+      "description": "Scaffold a stub Workday Everywhere plugin in an existing npm project.",
+      "flags": {
+        "plugin-dir": {
+          "char": "D",
+          "description": "Plugin directory (defaults to current working directory).",
+          "name": "plugin-dir",
+          "hasDynamicHelp": false,
+          "multiple": false,
+          "type": "option"
+        },
+        "verbose": {
+          "char": "v",
+          "description": "Show detailed output.",
+          "name": "verbose",
+          "allowNo": false,
+          "type": "boolean"
+        },
+        "title": {
+          "char": "T",
+          "description": "Human-friendly display name for the plugin.",
+          "name": "title",
+          "hasDynamicHelp": false,
+          "multiple": false,
+          "type": "option"
+        }
+      },
+      "hasDynamicHelp": false,
+      "hiddenAliases": [],
+      "id": "everywhere:init",
+      "pluginAlias": "@workday/everywhere",
+      "pluginName": "@workday/everywhere",
+      "pluginType": "core",
+      "strict": true,
+      "enableJsonFlag": false,
+      "isESM": true,
+      "relativePath": [
+        "dist",
+        "commands",
+        "everywhere",
+        "init.js"
+      ]
+    },
+    "everywhere:install": {
+      "aliases": [],
+      "args": {},
+      "description": "Build and install a plugin to a local directory.",
+      "flags": {
+        "plugin-dir": {
+          "char": "D",
+          "description": "Plugin directory (defaults to current working directory).",
+          "name": "plugin-dir",
+          "hasDynamicHelp": false,
+          "multiple": false,
+          "type": "option"
+        },
+        "verbose": {
+          "char": "v",
+          "description": "Show detailed output.",
+          "name": "verbose",
+          "allowNo": false,
+          "type": "boolean"
+        },
+        "path": {
+          "description": "Target directory for the installed plugin. Saved for future runs.",
+          "name": "path",
+          "hasDynamicHelp": false,
+          "multiple": false,
+          "type": "option"
+        }
+      },
+      "hasDynamicHelp": false,
+      "hiddenAliases": [],
+      "id": "everywhere:install",
+      "pluginAlias": "@workday/everywhere",
+      "pluginName": "@workday/everywhere",
+      "pluginType": "core",
+      "strict": true,
+      "enableJsonFlag": false,
+      "isESM": true,
+      "relativePath": [
+        "dist",
+        "commands",
+        "everywhere",
+        "install.js"
+      ]
+    },
+    "everywhere:publish": {
+      "aliases": [],
+      "args": {},
+      "description": "Builds and publishes your plugin to the Workday plugin registry.",
+      "flags": {
+        "plugin-dir": {
+          "char": "D",
+          "description": "Plugin directory (defaults to current working directory).",
+          "name": "plugin-dir",
+          "hasDynamicHelp": false,
+          "multiple": false,
+          "type": "option"
+        },
+        "verbose": {
+          "char": "v",
+          "description": "Show detailed output.",
+          "name": "verbose",
+          "allowNo": false,
+          "type": "boolean"
+        }
+      },
+      "hasDynamicHelp": false,
+      "hiddenAliases": [],
+      "id": "everywhere:publish",
+      "pluginAlias": "@workday/everywhere",
+      "pluginName": "@workday/everywhere",
+      "pluginType": "core",
+      "strict": true,
+      "enableJsonFlag": false,
+      "isESM": true,
+      "relativePath": [
+        "dist",
+        "commands",
+        "everywhere",
+        "publish.js"
+      ]
+    },
+    "everywhere:view": {
+      "aliases": [],
+      "args": {},
+      "description": "Preview a Workday Everywhere plugin in the browser.",
+      "flags": {
+        "plugin-dir": {
+          "char": "D",
+          "description": "Plugin directory (defaults to current working directory).",
+          "name": "plugin-dir",
+          "hasDynamicHelp": false,
+          "multiple": false,
+          "type": "option"
+        },
+        "verbose": {
+          "char": "v",
+          "description": "Show detailed output.",
+          "name": "verbose",
+          "allowNo": false,
+          "type": "boolean"
+        },
+        "port": {
+          "char": "p",
+          "description": "Port for the dev server.",
+          "name": "port",
+          "default": 4242,
+          "hasDynamicHelp": false,
+          "multiple": false,
+          "type": "option"
+        },
+        "open": {
+          "description": "Open the browser automatically.",
+          "name": "open",
+          "allowNo": true,
+          "type": "boolean"
+        },
+        "mock-data": {
+          "description": "Use local mock data instead of forwarding requests to the real GraphQL API. Defaults to false — real API is used when auth login credentials are present.",
+          "name": "mock-data",
+          "allowNo": true,
+          "type": "boolean"
+        }
+      },
+      "hasDynamicHelp": false,
+      "hiddenAliases": [],
+      "id": "everywhere:view",
+      "pluginAlias": "@workday/everywhere",
+      "pluginName": "@workday/everywhere",
+      "pluginType": "core",
+      "strict": true,
+      "enableJsonFlag": false,
+      "isESM": true,
+      "relativePath": [
+        "dist",
+        "commands",
+        "everywhere",
+        "view.js"
+      ]
+    },
+    "everywhere:auth:login": {
+      "aliases": [],
+      "args": {},
+      "description": "Authenticate with a Workday server using an access token.",
+      "flags": {
+        "plugin-dir": {
+          "char": "D",
+          "description": "Plugin directory (defaults to current working directory).",
+          "name": "plugin-dir",
+          "hasDynamicHelp": false,
+          "multiple": false,
+          "type": "option"
+        },
+        "verbose": {
+          "char": "v",
+          "description": "Show detailed output.",
+          "name": "verbose",
+          "allowNo": false,
+          "type": "boolean"
+        },
+        "gateway": {
+          "description": "Workday API gateway hostname.",
+          "name": "gateway",
+          "hasDynamicHelp": false,
+          "multiple": false,
+          "type": "option"
+        },
+        "https": {
+          "description": "Use HTTPS to contact the gateway (use --no-https to disable).",
+          "name": "https",
+          "allowNo": true,
+          "type": "boolean"
+        },
+        "token": {
+          "description": "Access token (omit to enter interactively).",
+          "name": "token",
+          "hasDynamicHelp": false,
+          "multiple": false,
+          "type": "option"
+        }
+      },
+      "hasDynamicHelp": false,
+      "hiddenAliases": [],
+      "id": "everywhere:auth:login",
+      "pluginAlias": "@workday/everywhere",
+      "pluginName": "@workday/everywhere",
+      "pluginType": "core",
+      "strict": true,
+      "enableJsonFlag": false,
+      "isESM": true,
+      "relativePath": [
+        "dist",
+        "commands",
+        "everywhere",
+        "auth",
+        "login.js"
+      ]
+    },
+    "everywhere:auth:logout": {
+      "aliases": [],
+      "args": {},
+      "description": "Log out and clear stored authentication token.",
+      "flags": {
+        "plugin-dir": {
+          "char": "D",
+          "description": "Plugin directory (defaults to current working directory).",
+          "name": "plugin-dir",
+          "hasDynamicHelp": false,
+          "multiple": false,
+          "type": "option"
+        },
+        "verbose": {
+          "char": "v",
+          "description": "Show detailed output.",
+          "name": "verbose",
+          "allowNo": false,
+          "type": "boolean"
+        }
+      },
+      "hasDynamicHelp": false,
+      "hiddenAliases": [],
+      "id": "everywhere:auth:logout",
+      "pluginAlias": "@workday/everywhere",
+      "pluginName": "@workday/everywhere",
+      "pluginType": "core",
+      "strict": true,
+      "enableJsonFlag": false,
+      "isESM": true,
+      "relativePath": [
+        "dist",
+        "commands",
+        "everywhere",
+        "auth",
+        "logout.js"
+      ]
+    },
+    "everywhere:auth:status": {
+      "aliases": [],
+      "args": {},
+      "description": "Show current authentication status.",
+      "flags": {
+        "plugin-dir": {
+          "char": "D",
+          "description": "Plugin directory (defaults to current working directory).",
+          "name": "plugin-dir",
+          "hasDynamicHelp": false,
+          "multiple": false,
+          "type": "option"
+        },
+        "verbose": {
+          "char": "v",
+          "description": "Show detailed output.",
+          "name": "verbose",
+          "allowNo": false,
+          "type": "boolean"
+        }
+      },
+      "hasDynamicHelp": false,
+      "hiddenAliases": [],
+      "id": "everywhere:auth:status",
+      "pluginAlias": "@workday/everywhere",
+      "pluginName": "@workday/everywhere",
+      "pluginType": "core",
+      "strict": true,
+      "enableJsonFlag": false,
+      "isESM": true,
+      "relativePath": [
+        "dist",
+        "commands",
+        "everywhere",
+        "auth",
+        "status.js"
+      ]
+    },
+    "everywhere:auth:token": {
+      "aliases": [],
+      "args": {},
+      "description": "Fetch and display an access token from the gateway.",
+      "flags": {
+        "plugin-dir": {
+          "char": "D",
+          "description": "Plugin directory (defaults to current working directory).",
+          "name": "plugin-dir",
+          "hasDynamicHelp": false,
+          "multiple": false,
+          "type": "option"
+        },
+        "verbose": {
+          "char": "v",
+          "description": "Show detailed output.",
+          "name": "verbose",
+          "allowNo": false,
+          "type": "boolean"
+        },
+        "json": {
+          "description": "Output the full JSON response body instead of just the token.",
+          "name": "json",
+          "allowNo": false,
+          "type": "boolean"
+        }
+      },
+      "hasDynamicHelp": false,
+      "hiddenAliases": [],
+      "id": "everywhere:auth:token",
+      "pluginAlias": "@workday/everywhere",
+      "pluginName": "@workday/everywhere",
+      "pluginType": "core",
+      "strict": true,
+      "enableJsonFlag": false,
+      "isESM": true,
+      "relativePath": [
+        "dist",
+        "commands",
+        "everywhere",
+        "auth",
+        "token.js"
+      ]
+    }
+  },
+  "version": "0.1.0"
+}
