@@ -1,34 +1,42 @@
 import { describe, it, expect } from 'vitest';
-import { resolveProxyAuth } from '../../src/data/proxy-auth.js';
+import { isUnauthenticated } from '../../src/data/proxy-auth.js';
 
-describe('resolveProxyAuth', () => {
-  describe('when the incoming request has an Authorization header', () => {
-    it('does not inject a token', () => {
-      const result = resolveProxyAuth({ authorization: 'Bearer existing-token' }, 'stored-token');
-
-      expect(result).toBeNull();
+describe('isUnauthenticated', () => {
+  describe('when the request has an Authorization header', () => {
+    it('returns false', () => {
+      expect(isUnauthenticated({ authorization: 'Bearer existing-token' })).toBe(false);
     });
   });
 
-  describe('when the incoming request has a Cookie header', () => {
-    it('does not inject a token', () => {
-      const result = resolveProxyAuth({ cookie: 'session=abc123' }, 'stored-token');
+  describe('when the request has a we_session cookie', () => {
+    it('returns false', () => {
+      expect(isUnauthenticated({ cookie: 'we_session=abc123' })).toBe(false);
+    });
 
-      expect(result).toBeNull();
+    it('returns false when we_session is among other cookies', () => {
+      expect(isUnauthenticated({ cookie: 'analytics=x; we_session=abc123; theme=dark' })).toBe(
+        false
+      );
     });
   });
 
-  describe('when the incoming request has no auth headers', () => {
-    it('returns the stored token when one is configured', () => {
-      const result = resolveProxyAuth({}, 'stored-token');
-
-      expect(result).toBe('stored-token');
+  describe('when the request has cookies but no we_session', () => {
+    it('returns true', () => {
+      expect(isUnauthenticated({ cookie: 'analytics=x; theme=dark' })).toBe(true);
     });
+  });
 
-    it('returns null when no stored token is configured', () => {
-      const result = resolveProxyAuth({}, undefined);
+  describe('when the request has no auth headers', () => {
+    it('returns true', () => {
+      expect(isUnauthenticated({})).toBe(true);
+    });
+  });
 
-      expect(result).toBeNull();
+  describe('when both Authorization and we_session cookie are present', () => {
+    it('returns false', () => {
+      expect(
+        isUnauthenticated({ authorization: 'Bearer token', cookie: 'we_session=abc123' })
+      ).toBe(false);
     });
   });
 });
