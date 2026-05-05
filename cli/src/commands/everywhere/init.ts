@@ -25,9 +25,14 @@ function getSdkVersion(): string {
 const NPM_BIN = process.platform === 'win32' ? 'npm.cmd' : 'npm';
 
 export function promptYesNo(question: string): Promise<boolean> {
+  // In non-TTY contexts (CI, piped stdin) there's no one to answer, so decline
+  // rather than block on a stream that will never produce input.
+  if (!process.stdin.isTTY) {
+    return Promise.resolve(false);
+  }
   const rl = readline.createInterface({
     input: process.stdin,
-    output: process.stderr,
+    output: process.stdout,
   });
   return new Promise<boolean>((resolve) => {
     rl.question(`${question} [Y/n] `, (answer) => {
@@ -108,6 +113,8 @@ export default class InitCommand extends EverywhereBaseCommand {
         this.log('Run `npm init` first, then re-run `we init`.');
         return;
       }
+      // npm init creates package.json on a clean exit; a non-zero exit causes
+      // runNpmInit to reject, so the read below only happens on success.
       await runNpmInit(pluginDir, { yes });
     }
 

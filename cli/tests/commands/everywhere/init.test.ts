@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import InitCommand from '../../../src/commands/everywhere/init.js';
 import EverywhereBaseCommand from '../../../src/lib/command.js';
 
@@ -124,8 +124,37 @@ describe('runNpmInstall', () => {
 });
 
 describe('promptYesNo', () => {
+  let originalIsTTY: boolean | undefined;
+
   beforeEach(() => {
     vi.resetModules();
+    originalIsTTY = process.stdin.isTTY;
+    Object.defineProperty(process.stdin, 'isTTY', { value: true, configurable: true });
+  });
+
+  afterEach(() => {
+    Object.defineProperty(process.stdin, 'isTTY', { value: originalIsTTY, configurable: true });
+  });
+
+  describe('when stdin is not a TTY', () => {
+    beforeEach(() => {
+      Object.defineProperty(process.stdin, 'isTTY', { value: false, configurable: true });
+    });
+
+    it('resolves to false without prompting', async () => {
+      const createInterface = vi.fn();
+      vi.doMock('node:readline', () => ({ createInterface }));
+      const { promptYesNo } = await import('../../../src/commands/everywhere/init.js');
+      await expect(promptYesNo('Continue?')).resolves.toBe(false);
+    });
+
+    it('does not create a readline interface', async () => {
+      const createInterface = vi.fn();
+      vi.doMock('node:readline', () => ({ createInterface }));
+      const { promptYesNo } = await import('../../../src/commands/everywhere/init.js');
+      await promptYesNo('Continue?');
+      expect(createInterface).not.toHaveBeenCalled();
+    });
   });
 
   describe('when the user answers "y"', () => {
@@ -239,7 +268,7 @@ describe('runNpmInit', () => {
       const { runNpmInit } = await import('../../../src/commands/everywhere/init.js');
       await runNpmInit('/fake/dir');
 
-      expect(mockSpawn).toHaveBeenCalledWith('npm', ['init'], expect.any(Object));
+      expect(mockSpawn).toHaveBeenCalledWith(expect.any(String), ['init'], expect.any(Object));
     });
   });
 
