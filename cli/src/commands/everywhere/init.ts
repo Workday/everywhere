@@ -3,6 +3,7 @@ import { Flags } from '@oclif/core';
 import { spawn } from 'node:child_process';
 import * as fs from 'node:fs';
 import * as path from 'node:path';
+import * as readline from 'node:readline';
 import { fileURLToPath } from 'node:url';
 
 import EverywhereBaseCommand from '../../lib/command.js';
@@ -16,6 +17,40 @@ const SDK_PKG_PATH = path.resolve(THIS_DIR, '../../../../package.json');
 function getSdkVersion(): string {
   const pkg = JSON.parse(fs.readFileSync(SDK_PKG_PATH, 'utf-8')) as { version: string };
   return pkg.version;
+}
+
+export function promptYesNo(question: string): Promise<boolean> {
+  const rl = readline.createInterface({
+    input: process.stdin,
+    output: process.stderr,
+  });
+  return new Promise<boolean>((resolve) => {
+    rl.question(`${question} [Y/n] `, (answer) => {
+      rl.close();
+      const normalized = answer.trim().toLowerCase();
+      resolve(normalized === '' || normalized === 'y' || normalized === 'yes');
+    });
+  });
+}
+
+export function runNpmInit(cwd: string): Promise<void> {
+  return new Promise((resolve, reject) => {
+    const child = spawn('npm', ['init'], {
+      cwd,
+      stdio: 'inherit',
+      shell: true,
+    });
+    child.on('error', (err) => {
+      reject(new Error(`Failed to start npm init: ${err.message}`));
+    });
+    child.on('close', (code) => {
+      if (code === 0) {
+        resolve();
+      } else {
+        reject(new Error(`npm init failed with exit code ${code}`));
+      }
+    });
+  });
 }
 
 export function runNpmInstall(cwd: string): Promise<void> {
@@ -58,7 +93,12 @@ export default class InitCommand extends EverywhereBaseCommand {
     // Pre-check 1: package.json exists
     const pkgPath = path.join(pluginDir, 'package.json');
     if (!fs.existsSync(pkgPath)) {
-      this.error(`No package.json found in ${pluginDir}. Run \`npm init\` first.`);
+      const confirmed = await promptYesNo('No package.json found. Would you like to run npm init?');
+      if (!confirmed) {
+        this.log('Run `npm init` first, then re-run `we init`.');
+        return;
+      }
+      await runNpmInit(pluginDir);
     }
 
     // Pre-check 2: package.json parses and has a name
