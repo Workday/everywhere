@@ -104,6 +104,23 @@ describe('runNpmInstall', () => {
       );
     });
   });
+
+  describe('spawn invocation', () => {
+    it('does not enable shell mode (avoids DEP0190)', async () => {
+      const mockOn = vi.fn().mockImplementation((event: string, cb: (code: number) => void) => {
+        if (event === 'close') cb(0);
+      });
+      const mockSpawn = vi.fn().mockReturnValue({ on: mockOn });
+
+      vi.doMock('node:child_process', () => ({ spawn: mockSpawn }));
+
+      const { runNpmInstall } = await import('../../../src/commands/everywhere/init.js');
+      await runNpmInstall('/fake/dir');
+
+      const opts = mockSpawn.mock.calls[0][2] as { shell?: boolean };
+      expect(opts.shell).not.toBe(true);
+    });
+  });
 });
 
 describe('promptYesNo', () => {
@@ -238,7 +255,28 @@ describe('runNpmInit', () => {
       const { runNpmInit } = await import('../../../src/commands/everywhere/init.js');
       await runNpmInit('/fake/dir', { yes: true });
 
-      expect(mockSpawn).toHaveBeenCalledWith('npm', ['init', '-y'], expect.any(Object));
+      expect(mockSpawn).toHaveBeenCalledWith(
+        expect.any(String),
+        ['init', '-y'],
+        expect.any(Object)
+      );
+    });
+  });
+
+  describe('spawn invocation', () => {
+    it('does not enable shell mode (avoids DEP0190)', async () => {
+      const mockOn = vi.fn().mockImplementation((event: string, cb: (code: number) => void) => {
+        if (event === 'close') cb(0);
+      });
+      const mockSpawn = vi.fn().mockReturnValue({ on: mockOn });
+
+      vi.doMock('node:child_process', () => ({ spawn: mockSpawn }));
+
+      const { runNpmInit } = await import('../../../src/commands/everywhere/init.js');
+      await runNpmInit('/fake/dir');
+
+      const opts = mockSpawn.mock.calls[0][2] as { shell?: boolean };
+      expect(opts.shell).not.toBe(true);
     });
   });
 

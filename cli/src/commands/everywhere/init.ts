@@ -19,6 +19,11 @@ function getSdkVersion(): string {
   return pkg.version;
 }
 
+// On Windows, npm is a `.cmd` shim that requires the explicit extension when
+// spawned without a shell. Avoid `shell: true` because Node deprecates passing
+// args alongside it (DEP0190).
+const NPM_BIN = process.platform === 'win32' ? 'npm.cmd' : 'npm';
+
 export function promptYesNo(question: string): Promise<boolean> {
   const rl = readline.createInterface({
     input: process.stdin,
@@ -36,10 +41,9 @@ export function promptYesNo(question: string): Promise<boolean> {
 export function runNpmInit(cwd: string, options: { yes?: boolean } = {}): Promise<void> {
   return new Promise((resolve, reject) => {
     const args = options.yes ? ['init', '-y'] : ['init'];
-    const child = spawn('npm', args, {
+    const child = spawn(NPM_BIN, args, {
       cwd,
       stdio: 'inherit',
-      shell: true,
     });
     child.on('error', (err) => {
       reject(new Error(`Failed to start npm init: ${err.message}`));
@@ -56,10 +60,9 @@ export function runNpmInit(cwd: string, options: { yes?: boolean } = {}): Promis
 
 export function runNpmInstall(cwd: string): Promise<void> {
   return new Promise((resolve, reject) => {
-    const child = spawn('npm', ['install'], {
+    const child = spawn(NPM_BIN, ['install'], {
       cwd,
       stdio: 'inherit',
-      shell: true,
     });
     child.on('error', (err) => {
       reject(new Error(`Failed to start npm install: ${err.message}`));
