@@ -33,9 +33,10 @@ export function promptYesNo(question: string): Promise<boolean> {
   });
 }
 
-export function runNpmInit(cwd: string): Promise<void> {
+export function runNpmInit(cwd: string, options: { yes?: boolean } = {}): Promise<void> {
   return new Promise((resolve, reject) => {
-    const child = spawn('npm', ['init'], {
+    const args = options.yes ? ['init', '-y'] : ['init'];
+    const child = spawn('npm', args, {
       cwd,
       stdio: 'inherit',
       shell: true,
@@ -82,6 +83,10 @@ export default class InitCommand extends EverywhereBaseCommand {
       char: 'T',
       description: 'Human-friendly display name for the plugin.',
     }),
+    yes: Flags.boolean({
+      char: 'y',
+      description: 'Skip confirmation prompts and pass -y to `npm init` if it runs.',
+    }),
   };
 
   async run(): Promise<void> {
@@ -89,16 +94,18 @@ export default class InitCommand extends EverywhereBaseCommand {
     const pluginDir = await this.parsePluginDir();
     const verbose = flags.verbose;
     const title = flags.title;
+    const yes = flags.yes;
 
     // Pre-check 1: package.json exists
     const pkgPath = path.join(pluginDir, 'package.json');
     if (!fs.existsSync(pkgPath)) {
-      const confirmed = await promptYesNo('No package.json found. Would you like to run npm init?');
+      const confirmed =
+        yes || (await promptYesNo('No package.json found. Would you like to run npm init?'));
       if (!confirmed) {
         this.log('Run `npm init` first, then re-run `we init`.');
         return;
       }
-      await runNpmInit(pluginDir);
+      await runNpmInit(pluginDir, { yes });
     }
 
     // Pre-check 2: package.json parses and has a name

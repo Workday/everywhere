@@ -39,6 +39,15 @@ describe('everywhere init', () => {
       const flag = InitCommand.flags['title'] as { char?: string };
       expect(flag.char).toBe('T');
     });
+
+    it('has an optional yes flag', () => {
+      expect(InitCommand.flags['yes']).toBeDefined();
+    });
+
+    it('uses y as the short alias for the yes flag', () => {
+      const flag = InitCommand.flags['yes'] as { char?: string };
+      expect(flag.char).toBe('y');
+    });
   });
 });
 
@@ -198,6 +207,38 @@ describe('runNpmInit', () => {
       const { runNpmInit } = await import('../../../src/commands/everywhere/init.js');
 
       await expect(runNpmInit('/fake/dir')).resolves.toBeUndefined();
+    });
+  });
+
+  describe('when called without yes', () => {
+    it('does not pass -y to npm init', async () => {
+      const mockOn = vi.fn().mockImplementation((event: string, cb: (code: number) => void) => {
+        if (event === 'close') cb(0);
+      });
+      const mockSpawn = vi.fn().mockReturnValue({ on: mockOn });
+
+      vi.doMock('node:child_process', () => ({ spawn: mockSpawn }));
+
+      const { runNpmInit } = await import('../../../src/commands/everywhere/init.js');
+      await runNpmInit('/fake/dir');
+
+      expect(mockSpawn).toHaveBeenCalledWith('npm', ['init'], expect.any(Object));
+    });
+  });
+
+  describe('when called with yes=true', () => {
+    it('passes -y to npm init', async () => {
+      const mockOn = vi.fn().mockImplementation((event: string, cb: (code: number) => void) => {
+        if (event === 'close') cb(0);
+      });
+      const mockSpawn = vi.fn().mockReturnValue({ on: mockOn });
+
+      vi.doMock('node:child_process', () => ({ spawn: mockSpawn }));
+
+      const { runNpmInit } = await import('../../../src/commands/everywhere/init.js');
+      await runNpmInit('/fake/dir', { yes: true });
+
+      expect(mockSpawn).toHaveBeenCalledWith('npm', ['init', '-y'], expect.any(Object));
     });
   });
 
