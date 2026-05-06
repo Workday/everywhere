@@ -1,5 +1,7 @@
 export type { FieldType, FieldSchema, ModelSchema, CurrencyValue } from './types.js';
 export type { DataResolver } from './resolver.js';
+export { ApiClient } from './ApiClient.js';
+export type { ApiClientOptions } from './ApiClient.js';
 export { HttpResolver } from './HttpResolver.js';
 export { GraphQLResolver } from './GraphQLResolver.js';
 export { DataProvider } from './DataContext.js';

@@ -12,6 +12,8 @@ export { useParams } from './hooks/index.js';
 
 export type { FieldType, FieldSchema, ModelSchema, CurrencyValue } from './data/index.js';
 export type { DataResolver } from './data/index.js';
+export { ApiClient } from './data/index.js';
+export type { ApiClientOptions } from './data/index.js';
 export { HttpResolver, GraphQLResolver } from './data/index.js';
 export { DataProvider } from './data/index.js';
 export type { DataProviderProps } from './data/index.js';
