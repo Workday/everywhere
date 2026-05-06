@@ -192,11 +192,10 @@ describe('everywhere publish', () => {
 
     describe('when the plugin is published successfully', () => {
       const registryUploadSuccessResponse = {
-        id: 'abc123',
-        referenceId: 'ref-456',
-        status: 'published',
-        appType: 'plugin',
-        creator: 'user@example.com',
+        tenant: 'acme',
+        name: 'my-test-plugin',
+        title: 'My Test Plugin',
+        bundleUrl: '/api/v1/app/my-test-plugin/bundle.js',
       };
 
       beforeEach(() => {
@@ -253,27 +252,16 @@ describe('everywhere publish', () => {
         await cmd.run();
 
         expect(fetch).toHaveBeenCalledWith(
-          new URL('https://registry.example.com/builder/v1/apps/source/archive'),
+          new URL('https://registry.example.com/api/v1/apps/publish'),
           expect.objectContaining({ method: 'POST' })
         );
-      });
-
-      it('includes the app reference ID in the upload form', async () => {
-        await cmd.run();
-
-        const calls = (fetch as ReturnType<typeof vi.fn>).mock.calls;
-        const lastCall = calls[calls.length - 1];
-        if (!lastCall) throw new Error('No fetch calls made');
-        const [, options] = lastCall;
-        const body = options.body as FormData;
-        expect(body.get('appRefId')).toBe('my-test-plugin');
       });
 
       it('logs a success message with the registry response details', async () => {
         const logSpy = vi.spyOn(cmd, 'log');
         await cmd.run();
 
-        expect(logSpy).toHaveBeenLastCalledWith(expect.stringContaining('abc123'));
+        expect(logSpy).toHaveBeenLastCalledWith(expect.stringContaining('my-test-plugin'));
       });
 
       describe('when auth.https is false', () => {
@@ -289,7 +277,7 @@ describe('everywhere publish', () => {
           await cmd.run();
 
           expect(fetch).toHaveBeenCalledWith(
-            new URL('http://registry.example.com/builder/v1/apps/source/archive'),
+            new URL('http://registry.example.com/api/v1/apps/publish'),
             expect.objectContaining({ method: 'POST' })
           );
         });
