@@ -1,28 +1,24 @@
 import * as fs from 'node:fs';
-import * as path from 'node:path';
 
 export interface RegistryUploadOptions {
   gateway: string;
   httpsEnabled: boolean;
   token: string;
   archivePath: string;
-  appRefId: string;
 }
 
 export interface RegistryUploadResult {
-  id: string;
-  referenceId: string;
-  status: string;
-  appType: string;
-  creator: string;
+  tenant: string;
+  name: string;
+  title: string;
+  bundleUrl: string;
 }
 
 const REGISTRY_UPLOAD_RESULT_KEYS: (keyof RegistryUploadResult)[] = [
-  'id',
-  'referenceId',
-  'status',
-  'appType',
-  'creator',
+  'tenant',
+  'name',
+  'title',
+  'bundleUrl',
 ];
 
 function parseRegistryUploadResult(json: unknown): RegistryUploadResult {
@@ -49,26 +45,54 @@ function parseRegistryUploadResult(json: unknown): RegistryUploadResult {
   return result;
 }
 
+export interface RegistryDeleteOptions {
+  gateway: string;
+  httpsEnabled: boolean;
+  token: string;
+  appId: string;
+}
+
+export async function deleteFromRegistry(options: RegistryDeleteOptions): Promise<void> {
+  const { gateway, httpsEnabled, token, appId } = options;
+
+  const scheme = httpsEnabled ? 'https' : 'http';
+  const url = new URL(`${scheme}://${gateway}/api/v1/app/${appId}`);
+
+  let response: Response;
+  try {
+    response = await fetch(url, {
+      method: 'DELETE',
+      headers: { Authorization: `Bearer ${token}` },
+    });
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : 'Unknown error occurred';
+    throw new Error(`Failed to unpublish plugin: ${message}`, { cause: error });
+  }
+
+  if (!response.ok) {
+    throw new Error('There was an error unpublishing your plugin from the registry');
+  }
+}
+
 export async function uploadToRegistry(
   options: RegistryUploadOptions
 ): Promise<RegistryUploadResult> {
-  const { gateway, httpsEnabled, token, archivePath, appRefId } = options;
+  const { gateway, httpsEnabled, token, archivePath } = options;
 
   const scheme = httpsEnabled ? 'https' : 'http';
-  const url = new URL(`${scheme}://${gateway}/builder/v1/apps/source/archive`);
+  const url = new URL(`${scheme}://${gateway}/api/v1/apps/publish`);
 
   const blob = await fs.openAsBlob(archivePath, { type: 'application/zip' });
-  const filename = path.basename(archivePath);
-  const form = new FormData();
-  form.set('payload', new File([blob], filename, { type: 'application/zip' }));
-  form.set('appRefId', appRefId);
 
   let response: Response;
   try {
     response = await fetch(url, {
       method: 'POST',
-      headers: { Authorization: `Bearer ${token}` },
-      body: form,
+      headers: {
+        Authorization: `Bearer ${token}`,
+        'Content-Type': 'application/zip',
+      },
+      body: blob,
     });
   } catch (error: unknown) {
     const message = error instanceof Error ? error.message : 'Unknown error occurred';

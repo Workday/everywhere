@@ -13,7 +13,6 @@ describe('uploadToRegistry', () => {
     httpsEnabled: false,
     token: 'test-token',
     archivePath: '/tmp/test-plugin.zip',
-    appRefId: 'my-test-plugin',
   };
 
   beforeEach(() => {
@@ -29,11 +28,10 @@ describe('uploadToRegistry', () => {
 
   describe('when the upload succeeds', () => {
     const successResponse = {
-      id: 'abc123',
-      referenceId: 'ref-456',
-      status: 'published',
-      appType: 'plugin',
-      creator: 'user@example.com',
+      tenant: 'acme',
+      name: 'my-test-plugin',
+      title: 'My Test Plugin',
+      bundleUrl: '/api/v1/app/my-test-plugin/bundle.js',
     };
 
     beforeEach(() => {
@@ -54,7 +52,7 @@ describe('uploadToRegistry', () => {
     it('posts to the http registry URL when httpsEnabled is false', async () => {
       await uploadToRegistry({ ...baseOptions, httpsEnabled: false });
       expect(fetch).toHaveBeenCalledWith(
-        new URL('http://registry.example.com/builder/v1/apps/source/archive'),
+        new URL('http://registry.example.com/api/v1/apps/publish'),
         expect.anything()
       );
     });
@@ -62,7 +60,7 @@ describe('uploadToRegistry', () => {
     it('posts to the https registry URL when httpsEnabled is true', async () => {
       await uploadToRegistry({ ...baseOptions, httpsEnabled: true });
       expect(fetch).toHaveBeenCalledWith(
-        new URL('https://registry.example.com/builder/v1/apps/source/archive'),
+        new URL('https://registry.example.com/api/v1/apps/publish'),
         expect.anything()
       );
     });
@@ -72,37 +70,28 @@ describe('uploadToRegistry', () => {
       expect(fetch).toHaveBeenCalledWith(
         expect.anything(),
         expect.objectContaining({
-          headers: { Authorization: 'Bearer test-token' },
+          headers: expect.objectContaining({ Authorization: 'Bearer test-token' }),
         })
       );
     });
 
-    it('includes the appRefId in the upload form', async () => {
+    it('sets the Content-Type header to application/zip', async () => {
       await uploadToRegistry(baseOptions);
-      const calls = (fetch as ReturnType<typeof vi.fn>).mock.calls;
-      const lastCall = calls[calls.length - 1];
-      if (!lastCall) throw new Error('No fetch calls made');
-      const [, options] = lastCall;
-      expect((options.body as FormData).get('appRefId')).toBe('my-test-plugin');
+      expect(fetch).toHaveBeenCalledWith(
+        expect.anything(),
+        expect.objectContaining({
+          headers: expect.objectContaining({ 'Content-Type': 'application/zip' }),
+        })
+      );
     });
 
-    it('includes the archive as a File in the upload form payload field', async () => {
+    it('sends the archive contents as the raw request body', async () => {
       await uploadToRegistry(baseOptions);
       const calls = (fetch as ReturnType<typeof vi.fn>).mock.calls;
       const lastCall = calls[calls.length - 1];
       if (!lastCall) throw new Error('No fetch calls made');
       const [, options] = lastCall;
-      expect((options.body as FormData).get('payload')).toBeInstanceOf(File);
-    });
-
-    it('uses the archive filename for the uploaded file', async () => {
-      await uploadToRegistry(baseOptions);
-      const calls = (fetch as ReturnType<typeof vi.fn>).mock.calls;
-      const lastCall = calls[calls.length - 1];
-      if (!lastCall) throw new Error('No fetch calls made');
-      const [, options] = lastCall;
-      const payload = (options.body as FormData).get('payload') as File;
-      expect(payload.name).toBe('test-plugin.zip');
+      expect(options.body).toBeInstanceOf(Blob);
     });
   });
 
@@ -138,10 +127,10 @@ describe('uploadToRegistry', () => {
           ok: true,
           json: () =>
             Promise.resolve({
+              tenant: 'acme',
               id: 'abc123',
-              referenceId: 'ref-456',
-              status: 'published',
-              appType: 'plugin',
+              name: 'my-test-plugin',
+              title: 'My Test Plugin',
             }),
         })
       );
@@ -156,11 +145,11 @@ describe('uploadToRegistry', () => {
           ok: true,
           json: () =>
             Promise.resolve({
+              tenant: 'acme',
               id: 'abc123',
-              referenceId: 'ref-456',
-              status: 'published',
-              appType: 'plugin',
-              creator: 123,
+              name: 'my-test-plugin',
+              title: 'My Test Plugin',
+              bundleUrl: 123,
             }),
         })
       );

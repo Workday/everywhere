@@ -1,42 +1,5 @@
 {
   "commands": {
-    "everywhere:base": {
-      "aliases": [],
-      "args": {},
-      "flags": {
-        "plugin-dir": {
-          "char": "D",
-          "description": "Plugin directory (defaults to current working directory).",
-          "name": "plugin-dir",
-          "hasDynamicHelp": false,
-          "multiple": false,
-          "type": "option"
-        },
-        "verbose": {
-          "char": "v",
-          "description": "Show detailed output.",
-          "name": "verbose",
-          "allowNo": false,
-          "type": "boolean"
-        }
-      },
-      "hasDynamicHelp": false,
-      "hidden": true,
-      "hiddenAliases": [],
-      "id": "everywhere:base",
-      "pluginAlias": "@workday/everywhere",
-      "pluginName": "@workday/everywhere",
-      "pluginType": "core",
-      "strict": true,
-      "enableJsonFlag": false,
-      "isESM": true,
-      "relativePath": [
-        "dist",
-        "commands",
-        "everywhere",
-        "base.js"
-      ]
-    },
     "everywhere:bind": {
       "aliases": [],
       "args": {
@@ -285,6 +248,43 @@
         "commands",
         "everywhere",
         "publish.js"
+      ]
+    },
+    "everywhere:unpublish": {
+      "aliases": [],
+      "args": {},
+      "description": "Unpublishes your plugin from the Workday plugin registry.",
+      "flags": {
+        "plugin-dir": {
+          "char": "D",
+          "description": "Plugin directory (defaults to current working directory).",
+          "name": "plugin-dir",
+          "hasDynamicHelp": false,
+          "multiple": false,
+          "type": "option"
+        },
+        "verbose": {
+          "char": "v",
+          "description": "Show detailed output.",
+          "name": "verbose",
+          "allowNo": false,
+          "type": "boolean"
+        }
+      },
+      "hasDynamicHelp": false,
+      "hiddenAliases": [],
+      "id": "everywhere:unpublish",
+      "pluginAlias": "@workday/everywhere",
+      "pluginName": "@workday/everywhere",
+      "pluginType": "core",
+      "strict": true,
+      "enableJsonFlag": false,
+      "isESM": true,
+      "relativePath": [
+        "dist",
+        "commands",
+        "everywhere",
+        "unpublish.js"
       ]
     },
     "everywhere:view": {

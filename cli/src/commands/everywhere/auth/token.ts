@@ -15,7 +15,7 @@ export default class AuthTokenCommand extends EverywhereBaseCommand {
   };
 
   async run(): Promise<void> {
-    const { flags } = await this.parse(AuthTokenCommand);
+    const { flags } = await this.parseFlags();
     const config = appConfig();
     const saved = config.read();
     const token = saved.auth?.token;
@@ -26,7 +26,7 @@ export default class AuthTokenCommand extends EverywhereBaseCommand {
 
     const gateway = saved.auth?.gateway ?? DEFAULT_GATEWAY;
     const scheme = (saved.auth?.https ?? DEFAULT_HTTPS) ? 'https' : 'http';
-    const url = `${scheme}://${gateway}/auth/token`;
+    const url = `${scheme}://${gateway}/api/v1/auth/token`;
 
     let response: Response;
     try {
@@ -65,5 +65,10 @@ export default class AuthTokenCommand extends EverywhereBaseCommand {
       this.error('Gateway response did not contain a `token` field.');
     }
     this.log((parsed as { token: string }).token);
+  }
+
+  protected async parseFlags(): Promise<{ flags: { json: boolean } }> {
+    const { flags } = await this.parse(AuthTokenCommand);
+    return { flags: { json: flags.json } };
   }
 }
