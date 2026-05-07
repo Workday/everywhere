@@ -37,7 +37,7 @@ export class GraphQLResolver implements DataResolver {
   private readonly schemaMap: Map<string, ModelSchema>;
 
   constructor(referenceId: string, schemas: Record<string, ModelSchema>, endpoint?: string) {
-    this.endpoint = endpoint ?? `${globalThis.window?.location.origin ?? ''}/api/data/graphql`;
+    this.endpoint = endpoint ?? `${globalThis.window?.location.origin ?? ''}/api/v1/data/graphql`;
     this.referenceId = referenceId;
     this.graphPrefix = referenceIdToGraphPrefix(referenceId);
     this.schemaMap = new Map(Object.entries(schemas));
