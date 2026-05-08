@@ -3,6 +3,7 @@ import { Flags } from '@oclif/core';
 import { spawn } from 'node:child_process';
 import * as fs from 'node:fs';
 import * as path from 'node:path';
+import * as readline from 'node:readline';
 import { fileURLToPath } from 'node:url';
 
 import EverywhereBaseCommand from '../../lib/command.js';
@@ -18,12 +19,55 @@ function getSdkVersion(): string {
   return pkg.version;
 }
 
-export function runNpmInstall(cwd: string): Promise<void> {
+// On Windows, npm is a `.cmd` shim that requires the explicit extension when
+// spawned without a shell. Avoid `shell: true` because Node deprecates passing
+// args alongside it (DEP0190).
+const NPM_BIN = process.platform === 'win32' ? 'npm.cmd' : 'npm';
+
+export function promptYesNo(question: string): Promise<boolean> {
+  // In non-TTY contexts (CI, piped stdin) there's no one to answer, so decline
+  // rather than block on a stream that will never produce input.
+  if (!process.stdin.isTTY) {
+    return Promise.resolve(false);
+  }
+  const rl = readline.createInterface({
+    input: process.stdin,
+    output: process.stdout,
+  });
+  return new Promise<boolean>((resolve) => {
+    rl.question(`${question} [Y/n] `, (answer) => {
+      rl.close();
+      const normalized = answer.trim().toLowerCase();
+      resolve(normalized === '' || normalized === 'y' || normalized === 'yes');
+    });
+  });
+}
+
+export function runNpmInit(cwd: string, options: { yes?: boolean } = {}): Promise<void> {
   return new Promise((resolve, reject) => {
-    const child = spawn('npm', ['install'], {
+    const args = options.yes ? ['init', '-y'] : ['init'];
+    const child = spawn(NPM_BIN, args, {
       cwd,
       stdio: 'inherit',
-      shell: true,
+    });
+    child.on('error', (err) => {
+      reject(new Error(`Failed to start npm init: ${err.message}`));
+    });
+    child.on('close', (code) => {
+      if (code === 0) {
+        resolve();
+      } else {
+        reject(new Error(`npm init failed with exit code ${code}`));
+      }
+    });
+  });
+}
+
+export function runNpmInstall(cwd: string): Promise<void> {
+  return new Promise((resolve, reject) => {
+    const child = spawn(NPM_BIN, ['install'], {
+      cwd,
+      stdio: 'inherit',
     });
     child.on('error', (err) => {
       reject(new Error(`Failed to start npm install: ${err.message}`));
@@ -47,6 +91,10 @@ export default class InitCommand extends EverywhereBaseCommand {
       char: 'T',
       description: 'Human-friendly display name for the plugin.',
     }),
+    yes: Flags.boolean({
+      char: 'y',
+      description: 'Skip confirmation prompts and pass -y to `npm init` if it runs.',
+    }),
   };
 
   async run(): Promise<void> {
@@ -54,11 +102,20 @@ export default class InitCommand extends EverywhereBaseCommand {
     const pluginDir = await this.parsePluginDir();
     const verbose = flags.verbose;
     const title = flags.title;
+    const yes = flags.yes;
 
     // Pre-check 1: package.json exists
     const pkgPath = path.join(pluginDir, 'package.json');
     if (!fs.existsSync(pkgPath)) {
-      this.error(`No package.json found in ${pluginDir}. Run \`npm init\` first.`);
+      const confirmed =
+        yes || (await promptYesNo('No package.json found. Would you like to run npm init?'));
+      if (!confirmed) {
+        this.log('Run `npm init` first, then re-run `we init`.');
+        return;
+      }
+      // npm init creates package.json on a clean exit; a non-zero exit causes
+      // runNpmInit to reject, so the read below only happens on success.
+      await runNpmInit(pluginDir, { yes });
     }
 
     // Pre-check 2: package.json parses and has a name
