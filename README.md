@@ -128,18 +128,26 @@ requests through the `everywhere view` dev server, which injects your stored cre
 automatically — no tokens in source code.
 
 ```tsx
-import { plugin, route, DataProvider, GraphQLResolver } from '@workday/everywhere';
+import { plugin, route, DataProvider, GraphQLResolver, useQuery } from '@workday/everywhere';
 import { schemas } from './everywhere/data/schema.js';
-import EventListPage from './pages/EventList.js';
+import React, { type ReactNode } from 'react';
 
 // referenceId comes from appManifest.json in your Extend bundle.
 const resolver = new GraphQLResolver('your-app-referenceId', schemas);
 
-function AppProvider({ children }) {
-  return <DataProvider resolver={resolver}>{children}</DataProvider>;
+function AppProvider({ children }: { children: ReactNode }) {
+  return <DataProvider resolver={resolver} children={children} />;
 }
 
-const events = route('events', { component: EventListPage });
+function ComponentWithData() {
+  // use the useQuery hook to get the data from your given model
+  const { data, loading, error } = useQuery('your-app-model-name');
+  if (loading) return <div>Loading…</div>;
+  if (error) return <pre>{error.message}</pre>;
+  return <div>{JSON.stringify(data)}</div>;
+}
+
+const events = route('events', { component: ComponentWithData });
 
 export default plugin({
   provider: AppProvider,
