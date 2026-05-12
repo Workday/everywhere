@@ -3,3 +3,4 @@ dist/
 cli/dist/
 cli/oclif.manifest.json
 package-lock.json
+settings.local.json
