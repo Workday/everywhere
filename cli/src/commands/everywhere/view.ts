@@ -61,7 +61,7 @@ export default class ViewCommand extends EverywhereBaseCommand {
       ? {}
       : {
           proxy: {
-            '/api/data/graphql': {
+            '/api/v1/data/graphql': {
               target: apiServer,
               changeOrigin: true,
               configure: (proxy, _options) => {

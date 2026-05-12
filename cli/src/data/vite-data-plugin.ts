@@ -13,7 +13,7 @@ export function dataServicePlugin(pluginDir: string): VitePlugin {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     configureServer(server: { middlewares: { use: (...args: any[]) => void } }) {
       server.middlewares.use(
-        '/api/data/graphql',
+        '/api/v1/data/graphql',
         async (req: IncomingMessage, res: ServerResponse) => {
           if (req.method !== 'POST') {
             res.writeHead(405, { 'Content-Type': 'application/json' });

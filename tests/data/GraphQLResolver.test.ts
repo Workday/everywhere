@@ -3,7 +3,7 @@ import { GraphQLResolver } from '../../src/data/GraphQLResolver.js';
 import type { ModelSchema } from '../../src/data/types.js';
 
 const SCHEMA: ModelSchema = { fields: [], collection: 'things', securityDomains: [] };
-const ENDPOINT = 'https://tenant.workday.com/api/data/graphql';
+const ENDPOINT = 'https://tenant.workday.com/api/v1/data/graphql';
 
 function mockFetch(data: unknown[] = []) {
   return vi.fn().mockResolvedValue({

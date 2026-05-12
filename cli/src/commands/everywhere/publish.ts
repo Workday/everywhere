@@ -31,7 +31,7 @@ export default class PublishCommand extends EverywhereBaseCommand {
     const manifest = this.loadManifest(pluginDir);
 
     this.log('Bundling plugin...');
-    const { archive, slug } = await this.buildPluginArchive(manifest, pluginDir);
+    const { archive } = await this.buildPluginArchive(manifest, pluginDir);
 
     this.log('Publishing plugin...');
     const result = await this.publishPlugin({
@@ -39,7 +39,6 @@ export default class PublishCommand extends EverywhereBaseCommand {
       httpsEnabled: config.auth?.https ?? true,
       token,
       archivePath: archive.filePath,
-      appRefId: slug,
     });
 
     this.log(this.formatSuccessMessage(result, config));
@@ -86,14 +85,12 @@ export default class PublishCommand extends EverywhereBaseCommand {
   private formatSuccessMessage(result: RegistryUploadResult, config: AppConfig): string {
     const scheme = (config.auth?.https ?? true) ? 'https' : 'http';
     return [
-      `Successfully published your plugin: ${result.referenceId}`,
+      `Successfully published your plugin: ${result.name}`,
       '',
-      `Log into ${scheme}://${config.auth?.gateway}/builder/preview to view and deploy your app`,
+      `Bundle: ${scheme}://${config.auth?.gateway}${result.bundleUrl}`,
       '',
-      `ID: ${result.id}`,
-      `Status: ${result.status}`,
-      `App type: ${result.appType}`,
-      `Created by: ${result.creator}`,
+      `Tenant: ${result.tenant}`,
+      `Title: ${result.title}`,
     ].join('\n');
   }
 }
