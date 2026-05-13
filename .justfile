@@ -1,8 +1,6 @@
 # Workflow targets for Workday Everywhere SDK
 
-# Install dependencies
-setup:
-    npm {{ if env("CI", "") != "" { "ci" } else { "install" } }}
+import 'common.just'
 
 # Format source files
 tidy:
@@ -44,11 +42,3 @@ release bump="patch": release-guard check test
     git commit -m "release v$VERSION"
     git tag -a "v$VERSION" -m "v$VERSION"
     git push && git push --tags
-
-# Remove build artifacts
-clean:
-    rm -rf dist/
-
-# Remove build artifacts and installed dependencies
-clobber: clean
-    rm -rf node_modules/

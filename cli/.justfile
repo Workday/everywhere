@@ -1,8 +1,6 @@
 # Workflow targets for wdcli-plugin-everywhere
 
-# Install dependencies
-setup:
-    npm {{ if env("CI", "") != "" { "ci" } else { "install" } }}
+import '../common.just'
 
 # Build to dist/
 build: setup
@@ -17,11 +15,3 @@ check:
 # Run tests
 test:
     npx vitest run
-
-# Remove build artifacts
-clean:
-    rm -rf dist/
-
-# Remove build artifacts and installed dependencies
-clobber: clean
-    rm -rf node_modules/
