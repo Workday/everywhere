@@ -1,3 +1,6 @@
+import { readFile } from 'node:fs/promises';
+import { join } from 'node:path';
+
 // Deprecated compatibility surface for `@workday/everywhere/build`.
 //
 // The canonical implementations live in `cli/src/build/**`. This file proxies
@@ -39,7 +42,7 @@ interface CliPackageOptions {
 }
 
 interface CliBuildModule {
-  bundlePlugin(cwd: string): Promise<CliPluginBundle>;
+  bundlePlugin(cwd: string, slug: string): Promise<CliPluginBundle>;
   packagePlugin(options: CliPackageOptions): Promise<PackageResult>;
 }
 
@@ -71,7 +74,16 @@ async function loadCliBuildModule(): Promise<CliBuildModule> {
 export async function bundlePlugin(cwd: string): Promise<string> {
   warnDeprecated();
   const cliBuild = await loadCliBuildModule();
-  const bundle = await cliBuild.bundlePlugin(cwd);
+  let slug = '';
+  try {
+    const pkg = JSON.parse(await readFile(join(cwd, 'package.json'), 'utf8')) as {
+      name?: unknown;
+    };
+    if (typeof pkg.name === 'string') slug = toSlug(pkg.name);
+  } catch {
+    // package.json unreadable — fall back to no publicPath
+  }
+  const bundle = await cliBuild.bundlePlugin(cwd, slug);
   return bundle.js;
 }
 
@@ -91,11 +103,15 @@ export async function packagePlugin(options: PackageOptions): Promise<PackageRes
 // duplicated here because the shim's other exports are async (proxied via
 // dynamic import) but `slugify` has always been synchronous, and changing
 // that would itself be a breaking change.
-export function slugify(input: string): string {
-  warnDeprecated();
+function toSlug(input: string): string {
   return input
     .toLowerCase()
     .replace(/[^a-z0-9\s-]/g, '')
     .replace(/[\s-]+/g, '-')
     .replace(/^-+|-+$/g, '');
+}
+
+export function slugify(input: string): string {
+  warnDeprecated();
+  return toSlug(input);
 }

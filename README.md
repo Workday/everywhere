@@ -73,7 +73,7 @@ npx everywhere build
 ```
 
 This produces a `dist/<name>-<version>.zip` containing `package.json`, the bundled `plugin.js`, and
-when present `plugin.css` plus any hashed static assets under `assets/`.
+when present `plugin.css` plus any hashed static assets (images, fonts, etc.) at the archive root.
 
 ## Connecting to Workday Data
 

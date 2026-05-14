@@ -144,7 +144,7 @@ describe('packagePlugin()', () => {
         pluginDir,
         bundle: {
           js: 'export default {};',
-          assets: [{ path: 'assets/logo-AB12.png', contents: png }],
+          assets: [{ path: 'logo-AB12.png', contents: png }],
         },
         outputDir,
         slug: 'test-plugin',
@@ -153,7 +153,7 @@ describe('packagePlugin()', () => {
 
       const zipData = await readFile(result.filePath);
       const zip = await JSZip.loadAsync(zipData);
-      const entry = zip.file('assets/logo-AB12.png');
+      const entry = zip.file('logo-AB12.png');
 
       expect(entry).not.toBeNull();
     });

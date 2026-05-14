@@ -29,25 +29,25 @@ export default plugin({ defaultRoute: home, routes: [home] });`;
 
 describe('bundlePlugin()', () => {
   it('returns non-empty bundled JavaScript', async () => {
-    const bundle = await bundlePlugin(FIXTURE_DIR);
+    const bundle = await bundlePlugin(FIXTURE_DIR, 'test-plugin');
 
     expect(bundle.js.length).toBeGreaterThan(0);
   });
 
   it('produces valid ESM with a default export', async () => {
-    const bundle = await bundlePlugin(FIXTURE_DIR);
+    const bundle = await bundlePlugin(FIXTURE_DIR, 'test-plugin');
 
     expect(bundle.js).toContain('export');
   });
 
   it('externalizes @workday/everywhere imports', async () => {
-    const bundle = await bundlePlugin(FIXTURE_DIR);
+    const bundle = await bundlePlugin(FIXTURE_DIR, 'test-plugin');
 
     expect(bundle.js).toContain('@workday/everywhere');
   });
 
   it('externalizes react imports', async () => {
-    const bundle = await bundlePlugin(FIXTURE_DIR);
+    const bundle = await bundlePlugin(FIXTURE_DIR, 'test-plugin');
 
     expect(bundle.js).toContain('react');
   });
@@ -55,12 +55,14 @@ describe('bundlePlugin()', () => {
   it('throws when no plugin entry file exists', async () => {
     const emptyDir = join(import.meta.dirname, 'fixtures');
 
-    await expect(bundlePlugin(emptyDir)).rejects.toThrow('No plugin entry file found');
+    await expect(bundlePlugin(emptyDir, 'test-plugin')).rejects.toThrow(
+      'No plugin entry file found'
+    );
   });
 
   describe('when the plugin has no plugin.css', () => {
     it('leaves css undefined', async () => {
-      const bundle = await bundlePlugin(FIXTURE_DIR);
+      const bundle = await bundlePlugin(FIXTURE_DIR, 'test-plugin');
 
       expect(bundle.css).toBeUndefined();
     });
@@ -68,7 +70,7 @@ describe('bundlePlugin()', () => {
 
   describe('when plugin.css imports from node_modules', () => {
     it('merges imported rules into the bundled css string', async () => {
-      const bundle = await bundlePlugin(CSS_NODE_FIXTURE);
+      const bundle = await bundlePlugin(CSS_NODE_FIXTURE, 'test-plugin');
 
       expect(bundle.css).toMatch(/from-node|navy/);
     });
@@ -76,25 +78,23 @@ describe('bundlePlugin()', () => {
 
   describe('when plugin.css references a relative image', () => {
     it('emits a hashed asset and rewrites the url in css', async () => {
-      const bundle = await bundlePlugin(CSS_URL_FIXTURE);
+      const bundle = await bundlePlugin(CSS_URL_FIXTURE, 'test-plugin');
 
-      expect(
-        bundle.assets.some((a) => /^assets\/dot-/.test(a.path) && a.path.endsWith('.png'))
-      ).toBe(true);
+      expect(bundle.assets.some((a) => /^dot-/.test(a.path) && a.path.endsWith('.png'))).toBe(true);
     });
 
-    it('includes a relative assets path in the bundled css', async () => {
-      const bundle = await bundlePlugin(CSS_URL_FIXTURE);
+    it('includes an absolute API path in the bundled css', async () => {
+      const bundle = await bundlePlugin(CSS_URL_FIXTURE, 'test-plugin');
 
-      expect(bundle.css).toMatch(/url\(['"]?\.\/assets\/dot-/);
+      expect(bundle.css).toMatch(/url\(['"]?\/api\/v1\/app\/test-plugin\/dot-/);
     });
   });
 
   describe('when JavaScript imports a png', () => {
     it('emits a hashed asset and rewrites the import in js', async () => {
-      const bundle = await bundlePlugin(JS_PNG_FIXTURE);
+      const bundle = await bundlePlugin(JS_PNG_FIXTURE, 'test-plugin');
 
-      expect(bundle.js).toMatch(/\.\/assets\/dot-/);
+      expect(bundle.js).toMatch(/\/api\/v1\/app\/test-plugin\/dot-/);
     });
   });
 
@@ -104,11 +104,13 @@ describe('bundlePlugin()', () => {
     // the noise rather than silence esbuild's logger, which would also hide useful
     // diagnostics when end users run `everywhere build`.
     it('fails with a message that points authors to plugin.css', async () => {
-      await expect(bundlePlugin(JS_IMPORTS_CSS_FIXTURE)).rejects.toThrow(/plugin\.css/);
+      await expect(bundlePlugin(JS_IMPORTS_CSS_FIXTURE, 'test-plugin')).rejects.toThrow(
+        /plugin\.css/
+      );
     });
 
     it('fails with a message that includes an @import hint', async () => {
-      await expect(bundlePlugin(JS_IMPORTS_CSS_FIXTURE)).rejects.toThrow(/@import/);
+      await expect(bundlePlugin(JS_IMPORTS_CSS_FIXTURE, 'test-plugin')).rejects.toThrow(/@import/);
     });
   });
 
@@ -121,7 +123,7 @@ describe('bundlePlugin()', () => {
         await writeFile(join(dir, 'plugin.tsx'), MINIMAL_PLUGIN_TSX);
         await writeFile(join(dir, 'huge.png'), Buffer.alloc(5 * 1024 * 1024 + 1));
 
-        await bundlePlugin(dir);
+        await bundlePlugin(dir, 'test-plugin');
 
         expect(
           warn.mock.calls.some(([msg]) => typeof msg === 'string' && /huge.*exceeds/.test(msg))

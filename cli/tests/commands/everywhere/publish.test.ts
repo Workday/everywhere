@@ -233,7 +233,7 @@ describe('everywhere publish', () => {
       it('bundles the plugin from the plugin directory', async () => {
         await cmd.run();
 
-        expect(plugins.bundlePlugin).toHaveBeenCalledWith(pluginDir);
+        expect(plugins.bundlePlugin).toHaveBeenCalledWith(pluginDir, 'my-test-plugin');
       });
 
       it('packages the plugin with the correct parameters', async () => {
