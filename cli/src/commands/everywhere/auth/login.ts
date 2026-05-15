@@ -42,6 +42,25 @@ export default class AuthLoginCommand extends EverywhereBaseCommand {
       this.error('Invalid token format. Please provide a valid JWT.');
     }
 
+    const scheme = https ? 'https' : 'http';
+    const url = `${scheme}://${gateway}/api/v1/me`;
+
+    let response: Response;
+    try {
+      response = await fetch(url, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+    } catch (err) {
+      const message = err instanceof Error ? err.message : String(err);
+      this.error(`Token validation request failed: ${message}`);
+    }
+
+    if (!response.ok) {
+      this.error(`Token validation failed (HTTP ${response.status}).`);
+    }
+
     config.write({ auth: { gateway, https, token } });
     this.log(chalk.green('Successfully authenticated.'));
   }
