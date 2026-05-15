@@ -25,7 +25,7 @@ const FILE_LOADERS: Record<string, esbuild.Loader> = {
   '.eot': 'file',
 };
 
-const ASSET_NAMES = 'assets/[name]-[hash]';
+const ASSET_NAMES = '[name]-[hash]';
 const ASSET_SIZE_WARN_BYTES = 5 * 1024 * 1024;
 
 export interface PluginBundle {
@@ -122,7 +122,11 @@ function warnAboutLargeAssets(assets: Array<{ path: string; contents: Uint8Array
   }
 }
 
-function sharedBuildOptions(outdir: string, nodePaths: string[]): esbuild.BuildOptions {
+function sharedBuildOptions(
+  outdir: string,
+  nodePaths: string[],
+  slug: string
+): esbuild.BuildOptions {
   return {
     bundle: true,
     write: false,
@@ -139,16 +143,17 @@ function sharedBuildOptions(outdir: string, nodePaths: string[]): esbuild.BuildO
     loader: FILE_LOADERS,
     assetNames: ASSET_NAMES,
     nodePaths,
+    ...(slug ? { publicPath: `/api/v1/app/${slug}/` } : {}),
   };
 }
 
-export async function bundlePlugin(cwd: string): Promise<PluginBundle> {
+export async function bundlePlugin(cwd: string, slug: string): Promise<PluginBundle> {
   const entryPath = await findPluginEntry(cwd);
   const nodePaths = [join(cwd, 'node_modules'), join(process.cwd(), 'node_modules')];
   const outdir = join(cwd, '.everywhere-esbuild-out');
 
   const jsResult = await esbuild.build({
-    ...sharedBuildOptions(outdir, nodePaths),
+    ...sharedBuildOptions(outdir, nodePaths, slug),
     entryPoints: [entryPath],
     plugins: [rejectCssImportsFromJs()],
   });
@@ -161,7 +166,7 @@ export async function bundlePlugin(cwd: string): Promise<PluginBundle> {
 
   if (cssEntry) {
     const cssResult = await esbuild.build({
-      ...sharedBuildOptions(outdir, nodePaths),
+      ...sharedBuildOptions(outdir, nodePaths, slug),
       entryPoints: [cssEntry],
     });
     const split = splitBuildOutputs(cssResult.outputFiles ?? [], outdir);
