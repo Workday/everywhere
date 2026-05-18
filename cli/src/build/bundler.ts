@@ -125,7 +125,8 @@ function warnAboutLargeAssets(assets: Array<{ path: string; contents: Uint8Array
 function sharedBuildOptions(
   outdir: string,
   nodePaths: string[],
-  slug: string
+  slug: string,
+  appId: string
 ): esbuild.BuildOptions {
   return {
     bundle: true,
@@ -144,16 +145,21 @@ function sharedBuildOptions(
     assetNames: ASSET_NAMES,
     nodePaths,
     ...(slug ? { publicPath: `/api/v1/app/${slug}/` } : {}),
+    banner: { js: `globalThis.__WE_APP_ID__ = ${JSON.stringify(appId)};` },
   };
 }
 
-export async function bundlePlugin(cwd: string, slug: string): Promise<PluginBundle> {
+export async function bundlePlugin(
+  cwd: string,
+  slug: string,
+  appId: string
+): Promise<PluginBundle> {
   const entryPath = await findPluginEntry(cwd);
   const nodePaths = [join(cwd, 'node_modules'), join(process.cwd(), 'node_modules')];
   const outdir = join(cwd, '.everywhere-esbuild-out');
 
   const jsResult = await esbuild.build({
-    ...sharedBuildOptions(outdir, nodePaths, slug),
+    ...sharedBuildOptions(outdir, nodePaths, slug, appId),
     entryPoints: [entryPath],
     plugins: [rejectCssImportsFromJs()],
   });
@@ -166,7 +172,7 @@ export async function bundlePlugin(cwd: string, slug: string): Promise<PluginBun
 
   if (cssEntry) {
     const cssResult = await esbuild.build({
-      ...sharedBuildOptions(outdir, nodePaths, slug),
+      ...sharedBuildOptions(outdir, nodePaths, slug, appId),
       entryPoints: [cssEntry],
     });
     const split = splitBuildOutputs(cssResult.outputFiles ?? [], outdir);

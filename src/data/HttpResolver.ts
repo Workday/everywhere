@@ -30,9 +30,13 @@ export class HttpResolver implements DataResolver {
   }
 
   private async execute<T>(query: string, variables: Record<string, unknown>): Promise<T> {
+    const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+    const appId = (globalThis as { __WE_APP_ID__?: string }).__WE_APP_ID__;
+    if (typeof appId === 'string') headers['x-app-id'] = appId;
+
     const response = await fetch(this.graphqlUrl, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers,
       body: JSON.stringify({ query, variables }),
     });
 

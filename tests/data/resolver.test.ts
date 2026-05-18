@@ -1,4 +1,4 @@
-import { describe, it, expect, vi } from 'vitest';
+import { describe, it, expect, vi, afterEach } from 'vitest';
 import { HttpResolver } from '../../src/data/HttpResolver.js';
 
 describe('HttpResolver', () => {
@@ -158,6 +158,53 @@ describe('HttpResolver', () => {
       const resolver = new HttpResolver('/api/data');
 
       await expect(resolver.findOne('Employee', '999')).rejects.toThrow('Not found');
+    });
+  });
+
+  describe('when __WE_APP_ID__ global is set', () => {
+    afterEach(() => {
+      vi.unstubAllGlobals();
+    });
+
+    it('sends the x-app-id header with the app id value', async () => {
+      vi.stubGlobal('__WE_APP_ID__', '@acme/my-plugin');
+      vi.stubGlobal(
+        'fetch',
+        vi.fn().mockResolvedValue({
+          ok: true,
+          json: () => Promise.resolve({ data: [] }),
+        })
+      );
+
+      const resolver = new HttpResolver('/api/data');
+      await resolver.find('Employee');
+
+      const headers = (globalThis.fetch as ReturnType<typeof vi.fn>).mock.calls[0][1]
+        .headers as Record<string, string>;
+      expect(headers['x-app-id']).toBe('@acme/my-plugin');
+    });
+  });
+
+  describe('when __WE_APP_ID__ global is not set', () => {
+    afterEach(() => {
+      vi.unstubAllGlobals();
+    });
+
+    it('does not send an x-app-id header', async () => {
+      vi.stubGlobal(
+        'fetch',
+        vi.fn().mockResolvedValue({
+          ok: true,
+          json: () => Promise.resolve({ data: [] }),
+        })
+      );
+
+      const resolver = new HttpResolver('/api/data');
+      await resolver.find('Employee');
+
+      const headers = (globalThis.fetch as ReturnType<typeof vi.fn>).mock.calls[0][1]
+        .headers as Record<string, string>;
+      expect(headers['x-app-id']).toBeUndefined();
     });
   });
 });

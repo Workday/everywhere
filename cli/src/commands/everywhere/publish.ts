@@ -55,7 +55,7 @@ export default class PublishCommand extends EverywhereBaseCommand {
 
   private async buildPluginArchive(manifest: PluginManifest, pluginDir: string) {
     const slug = plugins.slugify(manifest.name);
-    const bundle = await plugins.bundlePlugin(pluginDir, slug);
+    const bundle = await plugins.bundlePlugin(pluginDir, slug, manifest.name);
     const archive = await plugins.packagePlugin({
       pluginDir,
       bundle,

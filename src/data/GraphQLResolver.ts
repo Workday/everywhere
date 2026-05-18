@@ -80,6 +80,9 @@ export class GraphQLResolver implements DataResolver {
       'content-type': 'application/json',
     };
 
+    const appId = (globalThis as { __WE_APP_ID__?: string }).__WE_APP_ID__;
+    if (typeof appId === 'string') headers['x-app-id'] = appId;
+
     const response = await fetch(this.endpoint, {
       method: 'POST',
       headers,
