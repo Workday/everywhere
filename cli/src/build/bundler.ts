@@ -125,8 +125,7 @@ function warnAboutLargeAssets(assets: Array<{ path: string; contents: Uint8Array
 function sharedBuildOptions(
   outdir: string,
   nodePaths: string[],
-  slug: string,
-  appId: string
+  slug: string
 ): esbuild.BuildOptions {
   return {
     bundle: true,
@@ -145,7 +144,6 @@ function sharedBuildOptions(
     assetNames: ASSET_NAMES,
     nodePaths,
     ...(slug ? { publicPath: `/api/v1/app/${slug}/` } : {}),
-    banner: { js: `globalThis.__WE_APP_ID__ = ${JSON.stringify(appId)};` },
   };
 }
 
@@ -159,9 +157,10 @@ export async function bundlePlugin(
   const outdir = join(cwd, '.everywhere-esbuild-out');
 
   const jsResult = await esbuild.build({
-    ...sharedBuildOptions(outdir, nodePaths, slug, appId),
+    ...sharedBuildOptions(outdir, nodePaths, slug),
     entryPoints: [entryPath],
     plugins: [rejectCssImportsFromJs()],
+    ...(appId ? { banner: { js: `globalThis.__WE_APP_ID__ = ${JSON.stringify(appId)};` } } : {}),
   });
 
   const { js, assets: jsAssets } = splitBuildOutputs(jsResult.outputFiles ?? [], outdir);
@@ -172,7 +171,7 @@ export async function bundlePlugin(
 
   if (cssEntry) {
     const cssResult = await esbuild.build({
-      ...sharedBuildOptions(outdir, nodePaths, slug, appId),
+      ...sharedBuildOptions(outdir, nodePaths, slug),
       entryPoints: [cssEntry],
     });
     const split = splitBuildOutputs(cssResult.outputFiles ?? [], outdir);
