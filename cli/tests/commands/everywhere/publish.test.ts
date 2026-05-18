@@ -201,7 +201,7 @@ describe('everywhere publish', () => {
       beforeEach(() => {
         fs.writeFileSync(
           path.join(pluginDir, 'package.json'),
-          JSON.stringify({ name: 'my-test-plugin', version: '2.3.4' }),
+          JSON.stringify({ name: '@acme/my-test-plugin', version: '2.3.4' }),
           'utf-8'
         );
 
@@ -212,9 +212,9 @@ describe('everywhere publish', () => {
           js: '(()=>{})();',
           assets: [],
         });
-        vi.mocked(plugins.slugify).mockReturnValue('my-test-plugin');
+        vi.mocked(plugins.slugify).mockReturnValue('acme-my-test-plugin');
         vi.mocked(plugins.packagePlugin).mockResolvedValue({
-          filePath: path.join(pluginDir, 'dist', 'my-test-plugin.zip'),
+          filePath: path.join(pluginDir, 'dist', 'acme-my-test-plugin.zip'),
         } as unknown as Awaited<ReturnType<typeof plugins.packagePlugin>>);
 
         (fs.openAsBlob as ReturnType<typeof vi.fn>).mockResolvedValue(
@@ -233,7 +233,11 @@ describe('everywhere publish', () => {
       it('bundles the plugin from the plugin directory', async () => {
         await cmd.run();
 
-        expect(plugins.bundlePlugin).toHaveBeenCalledWith(pluginDir, 'my-test-plugin');
+        expect(plugins.bundlePlugin).toHaveBeenCalledWith(
+          pluginDir,
+          'acme-my-test-plugin',
+          '@acme/my-test-plugin'
+        );
       });
 
       it('packages the plugin with the correct parameters', async () => {
@@ -243,7 +247,7 @@ describe('everywhere publish', () => {
           pluginDir,
           bundle: { js: '(()=>{})();', assets: [] },
           outputDir: path.join(pluginDir, 'dist'),
-          slug: 'my-test-plugin',
+          slug: 'acme-my-test-plugin',
           version: '2.3.4',
         });
       });

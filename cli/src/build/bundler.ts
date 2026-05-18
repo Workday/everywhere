@@ -147,7 +147,11 @@ function sharedBuildOptions(
   };
 }
 
-export async function bundlePlugin(cwd: string, slug: string): Promise<PluginBundle> {
+export async function bundlePlugin(
+  cwd: string,
+  slug: string,
+  appId: string
+): Promise<PluginBundle> {
   const entryPath = await findPluginEntry(cwd);
   const nodePaths = [join(cwd, 'node_modules'), join(process.cwd(), 'node_modules')];
   const outdir = join(cwd, '.everywhere-esbuild-out');
@@ -156,6 +160,7 @@ export async function bundlePlugin(cwd: string, slug: string): Promise<PluginBun
     ...sharedBuildOptions(outdir, nodePaths, slug),
     entryPoints: [entryPath],
     plugins: [rejectCssImportsFromJs()],
+    ...(appId ? { banner: { js: `globalThis.__WE_APP_ID__ = ${JSON.stringify(appId)};` } } : {}),
   });
 
   const { js, assets: jsAssets } = splitBuildOutputs(jsResult.outputFiles ?? [], outdir);

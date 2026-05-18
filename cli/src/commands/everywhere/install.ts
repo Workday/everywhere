@@ -53,7 +53,7 @@ export default class InstallCommand extends EverywhereBaseCommand {
     // Build
     this.log('Bundling plugin...');
     const slug = slugify(pkg.name);
-    const bundle = await bundlePlugin(pluginDir, slug);
+    const bundle = await bundlePlugin(pluginDir, slug, pkg.name);
 
     this.log('Packaging...');
     const outputDir = join(pluginDir, 'dist');

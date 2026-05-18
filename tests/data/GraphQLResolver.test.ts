@@ -1,4 +1,4 @@
-import { describe, it, expect, vi } from 'vitest';
+import { describe, it, expect, vi, afterEach } from 'vitest';
 import { GraphQLResolver } from '../../src/data/GraphQLResolver.js';
 import type { ModelSchema } from '../../src/data/types.js';
 
@@ -93,6 +93,39 @@ describe('GraphQLResolver', () => {
       const headers = (globalThis.fetch as ReturnType<typeof vi.fn>).mock.calls[0][1]
         .headers as Record<string, string>;
       expect(headers['authorization']).toBeUndefined();
+    });
+  });
+
+  describe('when __WE_APP_ID__ global is set', () => {
+    afterEach(() => {
+      vi.unstubAllGlobals();
+    });
+
+    it('sends the x-app-id header with the app id value', async () => {
+      vi.stubGlobal('__WE_APP_ID__', '@acme/my-plugin');
+      globalThis.fetch = mockFetch();
+
+      await new GraphQLResolver('app_ns1', { Thing: SCHEMA }, ENDPOINT).find('Thing');
+
+      const headers = (globalThis.fetch as ReturnType<typeof vi.fn>).mock.calls[0][1]
+        .headers as Record<string, string>;
+      expect(headers['x-app-id']).toBe('@acme/my-plugin');
+    });
+  });
+
+  describe('when __WE_APP_ID__ global is not set', () => {
+    afterEach(() => {
+      vi.unstubAllGlobals();
+    });
+
+    it('does not send an x-app-id header', async () => {
+      globalThis.fetch = mockFetch();
+
+      await new GraphQLResolver('app_ns1', { Thing: SCHEMA }, ENDPOINT).find('Thing');
+
+      const headers = (globalThis.fetch as ReturnType<typeof vi.fn>).mock.calls[0][1]
+        .headers as Record<string, string>;
+      expect(headers['x-app-id']).toBeUndefined();
     });
   });
 });
