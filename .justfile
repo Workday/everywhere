@@ -12,7 +12,7 @@ tidy:
 check:
     npx prettier --check .
     npx tsc --noEmit
-    npx eslint src/
+    npx eslint src/ cli/src/
 
 # Build package to dist/
 build:
