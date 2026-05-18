@@ -13,6 +13,7 @@ build: setup
 # Run static checks
 check:
     npx tsc --noEmit
+    npx eslint src/
 
 # Run tests
 test:
