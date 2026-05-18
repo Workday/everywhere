@@ -15,16 +15,41 @@ export default abstract class EverywhereBaseCommand extends Command {
     }),
     verbose: Flags.boolean({
       char: 'v',
-      description: 'Show detailed output.',
+      description: 'Show detailed output including stack traces and error codes.',
     }),
   };
 
+  protected get isVerbose(): boolean {
+    return this._verbose;
+  }
+
   protected get pluginDir(): string {
-    // Resolved during run() after flags are parsed
     return this._pluginDir;
   }
 
+  private _verbose = false;
   private _pluginDir = process.cwd();
+
+  override async init(): Promise<void> {
+    await super.init();
+    const { flags } = await this.parse(this.constructor as typeof EverywhereBaseCommand);
+    this._verbose = flags.verbose ?? false;
+  }
+
+  override async catch(error: Error & { code?: string; exitCode?: number }): Promise<void> {
+    if (this._verbose) {
+      const timestamp = new Date().toISOString();
+      const stack = error.stack ?? `Error: ${error.message}`;
+      this.warn(`[${timestamp}]\n${stack}`);
+      if (error.code) {
+        this.warn(`  code: ${error.code}`);
+      }
+      if (error.exitCode !== undefined) {
+        this.warn(`  exit: ${error.exitCode}`);
+      }
+    }
+    return super.catch(error);
+  }
 
   protected async parsePluginDir(): Promise<string> {
     const { flags } = await this.parse(this.constructor as typeof EverywhereBaseCommand);
