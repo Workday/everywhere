@@ -22,7 +22,7 @@ build:
 # Run tests
 test: build
     cd examples && just setup
-    npx vitest run
+    npx vitest run --exclude ".worktrees/**"
 
 # Verify no uncommitted changes to tracked files
 release-guard:
