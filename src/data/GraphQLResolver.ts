@@ -154,7 +154,7 @@ export class GraphQLResolver implements DataResolver {
   async create<T>(model: string, input: Omit<T, 'id'>): Promise<T> {
     const schema = this.schema(model);
     const { collection } = schema;
-    const inputType = `${this.graphPrefix}_${capitalize(collection)}Summary_CreateInput`;
+    const inputType = `${this.graphPrefix}_${capitalize(collection)}Summary_Create_Input`;
     const mutationName = `${this.referenceId}_create${model}`;
 
     const selectionSet = await this.selectionSetFor(schema);
@@ -174,7 +174,7 @@ export class GraphQLResolver implements DataResolver {
   async update<T>(model: string, id: string, input: Partial<T>): Promise<T> {
     const schema = this.schema(model);
     const { collection } = schema;
-    const inputType = `${this.graphPrefix}_${capitalize(collection)}Summary_UpdateInput`;
+    const inputType = `${this.graphPrefix}_${capitalize(collection)}Summary_Update_Input`;
     const mutationName = `${this.referenceId}_update${model}`;
 
     const selectionSet = await this.selectionSetFor(schema);
