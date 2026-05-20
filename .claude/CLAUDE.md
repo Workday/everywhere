@@ -44,6 +44,20 @@ Types: `feat`, `fix`, `chore`, `docs`, `refactor`, `test`, `style`, `perf`
 
 Scope is optional but encouraged (e.g. `fix(auth): ...`, `feat(events): ...`).
 
+## Jira ticket hygiene
+
+When creating or updating Jira tickets for this team, always verify these routing fields so work
+appears on the correct board/backlog:
+
+- **Project**: set to the correct Jira project key (for this team, typically `NW`).
+- **Team**: set the Jira Team field (`customfield_13400`) to the exact board-mapped team value (for
+  this team, `WE Plugins`).
+- **Scrum Team**: if used by a board/workflow, set Jira Scrum Team (`scrumTeam`) to the exact valid
+  option.
+- **Component**: set `components` to the expected component (for this team, `WE PlugIns`).
+
+Do not assume team values from board names; use the exact dropdown option value accepted by Jira.
+
 ## Branch Naming
 
 Use the same type prefixes as commits, followed by a short description of the intended changes:
