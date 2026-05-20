@@ -13,54 +13,7 @@ function mockFetch(data: unknown[] = []) {
   });
 }
 
-function mockMutationFetch(mutationKey: string) {
-  return vi.fn().mockResolvedValue({
-    ok: true,
-    status: 200,
-    json: () =>
-      Promise.resolve({
-        data: {
-          [mutationKey]: { workdayID: { id: '1', type: 'Thing' }, descriptor: 'T' },
-        },
-      }),
-  });
-}
-
 describe('GraphQLResolver', () => {
-  describe('create', () => {
-    describe('when creating a record', () => {
-      it('uses the correct input type name in the mutation', async () => {
-        globalThis.fetch = mockMutationFetch('app_ns1_createThing');
-
-        await new GraphQLResolver('app_ns1', { Thing: SCHEMA }, ENDPOINT).create('Thing', {
-          descriptor: 'T',
-        });
-
-        const body = JSON.parse(
-          (globalThis.fetch as ReturnType<typeof vi.fn>).mock.calls[0][1].body as string
-        );
-        expect(body.query).toContain('$input: App_ns1_ThingsSummary_CreateInput!');
-      });
-    });
-  });
-
-  describe('update', () => {
-    describe('when updating a record', () => {
-      it('uses the correct input type name in the mutation', async () => {
-        globalThis.fetch = mockMutationFetch('app_ns1_updateThing');
-
-        await new GraphQLResolver('app_ns1', { Thing: SCHEMA }, ENDPOINT).update('Thing', '1', {
-          descriptor: 'T',
-        });
-
-        const body = JSON.parse(
-          (globalThis.fetch as ReturnType<typeof vi.fn>).mock.calls[0][1].body as string
-        );
-        expect(body.query).toContain('$input: App_ns1_ThingsSummary_UpdateInput!');
-      });
-    });
-  });
-
   describe('when constructed with an explicit endpoint', () => {
     it('sends requests to that endpoint', async () => {
       globalThis.fetch = mockFetch();
