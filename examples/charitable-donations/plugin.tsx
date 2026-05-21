@@ -4,6 +4,7 @@ import { CanvasProvider } from '@workday/canvas-kit-react';
 import { schemas } from './everywhere/data/schema.js';
 import { home, charityDetail } from './routes.js';
 
+// referenceId comes from appManifest.json in your Extend bundle.
 const resolver = new GraphQLResolver('charitableDonations_mcwslt', schemas);
 
 function AppProvider({ children }: { children: ReactNode }) {

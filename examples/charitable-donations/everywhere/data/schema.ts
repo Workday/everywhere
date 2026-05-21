@@ -13,7 +13,7 @@ export const schemas: Record<string, ModelSchema> = {
       { name: 'description', type: 'TEXT' },
       { name: 'matchDonations', type: 'BOOLEAN' },
       { name: 'relationshipManager', type: 'SINGLE_INSTANCE', target: 'WORKER' },
-      { name: 'logo', type: 'SINGLE_INSTANCE', target: 'CharityLogo' },
+      { name: 'logo', type: 'SINGLE_INSTANCE', target: 'CharityLogo', embeddedInput: true },
       { name: 'createdBy', type: 'SINGLE_INSTANCE', target: 'WORKER' },
       { name: 'logoUploadedBefore2022', type: 'BOOLEAN', isDerived: true },
       { name: 'logoLabel', type: 'TEXT', isDerived: true },
