@@ -27,7 +27,7 @@ The Create a Work Event plugin provides comprehensive event management capabilit
 ### 📝 Event Registration Demo
 
 - **Demo register button** - Try the in-app registration experience from the event detail page
-- **View registrations** - See the example registration list on the "My Events" page
+- **View registrations** - See the example registration list on the "Registered Events" page
 - **Registration confirmation** - The current UI confirms the action locally in the example
 
 ### ➕ Create New Events
@@ -183,7 +183,7 @@ create-work-event/
 │   ├── Home.tsx              # Landing page with navigation
 │   ├── BrowseEvents.tsx       # Event discovery and filtering
 │   ├── EventDetail.tsx        # Individual event details
-│   ├── MyEvents.tsx           # User's registered events
+│   ├── MyEvents.tsx           # Event list showing registrations
 │   ├── CreateEvent.tsx        # Event creation form
 │   └── ManageEvents.tsx       # Event management interface
 ├── everywhere/

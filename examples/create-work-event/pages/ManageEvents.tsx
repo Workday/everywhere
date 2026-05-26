@@ -126,7 +126,7 @@ export default function ManageEventsPage() {
       <div style={pageStyle}>
         <div style={containerStyle}>
           <div style={headerStyle}>
-            <h1 style={titleStyle}>Manage Events</h1>
+            <h1 style={titleStyle}>All Events</h1>
             <button style={buttonStyle('secondary')} onClick={() => navigate(home, {})}>
               ← Home
             </button>
@@ -144,10 +144,10 @@ export default function ManageEventsPage() {
       <div style={containerStyle}>
         <div style={headerStyle}>
           <div>
-            <h1 style={titleStyle}>Manage Events</h1>
+            <h1 style={titleStyle}>All Events</h1>
             <p style={{ color: '#999', margin: '8px 0 0 0' }}>
               {myEvents.length === 0
-                ? 'No events'
+                ? 'No events available'
                 : `${myEvents.length} event${myEvents.length !== 1 ? 's' : ''}`}
             </p>
           </div>
@@ -162,9 +162,7 @@ export default function ManageEventsPage() {
           </div>
         ) : myEvents.length === 0 ? (
           <div style={emptyStyle}>
-            <p style={{ fontSize: '18px', marginBottom: '16px' }}>
-              You haven't created any events yet
-            </p>
+            <p style={{ fontSize: '18px', marginBottom: '16px' }}>No events available yet</p>
           </div>
         ) : (
           <table style={tableStyle}>

@@ -4,6 +4,8 @@ import { useQuery, useMutation } from '@workday/everywhere';
 import type { QueryResult } from '@workday/everywhere';
 import type { WorkEvent } from './models.js';
 
+type WorkEventMutationModel = Partial<WorkEvent> & Pick<WorkEvent, 'id'>;
+
 export function useWorkEvents(options?: Parameters<typeof useQuery>[1]) {
   return useQuery<WorkEvent>('WorkEvent', options) as QueryResult<WorkEvent> & {
     data: WorkEvent[] | null;
@@ -17,5 +19,5 @@ export function useWorkEvent(id: string) {
 }
 
 export function useWorkEventMutation() {
-  return useMutation<WorkEvent>('WorkEvent');
+  return useMutation<WorkEventMutationModel>('WorkEvent');
 }

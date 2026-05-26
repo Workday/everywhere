@@ -216,7 +216,7 @@ export default function HomePage() {
             📅 Browse Events
           </button>
           <button type="button" style={buttonStyle(false)} onClick={goMyEvents}>
-            ✓ My Events
+            ✓ Registered Events
           </button>
           <button type="button" style={buttonStyle(false)} onClick={goCreateEvent}>
             ➕ Create Event

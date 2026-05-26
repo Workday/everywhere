@@ -125,7 +125,7 @@ export default function MyEventsPage() {
       <div style={pageStyle}>
         <div style={containerStyle}>
           <div style={headerStyle}>
-            <h1 style={titleStyle}>My Events</h1>
+            <h1 style={titleStyle}>Registered Events</h1>
             <button style={buttonStyle('secondary')} onClick={() => navigate(home, {})}>
               ← Home
             </button>
@@ -145,11 +145,11 @@ export default function MyEventsPage() {
       <div style={containerStyle}>
         <div style={headerStyle}>
           <div>
-            <h1 style={titleStyle}>My Events</h1>
+            <h1 style={titleStyle}>Registered Events</h1>
             <p style={{ color: '#999', margin: '8px 0 0 0' }}>
               {registeredEvents.length === 0
-                ? 'No events registered'
-                : `${registeredEvents.length} event${registeredEvents.length !== 1 ? 's' : ''}`}
+                ? 'No registered events'
+                : `${registeredEvents.length} event${registeredEvents.length !== 1 ? 's' : ''} with registrations`}
             </p>
           </div>
           <button style={buttonStyle('secondary')} onClick={() => navigate(home, {})}>
@@ -164,7 +164,7 @@ export default function MyEventsPage() {
         ) : registeredEvents.length === 0 ? (
           <div style={emptyStyle}>
             <p style={{ fontSize: '18px', marginBottom: '16px' }}>
-              You haven't registered for any events yet
+              No events currently have registrations
             </p>
             <button style={buttonStyle('primary')} onClick={() => navigate(home, {})}>
               Browse Events
