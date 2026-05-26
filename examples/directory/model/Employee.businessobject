@@ -1,0 +1,20 @@
+{
+  "id": 1,
+  "name": "Employee",
+  "label": "Employee",
+  "defaultCollection": {
+    "name": "employees",
+    "label": "Employees"
+  },
+  "fields": [
+    { "id": 1, "name": "name", "type": "TEXT", "useForDisplay": true },
+    { "id": 2, "name": "email", "type": "TEXT" },
+    { "id": 3, "name": "department", "type": "TEXT" },
+    { "id": 4, "name": "title", "type": "TEXT" },
+    { "id": 5, "name": "startDate", "type": "DATE", "precision": "DAY" },
+    { "id": 6, "name": "photoUrl", "type": "TEXT" },
+    { "id": 7, "name": "isActive", "type": "BOOLEAN" },
+    { "id": 8, "name": "isRemote", "type": "BOOLEAN" },
+    { "id": 9, "name": "bio", "type": "TEXT" }
+  ]
+}

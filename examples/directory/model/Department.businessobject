@@ -1,0 +1,14 @@
+{
+  "id": 2,
+  "name": "Department",
+  "label": "Department",
+  "defaultCollection": {
+    "name": "departments",
+    "label": "Departments"
+  },
+  "fields": [
+    { "id": 1, "name": "name", "type": "TEXT", "useForDisplay": true },
+    { "id": 2, "name": "manager", "type": "SINGLE_INSTANCE", "target": "Employee" },
+    { "id": 3, "name": "headcount", "type": "TEXT" }
+  ]
+}
