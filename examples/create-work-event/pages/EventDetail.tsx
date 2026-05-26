@@ -179,7 +179,10 @@ export default function EventDetailPage() {
       <div style={containerStyle}>
         <div style={headerStyle}>
           <h1 style={{ margin: 0, fontSize: '24px', fontWeight: 'bold' }}>Event Details</h1>
-          <button style={buttonStyle('secondary')} onClick={() => navigate(browseEvents, { type: '' })}>
+          <button
+            style={buttonStyle('secondary')}
+            onClick={() => navigate(browseEvents, { type: '' })}
+          >
             ← Back
           </button>
         </div>

@@ -199,7 +199,11 @@ export default function BrowseEventsPage() {
           </div>
           <div style={{ display: 'flex', gap: '8px' }}>
             {params.type && (
-              <button type="button" style={buttonStyle} onClick={() => navigate(browseEvents, { type: '' })}>
+              <button
+                type="button"
+                style={buttonStyle}
+                onClick={() => navigate(browseEvents, { type: '' })}
+              >
                 Clear Filter
               </button>
             )}
@@ -223,7 +227,11 @@ export default function BrowseEventsPage() {
         ) : filteredEvents && filteredEvents.length === 0 ? (
           <div style={emptyStyle}>
             <p style={{ fontSize: '18px', marginBottom: '16px' }}>No events match this type</p>
-            <button type="button" style={buttonStyle} onClick={() => navigate(browseEvents, { type: '' })}>
+            <button
+              type="button"
+              style={buttonStyle}
+              onClick={() => navigate(browseEvents, { type: '' })}
+            >
               View All Events
             </button>
           </div>

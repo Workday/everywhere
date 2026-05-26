@@ -313,7 +313,11 @@ export default function CreateEventPage() {
           </div>
 
           <div style={buttonGroupStyle}>
-            <button type="button" style={buttonStyle('secondary')} onClick={() => navigate(home, {})}>
+            <button
+              type="button"
+              style={buttonStyle('secondary')}
+              onClick={() => navigate(home, {})}
+            >
               Cancel
             </button>
             <button type="submit" style={buttonStyle('primary')} disabled={isSubmitting}>
