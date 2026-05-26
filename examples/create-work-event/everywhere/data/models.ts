@@ -29,7 +29,7 @@ export interface WorkEvent {
   sponsor: string;
   startDate: string;
   contactInfo: string;
-  cost: CurrencyValue;
+  cost?: CurrencyValue;
   createdBy: string;
   internalOnly: boolean;
   image: string;
