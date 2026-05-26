@@ -1,52 +1,53 @@
 import { useNavigate } from '@workday/everywhere';
+import type { CSSProperties, MouseEvent } from 'react';
 import { browseEvents, createEvent, manageEvents, myEvents } from '../routes.js';
 
 export default function HomePage() {
   const navigate = useNavigate();
 
-  const containerStyle: React.CSSProperties = {
+  const containerStyle: CSSProperties = {
     minHeight: '100vh',
     background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
     padding: '40px 20px',
     fontFamily: "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif",
   };
 
-  const contentStyle: React.CSSProperties = {
+  const contentStyle: CSSProperties = {
     maxWidth: '1200px',
     margin: '0 auto',
     position: 'relative',
     zIndex: 2,
   };
 
-  const heroStyle: React.CSSProperties = {
+  const heroStyle: CSSProperties = {
     color: 'white',
     textAlign: 'center',
     marginBottom: '60px',
     paddingTop: '40px',
   };
 
-  const titleStyle: React.CSSProperties = {
+  const titleStyle: CSSProperties = {
     fontSize: '48px',
     fontWeight: 'bold',
     margin: '0 0 16px 0',
     letterSpacing: '-0.5px',
   };
 
-  const subtitleStyle: React.CSSProperties = {
+  const subtitleStyle: CSSProperties = {
     fontSize: '20px',
     fontWeight: '300',
     margin: '0 0 40px 0',
     opacity: 0.95,
   };
 
-  const gridStyle: React.CSSProperties = {
+  const gridStyle: CSSProperties = {
     display: 'grid',
     gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
     gap: '24px',
     marginBottom: '40px',
   };
 
-  const benefitStyle: React.CSSProperties = {
+  const benefitStyle: CSSProperties = {
     background: 'rgba(255, 255, 255, 0.1)',
     backdropFilter: 'blur(10px)',
     padding: '24px',
@@ -55,24 +56,24 @@ export default function HomePage() {
     border: '1px solid rgba(255, 255, 255, 0.2)',
   };
 
-  const benefitIconStyle: React.CSSProperties = {
+  const benefitIconStyle: CSSProperties = {
     fontSize: '32px',
     marginBottom: '12px',
   };
 
-  const benefitTitleStyle: React.CSSProperties = {
+  const benefitTitleStyle: CSSProperties = {
     fontSize: '18px',
     fontWeight: '600',
     marginBottom: '8px',
   };
 
-  const benefitTextStyle: React.CSSProperties = {
+  const benefitTextStyle: CSSProperties = {
     fontSize: '14px',
     opacity: 0.9,
     lineHeight: '1.5',
   };
 
-  const actionGridStyle: React.CSSProperties = {
+  const actionGridStyle: CSSProperties = {
     display: 'grid',
     gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))',
     gap: '16px',
@@ -82,7 +83,7 @@ export default function HomePage() {
     pointerEvents: 'auto',
   };
 
-  const buttonStyle = (primary = false): React.CSSProperties => ({
+  const buttonStyle = (primary = false): CSSProperties => ({
     padding: '16px 32px',
     fontSize: '16px',
     fontWeight: '600',
@@ -101,17 +102,31 @@ export default function HomePage() {
     pointerEvents: 'auto',
   });
 
-  function handleNav<P extends Record<string, string>>(routeDef: { id: string }, params?: P) {
-    return (e: React.MouseEvent<HTMLButtonElement>) => {
+  const handleBrowseNav = (type: string) => {
+    return (e: MouseEvent<HTMLButtonElement>) => {
       e.preventDefault();
       e.stopPropagation();
-      if (params) {
-        navigate(routeDef as any, params as any);
-      } else {
-        navigate(routeDef as any);
-      }
+      navigate(browseEvents, { type });
     };
-  }
+  };
+
+  const goMyEvents = (e: MouseEvent<HTMLButtonElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+    navigate(myEvents, {});
+  };
+
+  const goCreateEvent = (e: MouseEvent<HTMLButtonElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+    navigate(createEvent, {});
+  };
+
+  const goManageEvents = (e: MouseEvent<HTMLButtonElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+    navigate(manageEvents, {});
+  };
 
   return (
     <div style={containerStyle}>
@@ -165,7 +180,7 @@ export default function HomePage() {
               <button
                 type="button"
                 key={event.type}
-                onClick={handleNav(browseEvents, { type: event.type })}
+                onClick={handleBrowseNav(event.type)}
                 style={{
                   appearance: 'none',
                   width: '100%',
@@ -197,16 +212,16 @@ export default function HomePage() {
         </div>
 
         <div style={actionGridStyle}>
-          <button type="button" style={buttonStyle(true)} onClick={handleNav(browseEvents, {})}>
+          <button type="button" style={buttonStyle(true)} onClick={handleBrowseNav('')}>
             📅 Browse Events
           </button>
-          <button type="button" style={buttonStyle(false)} onClick={handleNav(myEvents)}>
+          <button type="button" style={buttonStyle(false)} onClick={goMyEvents}>
             ✓ My Events
           </button>
-          <button type="button" style={buttonStyle(false)} onClick={handleNav(createEvent)}>
+          <button type="button" style={buttonStyle(false)} onClick={goCreateEvent}>
             ➕ Create Event
           </button>
-          <button type="button" style={buttonStyle(false)} onClick={handleNav(manageEvents)}>
+          <button type="button" style={buttonStyle(false)} onClick={goManageEvents}>
             ⚙️ Manage Events
           </button>
         </div>

@@ -7,7 +7,7 @@ import CreateEventPage from './pages/CreateEvent.js';
 import ManageEventsPage from './pages/ManageEvents.js';
 
 export const home = route('home', { component: HomePage });
-export const browseEvents = route<{ type?: string }>('browse', { component: BrowseEventsPage });
+export const browseEvents = route<{ type: string }>('browse', { component: BrowseEventsPage });
 export const eventDetail = route<{ id: string }>('event', { component: EventDetailPage });
 export const myEvents = route('my-events', { component: MyEventsPage });
 export const createEvent = route('create', { component: CreateEventPage });

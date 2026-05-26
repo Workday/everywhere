@@ -1,6 +1,7 @@
 import { useNavigate } from '@workday/everywhere';
 import { useWorkEvents } from '../everywhere/data/index.js';
 import { home, eventDetail } from '../routes.js';
+import type React from 'react';
 
 export default function MyEventsPage() {
   const navigate = useNavigate();
@@ -125,7 +126,7 @@ export default function MyEventsPage() {
         <div style={containerStyle}>
           <div style={headerStyle}>
             <h1 style={titleStyle}>My Events</h1>
-            <button style={buttonStyle('secondary')} onClick={() => navigate(home)}>
+            <button style={buttonStyle('secondary')} onClick={() => navigate(home, {})}>
               ← Home
             </button>
           </div>
@@ -151,7 +152,7 @@ export default function MyEventsPage() {
                 : `${registeredEvents.length} event${registeredEvents.length !== 1 ? 's' : ''}`}
             </p>
           </div>
-          <button style={buttonStyle('secondary')} onClick={() => navigate(home)}>
+          <button style={buttonStyle('secondary')} onClick={() => navigate(home, {})}>
             ← Home
           </button>
         </div>
@@ -165,7 +166,7 @@ export default function MyEventsPage() {
             <p style={{ fontSize: '18px', marginBottom: '16px' }}>
               You haven't registered for any events yet
             </p>
-            <button style={buttonStyle('primary')} onClick={() => navigate(home)}>
+            <button style={buttonStyle('primary')} onClick={() => navigate(home, {})}>
               Browse Events
             </button>
           </div>
@@ -178,16 +179,21 @@ export default function MyEventsPage() {
                 return (
                   <div key={event.id} style={eventRowStyle}>
                     <div>
-                      <div
+                      <button
+                        type="button"
                         style={{
                           ...eventNameStyle,
                           color: '#667eea',
                           cursor: 'pointer',
+                          background: 'transparent',
+                          border: 'none',
+                          padding: 0,
+                          textAlign: 'left',
                         }}
                         onClick={() => navigate(eventDetail, { id: event.id })}
                       >
                         {event.name}
-                      </div>
+                      </button>
                       <div style={eventMetaStyle}>📍 {event.location}</div>
                       <div style={eventMetaStyle}>
                         📅{' '}

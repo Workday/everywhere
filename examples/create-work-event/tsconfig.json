@@ -10,6 +10,6 @@
     "forceConsistentCasingInFileNames": true,
     "noEmit": true
   },
-  "include": ["plugin.tsx", "everywhere/**/*.ts"],
+  "include": ["plugin.tsx", "routes.ts", "pages/**/*.tsx", "everywhere/**/*.ts"],
   "exclude": ["node_modules"]
 }

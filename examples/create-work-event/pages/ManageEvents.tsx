@@ -1,6 +1,7 @@
 import { useNavigate } from '@workday/everywhere';
 import { useWorkEvents } from '../everywhere/data/index.js';
 import { home, eventDetail } from '../routes.js';
+import type React from 'react';
 
 export default function ManageEventsPage() {
   const navigate = useNavigate();
@@ -126,7 +127,7 @@ export default function ManageEventsPage() {
         <div style={containerStyle}>
           <div style={headerStyle}>
             <h1 style={titleStyle}>Manage Events</h1>
-            <button style={buttonStyle('secondary')} onClick={() => navigate(home)}>
+            <button style={buttonStyle('secondary')} onClick={() => navigate(home, {})}>
               ← Home
             </button>
           </div>
@@ -150,7 +151,7 @@ export default function ManageEventsPage() {
                 : `${myEvents.length} event${myEvents.length !== 1 ? 's' : ''}`}
             </p>
           </div>
-          <button style={buttonStyle('secondary')} onClick={() => navigate(home)}>
+          <button style={buttonStyle('secondary')} onClick={() => navigate(home, {})}>
             ← Home
           </button>
         </div>
@@ -188,12 +189,19 @@ export default function ManageEventsPage() {
                   return (
                     <tr key={event.id} style={trHoverStyle}>
                       <td style={tdStyle}>
-                        <a
-                          style={linkStyle}
+                        <button
+                          type="button"
+                          style={{
+                            ...linkStyle,
+                            background: 'transparent',
+                            border: 'none',
+                            padding: 0,
+                            textAlign: 'left',
+                          }}
                           onClick={() => navigate(eventDetail, { id: event.id })}
                         >
                           {event.name}
-                        </a>
+                        </button>
                       </td>
                       <td style={tdStyle}>{event.location}</td>
                       <td style={tdStyle}>

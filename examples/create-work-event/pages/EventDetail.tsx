@@ -1,13 +1,21 @@
 import { useNavigate, useParams } from '@workday/everywhere';
 import { useWorkEvent } from '../everywhere/data/index.js';
+import type { Registrant } from '../everywhere/data/models.js';
 import { browseEvents, eventDetail, home } from '../routes.js';
 import { useState } from 'react';
+import type React from 'react';
 
 export default function EventDetailPage() {
   const navigate = useNavigate();
   const { id } = useParams(eventDetail);
   const { data: event, error } = useWorkEvent(id);
   const [isRegistering, setIsRegistering] = useState(false);
+
+  const formatCost = (cost: { amount: number; currency: string }) =>
+    new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency: cost.currency,
+    }).format(cost.amount);
 
   const pageStyle: React.CSSProperties = {
     minHeight: '100vh',
@@ -144,7 +152,7 @@ export default function EventDetailPage() {
         <div style={containerStyle}>
           <div style={headerStyle}>
             <h1>Event Details</h1>
-            <button style={buttonStyle('secondary')} onClick={() => navigate(home)}>
+            <button style={buttonStyle('secondary')} onClick={() => navigate(home, {})}>
               ← Home
             </button>
           </div>
@@ -171,7 +179,7 @@ export default function EventDetailPage() {
       <div style={containerStyle}>
         <div style={headerStyle}>
           <h1 style={{ margin: 0, fontSize: '24px', fontWeight: 'bold' }}>Event Details</h1>
-          <button style={buttonStyle('secondary')} onClick={() => navigate(browseEvents)}>
+          <button style={buttonStyle('secondary')} onClick={() => navigate(browseEvents, { type: '' })}>
             ← Back
           </button>
         </div>
@@ -223,7 +231,7 @@ export default function EventDetailPage() {
           {event.cost && (
             <div style={infoRowStyle}>
               <div style={labelStyle}>💰 Cost</div>
-              <div style={valueStyle}>${event.cost}</div>
+              <div style={valueStyle}>{formatCost(event.cost)}</div>
             </div>
           )}
 
@@ -247,8 +255,11 @@ export default function EventDetailPage() {
               }}
               disabled={isRegistering}
             >
-              {isRegistering ? 'Registering...' : '✓ Register for Event'}
+              {isRegistering ? 'Registering...' : '✓ Register for Event (demo)'}
             </button>
+          </div>
+          <div style={{ marginTop: '12px', fontSize: '13px', color: '#666' }}>
+            Registration is currently a UI demo in this example.
           </div>
         </div>
 
@@ -256,7 +267,7 @@ export default function EventDetailPage() {
           <div style={cardStyle}>
             <h2 style={sectionTitleStyle}>Registrants ({event.registrants.length})</h2>
             <div style={registrantListStyle}>
-              {event.registrants.slice(0, 10).map((registrant, idx) => (
+              {event.registrants.slice(0, 10).map((registrant: Registrant, idx: number) => (
                 <div key={registrant.id || idx} style={registrantItemStyle}>
                   <div style={avatarStyle}>👤</div>
                   <div style={{ flex: 1 }}>Registrant {idx + 1}</div>

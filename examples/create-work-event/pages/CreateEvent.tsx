@@ -2,6 +2,7 @@ import { useNavigate } from '@workday/everywhere';
 import { useWorkEventMutation } from '../everywhere/data/index.js';
 import { home, browseEvents } from '../routes.js';
 import { useState } from 'react';
+import type React from 'react';
 
 export default function CreateEventPage() {
   const navigate = useNavigate();
@@ -148,9 +149,9 @@ export default function CreateEventPage() {
       });
 
       if (result?.id) {
-        navigate(browseEvents);
+        navigate(browseEvents, { type: '' });
       }
-    } catch (err) {
+    } catch {
       setErrors({ submit: 'Failed to create event. Please try again.' });
     } finally {
       setIsSubmitting(false);
@@ -181,8 +182,11 @@ export default function CreateEventPage() {
           )}
 
           <div style={fieldGroupStyle}>
-            <label style={labelStyle}>Event Name *</label>
+            <label htmlFor="event-name" style={labelStyle}>
+              Event Name *
+            </label>
             <input
+              id="event-name"
               type="text"
               style={inputStyle(!!errors.name)}
               value={formData.name}
@@ -193,8 +197,11 @@ export default function CreateEventPage() {
           </div>
 
           <div style={fieldGroupStyle}>
-            <label style={labelStyle}>Description *</label>
+            <label htmlFor="event-description" style={labelStyle}>
+              Description *
+            </label>
             <textarea
+              id="event-description"
               style={{
                 ...inputStyle(!!errors.description),
                 minHeight: '100px',
@@ -209,8 +216,11 @@ export default function CreateEventPage() {
           </div>
 
           <div style={fieldGroupStyle}>
-            <label style={labelStyle}>Location *</label>
+            <label htmlFor="event-location" style={labelStyle}>
+              Location *
+            </label>
             <input
+              id="event-location"
               type="text"
               style={inputStyle(!!errors.location)}
               value={formData.location}
@@ -222,8 +232,11 @@ export default function CreateEventPage() {
 
           <div style={twoColumnStyle}>
             <div style={fieldGroupStyle}>
-              <label style={labelStyle}>Sponsor</label>
+              <label htmlFor="event-sponsor" style={labelStyle}>
+                Sponsor
+              </label>
               <input
+                id="event-sponsor"
                 type="text"
                 style={inputStyle()}
                 value={formData.sponsor}
@@ -232,8 +245,11 @@ export default function CreateEventPage() {
               />
             </div>
             <div style={fieldGroupStyle}>
-              <label style={labelStyle}>Contact Info</label>
+              <label htmlFor="event-contact-info" style={labelStyle}>
+                Contact Info
+              </label>
               <input
+                id="event-contact-info"
                 type="text"
                 style={inputStyle()}
                 value={formData.contactInfo}
@@ -245,8 +261,11 @@ export default function CreateEventPage() {
 
           <div style={twoColumnStyle}>
             <div style={fieldGroupStyle}>
-              <label style={labelStyle}>Start Date *</label>
+              <label htmlFor="event-start-date" style={labelStyle}>
+                Start Date *
+              </label>
               <input
+                id="event-start-date"
                 type="date"
                 style={inputStyle(!!errors.startDate)}
                 value={formData.startDate}
@@ -255,8 +274,11 @@ export default function CreateEventPage() {
               {errors.startDate && <div style={errorTextStyle}>{errors.startDate}</div>}
             </div>
             <div style={fieldGroupStyle}>
-              <label style={labelStyle}>End Date</label>
+              <label htmlFor="event-end-date" style={labelStyle}>
+                End Date
+              </label>
               <input
+                id="event-end-date"
                 type="date"
                 style={inputStyle(!!errors.endDate)}
                 value={formData.endDate}
@@ -291,7 +313,7 @@ export default function CreateEventPage() {
           </div>
 
           <div style={buttonGroupStyle}>
-            <button type="button" style={buttonStyle('secondary')} onClick={() => navigate(home)}>
+            <button type="button" style={buttonStyle('secondary')} onClick={() => navigate(home, {})}>
               Cancel
             </button>
             <button type="submit" style={buttonStyle('primary')} disabled={isSubmitting}>

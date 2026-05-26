@@ -24,11 +24,11 @@ The Create a Work Event plugin provides comprehensive event management capabilit
 - **Event details view** - See comprehensive information about each event including location,
   sponsor, and contact information
 
-### 📝 Event Registration
+### 📝 Event Registration Demo
 
-- **Register for events** - Sign up to attend events you're interested in
-- **View registrations** - See all your upcoming event registrations
-- **Registration confirmation** - Get instant confirmation of your registration
+- **Demo register button** - Try the in-app registration experience from the event detail page
+- **View registrations** - See the example registration list on the "My Events" page
+- **Registration confirmation** - The current UI confirms the action locally in the example
 
 ### ➕ Create New Events
 
@@ -320,6 +320,6 @@ or create a `plugin.css` file for shared styles (which will be bundled automatic
 
 ## Resources
 
-- [Workday Everywhere SDK Documentation](../../../docs/)
+- [Workday Everywhere SDK Documentation](../../docs/)
 - [Workday Marketplace](https://marketplace.workday.com)
 - [Create a Work Event - Original Marketplace App](https://marketplace.workday.com/en-US/apps/425531/create-a-work-event)

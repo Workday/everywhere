@@ -3,15 +3,22 @@ import { useWorkEvents } from '../everywhere/data/index.js';
 import type { WorkEvent } from '../everywhere/data/models.js';
 import { browseEvents, eventDetail, home } from '../routes.js';
 import { useMemo } from 'react';
+import type React from 'react';
 
 export default function BrowseEventsPage() {
   const navigate = useNavigate();
-  const params = (useParams(browseEvents) ?? {}) as { type?: string };
+  const params = useParams(browseEvents);
   const { data: events, error } = useWorkEvents();
 
+  const formatCost = (cost: { amount: number; currency: string }) =>
+    new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency: cost.currency,
+    }).format(cost.amount);
+
   // Filter events by type based on description or sponsor
-  const filteredEvents = useMemo(() => {
-    if (!Array.isArray(events) || !params.type) return events;
+  const filteredEvents = useMemo<WorkEvent[]>(() => {
+    if (!Array.isArray(events) || !params.type) return Array.isArray(events) ? events : [];
 
     const typeKeywords: Record<string, string[]> = {
       potluck: ['potluck', 'food', 'lunch', 'dinner', 'meal'],
@@ -170,7 +177,7 @@ export default function BrowseEventsPage() {
       <div style={pageStyle}>
         <div style={containerStyle}>
           <div style={errorStyle}>Error loading events: {error.message}</div>
-          <button style={buttonStyle} onClick={() => navigate(home)}>
+          <button style={buttonStyle} onClick={() => navigate(home, {})}>
             ← Back to Home
           </button>
         </div>
@@ -192,11 +199,11 @@ export default function BrowseEventsPage() {
           </div>
           <div style={{ display: 'flex', gap: '8px' }}>
             {params.type && (
-              <button type="button" style={buttonStyle} onClick={() => navigate(browseEvents, {})}>
+              <button type="button" style={buttonStyle} onClick={() => navigate(browseEvents, { type: '' })}>
                 Clear Filter
               </button>
             )}
-            <button type="button" style={buttonStyle} onClick={() => navigate(home)}>
+            <button type="button" style={buttonStyle} onClick={() => navigate(home, {})}>
               ← Home
             </button>
           </div>
@@ -209,39 +216,45 @@ export default function BrowseEventsPage() {
         ) : events.length === 0 ? (
           <div style={emptyStyle}>
             <p style={{ fontSize: '18px', marginBottom: '16px' }}>No events available</p>
-            <button style={buttonStyle} onClick={() => navigate(home)}>
+            <button style={buttonStyle} onClick={() => navigate(home, {})}>
               Back to Home
             </button>
           </div>
         ) : filteredEvents && filteredEvents.length === 0 ? (
           <div style={emptyStyle}>
             <p style={{ fontSize: '18px', marginBottom: '16px' }}>No events match this type</p>
-            <button type="button" style={buttonStyle} onClick={() => navigate(browseEvents, {})}>
+            <button type="button" style={buttonStyle} onClick={() => navigate(browseEvents, { type: '' })}>
               View All Events
             </button>
           </div>
         ) : (
           <div style={gridStyle}>
-            {filteredEvents.map((event) => (
+            {filteredEvents.map((event: WorkEvent) => (
               <div key={event.id} style={cardStyle}>
                 <div style={cardImageStyle}>📅</div>
                 <div style={cardContentStyle}>
-                  <a
+                  <button
+                    type="button"
                     style={{
                       ...cardTitleStyle,
                       color: '#667eea',
                       textDecoration: 'none',
                       cursor: 'pointer',
+                      background: 'transparent',
+                      border: 'none',
+                      padding: 0,
+                      textAlign: 'left',
+                      width: '100%',
                     }}
                     onClick={() => navigate(eventDetail, { id: event.id })}
                   >
                     {event.name}
-                  </a>
+                  </button>
                   <div style={cardMetaStyle}>📍 {event.location}</div>
                   <div style={cardMetaStyle}>
                     📅 {new Date(event.startDate).toLocaleDateString()}
                   </div>
-                  {event.cost && <div style={cardMetaStyle}>💰 ${event.cost}</div>}
+                  {event.cost && <div style={cardMetaStyle}>💰 {formatCost(event.cost)}</div>}
                   <div style={cardDescStyle}>{event.description}</div>
                   <div style={cardFooterStyle}>
                     <button
