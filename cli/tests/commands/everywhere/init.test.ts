@@ -61,6 +61,7 @@ describe('resolveTypeDevDependencies', () => {
           '@workday/everywhere': '^1.0.0',
         })
       ).toEqual({
+        typescript: '^5',
         '@types/react': '^19',
         '@types/react-dom': '^19',
       });
@@ -68,8 +69,10 @@ describe('resolveTypeDevDependencies', () => {
   });
 
   describe('when desired dependencies have no mapped types package', () => {
-    it('returns an empty object', () => {
-      expect(resolveTypeDevDependencies({ '@workday/everywhere': '^1.0.0' })).toEqual({});
+    it('returns only the default development dependencies', () => {
+      expect(resolveTypeDevDependencies({ '@workday/everywhere': '^1.0.0' })).toEqual({
+        typescript: '^5',
+      });
     });
   });
 });

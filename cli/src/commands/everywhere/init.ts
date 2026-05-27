@@ -17,6 +17,9 @@ const TYPE_DEFINITIONS_BY_DEP: Record<string, { name: string; version: string }>
   react: { name: '@types/react', version: '^19' },
   'react-dom': { name: '@types/react-dom', version: '^19' },
 };
+const DEFAULT_DEV_DEPENDENCIES: Record<string, string> = {
+  typescript: '^5',
+};
 
 type InitPackageJson = {
   name?: string;
@@ -34,7 +37,7 @@ function getSdkVersion(): string {
 export const resolveTypeDevDependencies = (
   desiredDeps: Record<string, string>
 ): Record<string, string> => {
-  const desiredTypeDeps: Record<string, string> = {};
+  const desiredTypeDeps: Record<string, string> = { ...DEFAULT_DEV_DEPENDENCIES };
   for (const depName of Object.keys(desiredDeps)) {
     const typeDefinition = TYPE_DEFINITIONS_BY_DEP[depName];
     if (typeDefinition) {
