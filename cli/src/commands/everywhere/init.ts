@@ -7,7 +7,7 @@ import * as readline from 'node:readline';
 import { fileURLToPath } from 'node:url';
 
 import EverywhereBaseCommand from '../../lib/command.js';
-import { renderStub } from '../../init-template.js';
+import { renderStub, renderTsConfig } from '../../init-template.js';
 
 const THIS_DIR = path.dirname(fileURLToPath(import.meta.url));
 // init.ts compiles to cli/dist/commands/everywhere/init.js, so the SDK's root
@@ -93,6 +93,15 @@ export function runNpmInit(cwd: string, options: { yes?: boolean } = {}): Promis
       }
     });
   });
+}
+
+export function writeTsConfigIfAbsent(pluginDir: string): boolean {
+  const tsConfigPath = path.join(pluginDir, 'tsconfig.json');
+  if (fs.existsSync(tsConfigPath)) {
+    return false;
+  }
+  fs.writeFileSync(tsConfigPath, renderTsConfig());
+  return true;
 }
 
 export function runNpmInstall(cwd: string): Promise<void> {
@@ -250,6 +259,14 @@ export default class InitCommand extends EverywhereBaseCommand {
     // Mutation 2: write plugin.tsx
     fs.writeFileSync(tsxPath, renderStub(pkg.name));
     this.log(chalk.green('Created plugin.tsx'));
+
+    // Mutation 3: write tsconfig.json if not already present
+    const tsConfigPath = path.join(pluginDir, 'tsconfig.json');
+    if (writeTsConfigIfAbsent(pluginDir)) {
+      this.log(chalk.green('Created tsconfig.json'));
+    } else if (verbose) {
+      this.log(`tsconfig.json already exists, skipping (${chalk.cyan(tsConfigPath)})`);
+    }
 
     // Run npm install
     this.log('Installing dependencies...');
