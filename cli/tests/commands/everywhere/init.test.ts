@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import InitCommand from '../../../src/commands/everywhere/init.js';
+import InitCommand, { resolveTypeDevDependencies } from '../../../src/commands/everywhere/init.js';
 import EverywhereBaseCommand from '../../../src/lib/command.js';
 
 describe('everywhere init', () => {
@@ -47,6 +47,47 @@ describe('everywhere init', () => {
     it('uses y as the short alias for the yes flag', () => {
       const flag = InitCommand.flags['yes'] as { char?: string };
       expect(flag.char).toBe('y');
+    });
+  });
+});
+
+describe('resolveTypeDevDependencies', () => {
+  describe('when desired dependencies use non-default versions', () => {
+    it('aligns @types package versions with desired runtime dependency versions', () => {
+      expect(
+        resolveTypeDevDependencies({
+          react: '^18.3.1',
+          'react-dom': '^18.3.1',
+        })
+      ).toEqual({
+        typescript: '^5',
+        '@types/react': '^18.3.1',
+        '@types/react-dom': '^18.3.1',
+      });
+    });
+  });
+
+  describe('when desired dependencies include react and react-dom', () => {
+    it('returns @types packages for both dependencies', () => {
+      expect(
+        resolveTypeDevDependencies({
+          react: '^19',
+          'react-dom': '^19',
+          '@workday/everywhere': '^1.0.0',
+        })
+      ).toEqual({
+        typescript: '^5',
+        '@types/react': '^19',
+        '@types/react-dom': '^19',
+      });
+    });
+  });
+
+  describe('when desired dependencies have no mapped types package', () => {
+    it('returns only the default development dependencies', () => {
+      expect(resolveTypeDevDependencies({ '@workday/everywhere': '^1.0.0' })).toEqual({
+        typescript: '^5',
+      });
     });
   });
 });
@@ -117,7 +158,9 @@ describe('runNpmInstall', () => {
       const { runNpmInstall } = await import('../../../src/commands/everywhere/init.js');
       await runNpmInstall('/fake/dir');
 
-      const opts = mockSpawn.mock.calls[0][2] as { shell?: boolean };
+      const firstCall = mockSpawn.mock.calls[0];
+      expect(firstCall).toBeDefined();
+      const opts = firstCall?.[2] as { shell?: boolean };
       expect(opts.shell).not.toBe(true);
     });
   });
@@ -304,7 +347,9 @@ describe('runNpmInit', () => {
       const { runNpmInit } = await import('../../../src/commands/everywhere/init.js');
       await runNpmInit('/fake/dir');
 
-      const opts = mockSpawn.mock.calls[0][2] as { shell?: boolean };
+      const firstCall = mockSpawn.mock.calls[0];
+      expect(firstCall).toBeDefined();
+      const opts = firstCall?.[2] as { shell?: boolean };
       expect(opts.shell).not.toBe(true);
     });
   });

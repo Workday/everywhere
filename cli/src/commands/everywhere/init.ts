@@ -13,11 +13,43 @@ const THIS_DIR = path.dirname(fileURLToPath(import.meta.url));
 // init.ts compiles to cli/dist/commands/everywhere/init.js, so the SDK's root
 // package.json is four levels up. Both dev and published layouts match.
 const SDK_PKG_PATH = path.resolve(THIS_DIR, '../../../../package.json');
+const TYPE_DEFINITIONS_BY_DEP: Record<string, string> = {
+  react: '@types/react',
+  'react-dom': '@types/react-dom',
+};
+const DEFAULT_DEV_DEPENDENCIES: Record<string, string> = {
+  typescript: '^5',
+};
+
+type InitPackageJson = {
+  name?: string;
+  version?: string;
+  title?: string;
+  dependencies?: Record<string, string>;
+  devDependencies?: Record<string, string>;
+};
+
+type InitPackageJsonWithDependencies = InitPackageJson & {
+  dependencies: Record<string, string>;
+};
 
 function getSdkVersion(): string {
   const pkg = JSON.parse(fs.readFileSync(SDK_PKG_PATH, 'utf-8')) as { version: string };
   return pkg.version;
 }
+
+export const resolveTypeDevDependencies = (
+  desiredDeps: Record<string, string>
+): Record<string, string> => {
+  const desiredTypeDeps: Record<string, string> = { ...DEFAULT_DEV_DEPENDENCIES };
+  for (const depName of Object.keys(desiredDeps)) {
+    const typePackageName = TYPE_DEFINITIONS_BY_DEP[depName];
+    if (typePackageName) {
+      desiredTypeDeps[typePackageName] = desiredDeps[depName];
+    }
+  }
+  return desiredTypeDeps;
+};
 
 // On Windows, npm is a `.cmd` shim that requires the explicit extension when
 // spawned without a shell. Avoid `shell: true` because Node deprecates passing
@@ -119,12 +151,7 @@ export default class InitCommand extends EverywhereBaseCommand {
     }
 
     // Pre-check 2: package.json parses and has a name
-    const pkg = JSON.parse(fs.readFileSync(pkgPath, 'utf-8')) as {
-      name?: string;
-      version?: string;
-      title?: string;
-      dependencies?: Record<string, string>;
-    };
+    const pkg = JSON.parse(fs.readFileSync(pkgPath, 'utf-8')) as InitPackageJson;
     if (!pkg.name || typeof pkg.name !== 'string') {
       this.error('package.json must have a "name" field.');
     }
@@ -153,13 +180,14 @@ export default class InitCommand extends EverywhereBaseCommand {
       react: '^19',
       'react-dom': '^19',
     };
+    const desiredDevDeps = resolveTypeDevDependencies(desiredDeps);
     const existingDeps: Record<string, string> = pkg.dependencies ?? {};
+    const existingDevDeps: Record<string, string> = pkg.devDependencies ?? {};
     const added: Array<{ name: string; version: string }> = [];
-    const skipped: Array<{ name: string; existingVersion: string }> = [];
+    const addedDevDeps: Array<{ name: string; version: string }> = [];
 
     for (const [name, version] of Object.entries(desiredDeps)) {
       if (name in existingDeps) {
-        skipped.push({ name, existingVersion: existingDeps[name] });
         if (verbose) {
           this.log(
             `Dependency already present: ${name} (keeping ${chalk.dim(existingDeps[name])})`
@@ -173,11 +201,37 @@ export default class InitCommand extends EverywhereBaseCommand {
       }
     }
 
+    for (const [name, version] of Object.entries(desiredDevDeps)) {
+      if (name in existingDevDeps || name in existingDeps) {
+        if (verbose) {
+          const source = name in existingDevDeps ? 'devDependencies' : 'dependencies';
+          const existingVersion = existingDevDeps[name] ?? existingDeps[name];
+          this.log(
+            `Type dependency already present in ${source}: ${name} (keeping ${chalk.dim(existingVersion)})`
+          );
+        }
+      } else {
+        addedDevDeps.push({ name, version });
+        if (verbose) {
+          this.log(`Adding dev dependency: ${name} ${chalk.dim(version)}`);
+        }
+      }
+    }
+
     // Mutation 1: write package.json if anything was added
-    if (added.length > 0 || title) {
-      const newPkg = { ...pkg, dependencies: { ...existingDeps } };
+    if (added.length > 0 || addedDevDeps.length > 0 || title) {
+      const newPkg: InitPackageJsonWithDependencies = {
+        ...pkg,
+        dependencies: { ...existingDeps },
+      };
       for (const { name, version } of added) {
         newPkg.dependencies[name] = version;
+      }
+      if (addedDevDeps.length > 0 || pkg.devDependencies) {
+        newPkg.devDependencies = { ...existingDevDeps };
+        for (const { name, version } of addedDevDeps) {
+          newPkg.devDependencies[name] = version;
+        }
       }
       if (title) {
         newPkg.title = title;
