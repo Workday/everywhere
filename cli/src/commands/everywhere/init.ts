@@ -13,9 +13,9 @@ const THIS_DIR = path.dirname(fileURLToPath(import.meta.url));
 // init.ts compiles to cli/dist/commands/everywhere/init.js, so the SDK's root
 // package.json is four levels up. Both dev and published layouts match.
 const SDK_PKG_PATH = path.resolve(THIS_DIR, '../../../../package.json');
-const TYPE_DEFINITIONS_BY_DEP: Record<string, { name: string; version: string }> = {
-  react: { name: '@types/react', version: '^19' },
-  'react-dom': { name: '@types/react-dom', version: '^19' },
+const TYPE_DEFINITIONS_BY_DEP: Record<string, string> = {
+  react: '@types/react',
+  'react-dom': '@types/react-dom',
 };
 const DEFAULT_DEV_DEPENDENCIES: Record<string, string> = {
   typescript: '^5',
@@ -25,8 +25,12 @@ type InitPackageJson = {
   name?: string;
   version?: string;
   title?: string;
-  dependencies: Record<string, string>;
+  dependencies?: Record<string, string>;
   devDependencies?: Record<string, string>;
+};
+
+type InitPackageJsonWithDependencies = InitPackageJson & {
+  dependencies: Record<string, string>;
 };
 
 function getSdkVersion(): string {
@@ -39,9 +43,9 @@ export const resolveTypeDevDependencies = (
 ): Record<string, string> => {
   const desiredTypeDeps: Record<string, string> = { ...DEFAULT_DEV_DEPENDENCIES };
   for (const depName of Object.keys(desiredDeps)) {
-    const typeDefinition = TYPE_DEFINITIONS_BY_DEP[depName];
-    if (typeDefinition) {
-      desiredTypeDeps[typeDefinition.name] = typeDefinition.version;
+    const typePackageName = TYPE_DEFINITIONS_BY_DEP[depName];
+    if (typePackageName) {
+      desiredTypeDeps[typePackageName] = desiredDeps[depName];
     }
   }
   return desiredTypeDeps;
@@ -200,9 +204,10 @@ export default class InitCommand extends EverywhereBaseCommand {
     for (const [name, version] of Object.entries(desiredDevDeps)) {
       if (name in existingDevDeps || name in existingDeps) {
         if (verbose) {
+          const source = name in existingDevDeps ? 'devDependencies' : 'dependencies';
           const existingVersion = existingDevDeps[name] ?? existingDeps[name];
           this.log(
-            `Dev dependency already present: ${name} (keeping ${chalk.dim(existingVersion)})`
+            `Type dependency already present in ${source}: ${name} (keeping ${chalk.dim(existingVersion)})`
           );
         }
       } else {
@@ -215,7 +220,10 @@ export default class InitCommand extends EverywhereBaseCommand {
 
     // Mutation 1: write package.json if anything was added
     if (added.length > 0 || addedDevDeps.length > 0 || title) {
-      const newPkg: InitPackageJson = { ...pkg, dependencies: { ...existingDeps } };
+      const newPkg: InitPackageJsonWithDependencies = {
+        ...pkg,
+        dependencies: { ...existingDeps },
+      };
       for (const { name, version } of added) {
         newPkg.dependencies[name] = version;
       }

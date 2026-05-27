@@ -52,6 +52,21 @@ describe('everywhere init', () => {
 });
 
 describe('resolveTypeDevDependencies', () => {
+  describe('when desired dependencies use non-default versions', () => {
+    it('aligns @types package versions with desired runtime dependency versions', () => {
+      expect(
+        resolveTypeDevDependencies({
+          react: '^18.3.1',
+          'react-dom': '^18.3.1',
+        })
+      ).toEqual({
+        typescript: '^5',
+        '@types/react': '^18.3.1',
+        '@types/react-dom': '^18.3.1',
+      });
+    });
+  });
+
   describe('when desired dependencies include react and react-dom', () => {
     it('returns @types packages for both dependencies', () => {
       expect(
