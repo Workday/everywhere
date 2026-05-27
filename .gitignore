@@ -8,3 +8,4 @@ cli/oclif.manifest.json
 everywhere/.config.json
 .everywhere-esbuild-out/
 .worktrees/
+.DS_Store
