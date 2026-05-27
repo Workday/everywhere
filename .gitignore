@@ -5,6 +5,6 @@ cli/lib/
 cli/node_modules/
 cli/oclif.manifest.json
 .data/
-everywhere/.config.json
+**/everywhere/.config.json
 .everywhere-esbuild-out/
 .worktrees/

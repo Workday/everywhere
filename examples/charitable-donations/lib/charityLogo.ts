@@ -1,7 +1,5 @@
-import { EXTEND_APPLICATION_ID } from '../everywhere/extend.js';
+import { EXTEND_APPLICATION_ID, REFERENCE_ID } from '../everywhere/extend.js';
 import { cacheLogoFromFile, getCachedLogoSrc, setCachedLogoSrc } from './logoCache.js';
-
-const REFERENCE_ID = 'charitableDonations_mcwslt';
 const FILE_FIELD = 'logoFile';
 
 type GraphQLResponse<T> = {
