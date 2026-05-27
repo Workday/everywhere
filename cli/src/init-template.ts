@@ -1,3 +1,21 @@
+export function renderTsConfig(): string {
+  const config = {
+    compilerOptions: {
+      target: 'ES2020',
+      lib: ['ES2020', 'DOM', 'DOM.Iterable'],
+      jsx: 'react-jsx',
+      module: 'Preserve',
+      moduleResolution: 'bundler',
+      strict: true,
+      noEmit: true,
+      skipLibCheck: true,
+    },
+    include: ['**/*.ts', '**/*.tsx'],
+    exclude: ['node_modules', 'dist'],
+  };
+  return JSON.stringify(config, null, 2) + '\n';
+}
+
 export function renderStub(name: string): string {
   return `import { plugin, route } from '@workday/everywhere';
 

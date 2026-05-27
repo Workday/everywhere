@@ -1,5 +1,11 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import InitCommand, { resolveTypeDevDependencies } from '../../../src/commands/everywhere/init.js';
+import * as os from 'node:os';
+import * as path from 'node:path';
+import * as fs from 'node:fs';
+import InitCommand, {
+  resolveTypeDevDependencies,
+  writeTsConfigIfAbsent,
+} from '../../../src/commands/everywhere/init.js';
 import EverywhereBaseCommand from '../../../src/lib/command.js';
 
 describe('everywhere init', () => {
@@ -275,6 +281,51 @@ describe('promptYesNo', () => {
       }));
       const { promptYesNo } = await import('../../../src/commands/everywhere/init.js');
       await expect(promptYesNo('Continue?')).resolves.toBe(false);
+    });
+  });
+});
+
+describe('writeTsConfigIfAbsent', () => {
+  let tmpDir: string;
+
+  beforeEach(() => {
+    tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'we-init-test-'));
+  });
+
+  afterEach(() => {
+    fs.rmSync(tmpDir, { recursive: true });
+  });
+
+  describe('when tsconfig.json does not exist', () => {
+    it('writes tsconfig.json to the directory', () => {
+      writeTsConfigIfAbsent(tmpDir);
+      expect(fs.existsSync(path.join(tmpDir, 'tsconfig.json'))).toBe(true);
+    });
+
+    it('writes valid JSON', () => {
+      writeTsConfigIfAbsent(tmpDir);
+      const content = fs.readFileSync(path.join(tmpDir, 'tsconfig.json'), 'utf-8');
+      expect(() => JSON.parse(content)).not.toThrow();
+    });
+
+    it('returns true', () => {
+      expect(writeTsConfigIfAbsent(tmpDir)).toBe(true);
+    });
+  });
+
+  describe('when tsconfig.json already exists', () => {
+    beforeEach(() => {
+      fs.writeFileSync(path.join(tmpDir, 'tsconfig.json'), '{"existing":true}\n');
+    });
+
+    it('does not overwrite the existing file', () => {
+      writeTsConfigIfAbsent(tmpDir);
+      const content = fs.readFileSync(path.join(tmpDir, 'tsconfig.json'), 'utf-8');
+      expect(JSON.parse(content)).toEqual({ existing: true });
+    });
+
+    it('returns false', () => {
+      expect(writeTsConfigIfAbsent(tmpDir)).toBe(false);
     });
   });
 });
