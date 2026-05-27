@@ -7,7 +7,7 @@ import * as readline from 'node:readline';
 import { fileURLToPath } from 'node:url';
 
 import EverywhereBaseCommand from '../../lib/command.js';
-import { renderStub, renderTsConfig } from '../../init-template.js';
+import { renderStub, renderTsConfig, renderAgentsMd } from '../../init-template.js';
 
 const THIS_DIR = path.dirname(fileURLToPath(import.meta.url));
 // init.ts compiles to cli/dist/commands/everywhere/init.js, so the SDK's root
@@ -101,6 +101,15 @@ export function writeTsConfigIfAbsent(pluginDir: string): boolean {
     return false;
   }
   fs.writeFileSync(tsConfigPath, renderTsConfig());
+  return true;
+}
+
+export function writeAgentsMdIfAbsent(pluginDir: string): boolean {
+  const agentsPath = path.join(pluginDir, 'AGENTS.md');
+  if (fs.existsSync(agentsPath)) {
+    return false;
+  }
+  fs.writeFileSync(agentsPath, renderAgentsMd());
   return true;
 }
 
@@ -266,6 +275,14 @@ export default class InitCommand extends EverywhereBaseCommand {
       this.log(chalk.green('Created tsconfig.json'));
     } else if (verbose) {
       this.log(`tsconfig.json already exists, skipping (${chalk.cyan(tsConfigPath)})`);
+    }
+
+    // Mutation 4: write AGENTS.md if not already present
+    const agentsPath = path.join(pluginDir, 'AGENTS.md');
+    if (writeAgentsMdIfAbsent(pluginDir)) {
+      this.log(chalk.green('Created AGENTS.md'));
+    } else if (verbose) {
+      this.log(`AGENTS.md already exists, skipping (${chalk.cyan(agentsPath)})`);
     }
 
     // Run npm install

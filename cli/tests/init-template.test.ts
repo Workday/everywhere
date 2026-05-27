@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { renderStub, renderTsConfig } from '../src/init-template.js';
+import { renderStub, renderTsConfig, renderAgentsMd } from '../src/init-template.js';
 
 describe('renderStub', () => {
   describe('when called with a name', () => {
@@ -101,6 +101,54 @@ describe('renderTsConfig', () => {
     it('excludes node_modules', () => {
       const config = JSON.parse(renderTsConfig()) as { exclude: string[] };
       expect(config.exclude).toContain('node_modules');
+    });
+  });
+});
+
+describe('renderAgentsMd', () => {
+  describe('when called', () => {
+    it('returns a string', () => {
+      expect(typeof renderAgentsMd()).toBe('string');
+    });
+
+    it('ends with a newline', () => {
+      expect(renderAgentsMd().endsWith('\n')).toBe(true);
+    });
+  });
+
+  describe('project context', () => {
+    it('identifies this as a Workday Everywhere plugin project', () => {
+      expect(renderAgentsMd()).toContain('Workday Everywhere');
+    });
+
+    it('names the entry point file', () => {
+      expect(renderAgentsMd()).toContain('plugin.tsx');
+    });
+  });
+
+  describe('data provider guidance', () => {
+    it('mentions DataProvider', () => {
+      expect(renderAgentsMd()).toContain('DataProvider');
+    });
+
+    it('mentions DataResolver', () => {
+      expect(renderAgentsMd()).toContain('DataResolver');
+    });
+  });
+
+  describe('peer dependency guidance', () => {
+    it('mentions react as a peer dependency', () => {
+      expect(renderAgentsMd().toLowerCase()).toContain('peer');
+    });
+
+    it('mentions react', () => {
+      expect(renderAgentsMd()).toContain('react');
+    });
+  });
+
+  describe('import convention guidance', () => {
+    it('calls out the .js extension requirement', () => {
+      expect(renderAgentsMd()).toContain('.js');
     });
   });
 });

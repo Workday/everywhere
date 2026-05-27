@@ -5,6 +5,7 @@ import * as fs from 'node:fs';
 import InitCommand, {
   resolveTypeDevDependencies,
   writeTsConfigIfAbsent,
+  writeAgentsMdIfAbsent,
 } from '../../../src/commands/everywhere/init.js';
 import EverywhereBaseCommand from '../../../src/lib/command.js';
 
@@ -326,6 +327,51 @@ describe('writeTsConfigIfAbsent', () => {
 
     it('returns false', () => {
       expect(writeTsConfigIfAbsent(tmpDir)).toBe(false);
+    });
+  });
+});
+
+describe('writeAgentsMdIfAbsent', () => {
+  let tmpDir: string;
+
+  beforeEach(() => {
+    tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'we-init-test-'));
+  });
+
+  afterEach(() => {
+    fs.rmSync(tmpDir, { recursive: true });
+  });
+
+  describe('when AGENTS.md does not exist', () => {
+    it('writes AGENTS.md to the directory', () => {
+      writeAgentsMdIfAbsent(tmpDir);
+      expect(fs.existsSync(path.join(tmpDir, 'AGENTS.md'))).toBe(true);
+    });
+
+    it('writes non-empty content', () => {
+      writeAgentsMdIfAbsent(tmpDir);
+      const content = fs.readFileSync(path.join(tmpDir, 'AGENTS.md'), 'utf-8');
+      expect(content.length).toBeGreaterThan(0);
+    });
+
+    it('returns true', () => {
+      expect(writeAgentsMdIfAbsent(tmpDir)).toBe(true);
+    });
+  });
+
+  describe('when AGENTS.md already exists', () => {
+    beforeEach(() => {
+      fs.writeFileSync(path.join(tmpDir, 'AGENTS.md'), '# existing\n');
+    });
+
+    it('does not overwrite the existing file', () => {
+      writeAgentsMdIfAbsent(tmpDir);
+      const content = fs.readFileSync(path.join(tmpDir, 'AGENTS.md'), 'utf-8');
+      expect(content).toBe('# existing\n');
+    });
+
+    it('returns false', () => {
+      expect(writeAgentsMdIfAbsent(tmpDir)).toBe(false);
     });
   });
 });
