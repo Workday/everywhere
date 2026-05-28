@@ -72,6 +72,17 @@ export default class ViewCommand extends EverywhereBaseCommand {
                 });
               },
             },
+            '/apps': {
+              target: apiServer,
+              changeOrigin: true,
+              configure: (proxy, _options) => {
+                proxy.on('proxyReq', (proxyReq, req, _res) => {
+                  if (isUnauthenticated(req.headers) && token) {
+                    proxyReq.setHeader('Authorization', `Bearer ${token}`);
+                  }
+                });
+              },
+            },
           },
         };
 

@@ -19,6 +19,8 @@ export interface FieldSchema {
   isDerived?: boolean;
   target?: string;
   precision?: string;
+  /** When true, the mutation input wraps the IdentifierInput in a nested `id` field (Workday embedded input pattern). */
+  embeddedInput?: boolean;
 }
 
 export interface ModelSchema {

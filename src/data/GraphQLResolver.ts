@@ -5,6 +5,17 @@ function capitalize(s: string): string {
   return s.length === 0 ? '' : (s[0] as string).toUpperCase() + s.slice(1);
 }
 
+function collectionIdArg(collection: string): string {
+  return `${collection}Id`;
+}
+
+interface WorkdayIdentifier {
+  id: string;
+  type: string;
+}
+
+const DEFAULT_WORKDAY_ID_TYPE = 'WID';
+
 function referenceIdToGraphPrefix(referenceId: string): string {
   const parts = referenceId.split('_');
   const head = parts[0] ?? '';
@@ -35,6 +46,7 @@ export class GraphQLResolver implements DataResolver {
   private readonly referenceId: string;
   private readonly graphPrefix: string;
   private readonly schemaMap: Map<string, ModelSchema>;
+  private readonly workdayIdTypes = new Map<string, string>();
 
   constructor(referenceId: string, schemas: Record<string, ModelSchema>, endpoint?: string) {
     this.endpoint = endpoint ?? `${globalThis.window?.location.origin ?? ''}/api/v1/data/graphql`;
@@ -47,6 +59,67 @@ export class GraphQLResolver implements DataResolver {
     const s = this.schemaMap.get(model);
     if (!s) throw new Error(`GraphQLResolver: no schema registered for model "${model}"`);
     return s;
+  }
+
+  private workdayIdCacheKey(model: string, id: string): string {
+    return `${model}:${id}`;
+  }
+
+  private rememberWorkdayIdType(model: string, workdayID?: { id?: string; type?: string }): void {
+    if (workdayID?.id && workdayID.type) {
+      this.workdayIdTypes.set(this.workdayIdCacheKey(model, workdayID.id), workdayID.type);
+    }
+  }
+
+  private identifierInput(model: string, id: string): WorkdayIdentifier {
+    const type =
+      this.workdayIdTypes.get(this.workdayIdCacheKey(model, id)) ?? DEFAULT_WORKDAY_ID_TYPE;
+    return { id, type };
+  }
+
+  private async ensureWorkdayIdType(model: string, id: string): Promise<void> {
+    if (this.workdayIdTypes.has(this.workdayIdCacheKey(model, id))) return;
+    await this.findOne(model, id);
+  }
+
+  private mapItem<T>(
+    model: string,
+    schema: ModelSchema,
+    item: T & { workdayID?: { id: string; type: string } }
+  ): T & { id: string } {
+    this.rememberWorkdayIdType(model, item.workdayID);
+    const mapped: Record<string, unknown> = { ...item, id: item.workdayID?.id ?? '' };
+
+    for (const field of schema.fields) {
+      if (field.type !== 'SINGLE_INSTANCE' || field.isDerived) continue;
+      const ref = mapped[field.name] as { workdayID?: { id: string; type: string } } | undefined;
+      if (ref?.workdayID?.id) {
+        const target = field.target ?? model;
+        this.rememberWorkdayIdType(target, ref.workdayID);
+        mapped[field.name] = ref.workdayID.id;
+      }
+    }
+
+    return mapped as T & { id: string };
+  }
+
+  private normalizeMutationInput(
+    schema: ModelSchema,
+    input: Record<string, unknown>
+  ): Record<string, unknown> {
+    const normalized = { ...input };
+
+    for (const field of schema.fields) {
+      if (field.type !== 'SINGLE_INSTANCE' || field.isDerived) continue;
+      const value = normalized[field.name];
+      if (typeof value === 'string' && value.length > 0) {
+        const target = field.target ?? schema.name;
+        const identifier = this.identifierInput(target, value);
+        normalized[field.name] = field.embeddedInput ? { id: identifier } : identifier;
+      }
+    }
+
+    return normalized;
   }
 
   // Lazily resolved: introspect CurrencyValue field names on first CURRENCY query.
@@ -64,14 +137,18 @@ export class GraphQLResolver implements DataResolver {
     return this.currencyFieldsPromise;
   }
 
-  // Scalar + derived fields only — SINGLE/MULTI_INSTANCE need nested selections handled separately.
   private async selectionSetFor(schema: ModelSchema): Promise<string> {
     const hasCurrency = schema.fields.some((f) => f.type === 'CURRENCY');
     const currencyFields = hasCurrency ? await this.currencySubselection() : '';
-    const fields = schema.fields
+    const scalarFields = schema.fields
       .filter((f) => SCALAR_TYPES.has(f.type))
       .map((f) => (f.type === 'CURRENCY' ? `${f.name} { ${currencyFields} }` : f.name));
-    return ['workdayID { id type }', 'descriptor', ...fields].join('\n      ');
+    const instanceFields = schema.fields
+      .filter((f) => f.type === 'SINGLE_INSTANCE' && !f.isDerived)
+      .map((f) => `${f.name} { workdayID { id type } }`);
+    return ['workdayID { id type }', 'descriptor', ...scalarFields, ...instanceFields].join(
+      '\n      '
+    );
   }
 
   private async execute<T>(query: string, variables?: Record<string, unknown>): Promise<T> {
@@ -137,11 +214,10 @@ export class GraphQLResolver implements DataResolver {
 }`;
 
     const result =
-      await this.execute<Record<string, { data: (T & { workdayID?: { id: string } })[] }>>(query);
-    return (result[opName]?.data ?? []).map((item) => ({
-      ...item,
-      id: item.workdayID?.id ?? '',
-    }));
+      await this.execute<
+        Record<string, { data: (T & { workdayID?: { id: string; type: string } })[] }>
+      >(query);
+    return (result[opName]?.data ?? []).map((item) => this.mapItem(model, schema, item));
   }
 
   async findOne<T>(model: string, id: string): Promise<T | null> {
@@ -164,43 +240,58 @@ export class GraphQLResolver implements DataResolver {
   }
 }`;
 
-    const result = await this.execute<Record<string, T & { workdayID?: { id: string } }>>(query, {
-      input,
+    const result = await this.execute<
+      Record<string, T & { workdayID?: { id: string; type: string } }>
+    >(query, {
+      input: this.normalizeMutationInput(schema, input as Record<string, unknown>),
     });
     const item = result[mutationName];
-    return { ...item, id: item?.workdayID?.id ?? '' } as unknown as T;
+    if (!item) throw new Error(`GraphQL mutation ${mutationName} returned no data`);
+    return this.mapItem(model, schema, item) as unknown as T;
   }
 
   async update<T>(model: string, id: string, input: Partial<T>): Promise<T> {
     const schema = this.schema(model);
     const { collection } = schema;
+    const idArg = collectionIdArg(collection);
     const inputType = `${this.graphPrefix}_${capitalize(collection)}Summary_Update_Input`;
     const mutationName = `${this.referenceId}_update${model}`;
 
+    await this.ensureWorkdayIdType(model, id);
+    const identifier = this.identifierInput(model, id);
+
     const selectionSet = await this.selectionSetFor(schema);
-    const query = `mutation Update${model}($id: String!, $input: ${inputType}!) {
-  ${mutationName}(id: $id, input: $input) {
+    const query = `mutation Update${model}($${idArg}: IdentifierInput!, $input: ${inputType}!) {
+  ${mutationName}(${idArg}: $${idArg}, input: $input) {
     ${selectionSet}
   }
 }`;
 
-    const result = await this.execute<Record<string, T & { workdayID?: { id: string } }>>(query, {
-      id,
-      input,
+    const result = await this.execute<
+      Record<string, T & { workdayID?: { id: string; type: string } }>
+    >(query, {
+      [idArg]: identifier,
+      input: this.normalizeMutationInput(schema, input as Record<string, unknown>),
     });
     const item = result[mutationName];
-    return { ...item, id: item?.workdayID?.id ?? '' } as unknown as T;
+    if (!item) throw new Error(`GraphQL mutation ${mutationName} returned no data`);
+    return this.mapItem(model, schema, item) as unknown as T;
   }
 
   async remove(model: string, id: string): Promise<void> {
+    const schema = this.schema(model);
+    const idArg = collectionIdArg(schema.collection);
     const mutationName = `${this.referenceId}_delete${model}`;
 
-    const query = `mutation Delete${model}($id: String!) {
-  ${mutationName}(id: $id) {
+    await this.ensureWorkdayIdType(model, id);
+    const identifier = this.identifierInput(model, id);
+
+    const query = `mutation Delete${model}($${idArg}: IdentifierInput!) {
+  ${mutationName}(${idArg}: $${idArg}) {
     workdayID { id type }
   }
 }`;
 
-    await this.execute(query, { id });
+    await this.execute(query, { [idArg]: identifier });
   }
 }
