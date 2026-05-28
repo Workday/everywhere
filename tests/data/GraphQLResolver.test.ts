@@ -22,6 +22,19 @@ const SCHEMA_WITH_REFS: ModelSchema = {
 const ENDPOINT = 'https://tenant.workday.com/api/v1/data/graphql';
 const REFERENCE_ID = 'examplePlugin_test9999';
 
+const SCHEMA_WITH_GRAPH: ModelSchema = {
+  name: 'Thing',
+  label: 'Thing',
+  collection: 'things',
+  fields: [],
+  securityDomains: [],
+  graph: {
+    dataSourceKey: 'custom_things_datasource',
+    createInputType: 'Custom_ThingsSummary_Create_Input',
+    updateInputType: 'Custom_ThingsSummary_Update_Input',
+  },
+};
+
 function mockFetch(data: unknown[] = []) {
   return vi.fn().mockResolvedValue({
     ok: true,
@@ -327,6 +340,91 @@ describe('GraphQLResolver', () => {
       const headers = (globalThis.fetch as ReturnType<typeof vi.fn>).mock.calls[0][1]
         .headers as Record<string, string>;
       expect(headers['x-app-id']).toBeUndefined();
+    });
+  });
+
+  describe('when schema has graph metadata', () => {
+    describe('find()', () => {
+      it('uses graph.dataSourceKey in the query instead of the convention-derived key', async () => {
+        const fetchMock = vi.fn().mockResolvedValue({
+          ok: true,
+          status: 200,
+          json: () => Promise.resolve({ data: { app_ns1_Thing: { data: [] } } }),
+        });
+        globalThis.fetch = fetchMock;
+
+        await new GraphQLResolver('app_ns1', { Thing: SCHEMA_WITH_GRAPH }, ENDPOINT).find('Thing');
+
+        const body = JSON.parse((fetchMock.mock.calls[0][1] as { body: string }).body) as {
+          query: string;
+        };
+        expect(body.query).toContain('custom_things_datasource');
+      });
+
+      it('does not use the convention-derived key when graph.dataSourceKey is present', async () => {
+        const fetchMock = vi.fn().mockResolvedValue({
+          ok: true,
+          status: 200,
+          json: () => Promise.resolve({ data: { app_ns1_Thing: { data: [] } } }),
+        });
+        globalThis.fetch = fetchMock;
+
+        await new GraphQLResolver('app_ns1', { Thing: SCHEMA_WITH_GRAPH }, ENDPOINT).find('Thing');
+
+        const body = JSON.parse((fetchMock.mock.calls[0][1] as { body: string }).body) as {
+          query: string;
+        };
+        expect(body.query).not.toContain('app_ns1_things');
+      });
+    });
+
+    describe('create()', () => {
+      it('uses graph.createInputType instead of the convention-derived type', async () => {
+        const fetchMock = vi.fn().mockResolvedValue({
+          ok: true,
+          status: 200,
+          json: () =>
+            Promise.resolve({
+              data: { app_ns1_createThing: { workdayID: { id: '1' } } },
+            }),
+        });
+        globalThis.fetch = fetchMock;
+
+        await new GraphQLResolver('app_ns1', { Thing: SCHEMA_WITH_GRAPH }, ENDPOINT).create(
+          'Thing',
+          {}
+        );
+
+        const body = JSON.parse((fetchMock.mock.calls[0][1] as { body: string }).body) as {
+          query: string;
+        };
+        expect(body.query).toContain('Custom_ThingsSummary_Create_Input');
+      });
+    });
+
+    describe('update()', () => {
+      it('uses graph.updateInputType instead of the convention-derived type', async () => {
+        const fetchMock = vi.fn().mockResolvedValue({
+          ok: true,
+          status: 200,
+          json: () =>
+            Promise.resolve({
+              data: { app_ns1_updateThing: { workdayID: { id: '1' } } },
+            }),
+        });
+        globalThis.fetch = fetchMock;
+
+        await new GraphQLResolver('app_ns1', { Thing: SCHEMA_WITH_GRAPH }, ENDPOINT).update(
+          'Thing',
+          '1',
+          {}
+        );
+
+        const body = JSON.parse((fetchMock.mock.calls[0][1] as { body: string }).body) as {
+          query: string;
+        };
+        expect(body.query).toContain('Custom_ThingsSummary_Update_Input');
+      });
     });
   });
 });

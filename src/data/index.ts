@@ -1,4 +1,12 @@
-export type { FieldType, FieldSchema, ModelSchema, CurrencyValue } from './types.js';
+export type {
+  FieldType,
+  FieldSchema,
+  GraphFieldMeta,
+  GraphInputFieldMeta,
+  GraphMetadata,
+  ModelSchema,
+  CurrencyValue,
+} from './types.js';
 export type { DataResolver } from './resolver.js';
 export { HttpResolver } from './HttpResolver.js';
 export { GraphQLResolver } from './GraphQLResolver.js';

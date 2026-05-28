@@ -1,5 +1,12 @@
 import { describe, it, expect } from 'vitest';
-import type { FieldType, FieldSchema, ModelSchema } from '../../src/data/types.js';
+import type {
+  FieldType,
+  FieldSchema,
+  ModelSchema,
+  GraphMetadata,
+  GraphFieldMeta,
+  GraphInputFieldMeta,
+} from '../../src/data/types.js';
 
 describe('data schema types', () => {
   describe('FieldType', () => {
@@ -83,6 +90,83 @@ describe('data schema types', () => {
       };
 
       expect(schema.collection).toBe('workFromAnywhereRequests');
+    });
+
+    it('allows an optional graph field with GraphMetadata', () => {
+      const schema: ModelSchema = {
+        name: 'Employee',
+        label: 'Employee',
+        collection: 'employees',
+        fields: [],
+        graph: {
+          dataSourceKey: 'myApp_employees',
+          createInputType: 'Prefix_EmployeesSummary_Create_Input',
+          updateInputType: 'Prefix_EmployeesSummary_Update_Input',
+        },
+      };
+
+      expect(schema.graph?.dataSourceKey).toBe('myApp_employees');
+    });
+  });
+
+  describe('GraphMetadata', () => {
+    it('holds dataSourceKey, createInputType, and updateInputType', () => {
+      const meta: GraphMetadata = {
+        dataSourceKey: 'myApp_employees',
+        createInputType: 'Prefix_EmployeesSummary_Create_Input',
+        updateInputType: 'Prefix_EmployeesSummary_Update_Input',
+      };
+
+      expect(meta.dataSourceKey).toBe('myApp_employees');
+    });
+
+    it('accepts optional fields map', () => {
+      const meta: GraphMetadata = {
+        dataSourceKey: 'myApp_employees',
+        createInputType: 'Prefix_Create_Input',
+        updateInputType: 'Prefix_Update_Input',
+        fields: { name: { nullable: false } },
+      };
+
+      expect(meta.fields?.['name']?.nullable).toBe(false);
+    });
+
+    it('accepts optional createInputFields map', () => {
+      const meta: GraphMetadata = {
+        dataSourceKey: 'myApp_employees',
+        createInputType: 'Prefix_Create_Input',
+        updateInputType: 'Prefix_Update_Input',
+        createInputFields: { name: { required: true } },
+      };
+
+      expect(meta.createInputFields?.['name']?.required).toBe(true);
+    });
+
+    it('accepts optional updateInputFields map', () => {
+      const meta: GraphMetadata = {
+        dataSourceKey: 'myApp_employees',
+        createInputType: 'Prefix_Create_Input',
+        updateInputType: 'Prefix_Update_Input',
+        updateInputFields: { name: { required: false } },
+      };
+
+      expect(meta.updateInputFields?.['name']?.required).toBe(false);
+    });
+  });
+
+  describe('GraphFieldMeta', () => {
+    it('holds a nullable boolean', () => {
+      const meta: GraphFieldMeta = { nullable: true };
+
+      expect(meta.nullable).toBe(true);
+    });
+  });
+
+  describe('GraphInputFieldMeta', () => {
+    it('holds a required boolean', () => {
+      const meta: GraphInputFieldMeta = { required: true };
+
+      expect(meta.required).toBe(true);
     });
   });
 });
