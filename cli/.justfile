@@ -8,6 +8,7 @@ setup:
 build: setup
     npx tsc
     cp src/viewer/index.html src/viewer/viewer.css src/viewer/empty-plugin-styles.css dist/viewer/
+    cp src/agents.template.md dist/
     npx oclif manifest
 
 # Run static checks

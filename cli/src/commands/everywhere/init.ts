@@ -104,6 +104,17 @@ export function writeTsConfigIfAbsent(pluginDir: string): boolean {
   return true;
 }
 
+const AGENTS_TEMPLATE_PATH = path.resolve(THIS_DIR, '../../agents.template.md');
+
+export function writeAgentsMdIfAbsent(pluginDir: string): boolean {
+  const agentsPath = path.join(pluginDir, 'AGENTS.md');
+  if (fs.existsSync(agentsPath)) {
+    return false;
+  }
+  fs.copyFileSync(AGENTS_TEMPLATE_PATH, agentsPath);
+  return true;
+}
+
 export function runNpmInstall(cwd: string): Promise<void> {
   return new Promise((resolve, reject) => {
     const child = spawn(NPM_BIN, ['install'], {
@@ -266,6 +277,14 @@ export default class InitCommand extends EverywhereBaseCommand {
       this.log(chalk.green('Created tsconfig.json'));
     } else if (verbose) {
       this.log(`tsconfig.json already exists, skipping (${chalk.cyan(tsConfigPath)})`);
+    }
+
+    // Mutation 4: write AGENTS.md if not already present
+    const agentsPath = path.join(pluginDir, 'AGENTS.md');
+    if (writeAgentsMdIfAbsent(pluginDir)) {
+      this.log(chalk.green('Created AGENTS.md'));
+    } else if (verbose) {
+      this.log(`AGENTS.md already exists, skipping (${chalk.cyan(agentsPath)})`);
     }
 
     // Run npm install
