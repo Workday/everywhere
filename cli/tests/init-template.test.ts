@@ -1,5 +1,13 @@
 import { describe, it, expect } from 'vitest';
-import { renderStub, renderTsConfig, renderAgentsMd } from '../src/init-template.js';
+import * as fs from 'node:fs';
+import * as path from 'node:path';
+import { fileURLToPath } from 'node:url';
+import { renderStub, renderTsConfig } from '../src/init-template.js';
+
+const TEMPLATE_PATH = path.resolve(
+  path.dirname(fileURLToPath(import.meta.url)),
+  '../src/agents.template.md'
+);
 
 describe('renderStub', () => {
   describe('when called with a name', () => {
@@ -105,50 +113,72 @@ describe('renderTsConfig', () => {
   });
 });
 
-describe('renderAgentsMd', () => {
-  describe('when called', () => {
-    it('returns a string', () => {
-      expect(typeof renderAgentsMd()).toBe('string');
+describe('agents.template.md', () => {
+  let content: string;
+
+  describe('when read from disk', () => {
+    it('exists', () => {
+      expect(fs.existsSync(TEMPLATE_PATH)).toBe(true);
     });
 
     it('ends with a newline', () => {
-      expect(renderAgentsMd().endsWith('\n')).toBe(true);
+      content = fs.readFileSync(TEMPLATE_PATH, 'utf-8');
+      expect(content.endsWith('\n')).toBe(true);
     });
   });
 
   describe('project context', () => {
     it('identifies this as a Workday Everywhere plugin project', () => {
-      expect(renderAgentsMd()).toContain('Workday Everywhere');
+      content = fs.readFileSync(TEMPLATE_PATH, 'utf-8');
+      expect(content).toContain('Workday Everywhere');
     });
 
     it('names the entry point file', () => {
-      expect(renderAgentsMd()).toContain('plugin.tsx');
+      content = fs.readFileSync(TEMPLATE_PATH, 'utf-8');
+      expect(content).toContain('plugin.tsx');
     });
   });
 
   describe('data provider guidance', () => {
     it('mentions DataProvider', () => {
-      expect(renderAgentsMd()).toContain('DataProvider');
+      content = fs.readFileSync(TEMPLATE_PATH, 'utf-8');
+      expect(content).toContain('DataProvider');
     });
 
     it('mentions DataResolver', () => {
-      expect(renderAgentsMd()).toContain('DataResolver');
+      content = fs.readFileSync(TEMPLATE_PATH, 'utf-8');
+      expect(content).toContain('DataResolver');
     });
   });
 
   describe('peer dependency guidance', () => {
     it('mentions react as a peer dependency', () => {
-      expect(renderAgentsMd().toLowerCase()).toContain('peer');
+      content = fs.readFileSync(TEMPLATE_PATH, 'utf-8');
+      expect(content.toLowerCase()).toContain('peer');
     });
 
     it('mentions react', () => {
-      expect(renderAgentsMd()).toContain('react');
+      content = fs.readFileSync(TEMPLATE_PATH, 'utf-8');
+      expect(content).toContain('react');
     });
   });
 
   describe('import convention guidance', () => {
     it('calls out the .js extension requirement', () => {
-      expect(renderAgentsMd()).toContain('.js');
+      content = fs.readFileSync(TEMPLATE_PATH, 'utf-8');
+      expect(content).toContain('.js');
+    });
+  });
+
+  describe('example references', () => {
+    it('links to the hello example', () => {
+      content = fs.readFileSync(TEMPLATE_PATH, 'utf-8');
+      expect(content).toContain('examples/hello');
+    });
+
+    it('links to the directory example', () => {
+      content = fs.readFileSync(TEMPLATE_PATH, 'utf-8');
+      expect(content).toContain('examples/directory');
     });
   });
 });

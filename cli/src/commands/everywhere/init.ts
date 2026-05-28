@@ -7,7 +7,7 @@ import * as readline from 'node:readline';
 import { fileURLToPath } from 'node:url';
 
 import EverywhereBaseCommand from '../../lib/command.js';
-import { renderStub, renderTsConfig, renderAgentsMd } from '../../init-template.js';
+import { renderStub, renderTsConfig } from '../../init-template.js';
 
 const THIS_DIR = path.dirname(fileURLToPath(import.meta.url));
 // init.ts compiles to cli/dist/commands/everywhere/init.js, so the SDK's root
@@ -104,12 +104,14 @@ export function writeTsConfigIfAbsent(pluginDir: string): boolean {
   return true;
 }
 
+const AGENTS_TEMPLATE_PATH = path.resolve(THIS_DIR, '../../agents.template.md');
+
 export function writeAgentsMdIfAbsent(pluginDir: string): boolean {
   const agentsPath = path.join(pluginDir, 'AGENTS.md');
   if (fs.existsSync(agentsPath)) {
     return false;
   }
-  fs.writeFileSync(agentsPath, renderAgentsMd());
+  fs.copyFileSync(AGENTS_TEMPLATE_PATH, agentsPath);
   return true;
 }
 
