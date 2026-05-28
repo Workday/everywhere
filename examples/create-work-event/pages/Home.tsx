@@ -113,19 +113,19 @@ export default function HomePage() {
   const goMyEvents = (e: MouseEvent<HTMLButtonElement>) => {
     e.preventDefault();
     e.stopPropagation();
-    navigate(myEvents, {});
+    navigate(myEvents);
   };
 
   const goCreateEvent = (e: MouseEvent<HTMLButtonElement>) => {
     e.preventDefault();
     e.stopPropagation();
-    navigate(createEvent, {});
+    navigate(createEvent);
   };
 
   const goManageEvents = (e: MouseEvent<HTMLButtonElement>) => {
     e.preventDefault();
     e.stopPropagation();
-    navigate(manageEvents, {});
+    navigate(manageEvents);
   };
 
   return (

@@ -95,7 +95,7 @@ export default function ManageEventsPage() {
       inactive: { bg: '#f3e5f5', color: '#7b1fa2' },
       draft: { bg: '#fff3e0', color: '#f57c00' },
     };
-    const theme = colors[status] || colors.inactive;
+    const theme = colors[status] ?? { bg: '#f3e5f5', color: '#7b1fa2' };
     return {
       display: 'inline-block',
       padding: '4px 12px',
@@ -127,7 +127,7 @@ export default function ManageEventsPage() {
         <div style={containerStyle}>
           <div style={headerStyle}>
             <h1 style={titleStyle}>All Events</h1>
-            <button style={buttonStyle('secondary')} onClick={() => navigate(home, {})}>
+            <button style={buttonStyle('secondary')} onClick={() => navigate(home)}>
               ← Home
             </button>
           </div>
@@ -151,7 +151,7 @@ export default function ManageEventsPage() {
                 : `${myEvents.length} event${myEvents.length !== 1 ? 's' : ''}`}
             </p>
           </div>
-          <button style={buttonStyle('secondary')} onClick={() => navigate(home, {})}>
+          <button style={buttonStyle('secondary')} onClick={() => navigate(home)}>
             ← Home
           </button>
         </div>

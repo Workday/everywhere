@@ -4,6 +4,8 @@
 setup:
     cd hello && npm install
     cd directory && npm install
+    cd charitable-donations && npm install
+    cd create-work-event && npm install
 
 # Format example source files
 tidy:
