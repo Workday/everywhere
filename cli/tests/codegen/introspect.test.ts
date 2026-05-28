@@ -523,51 +523,33 @@ describe('applyIntrospectionOutcome()', () => {
         expect(schemas[0]).toBe(BASE_SCHEMA);
       });
 
-      it('returns one warning', () => {
+      it('returns no warnings', () => {
         const { warnings } = applyIntrospectionOutcome([BASE_SCHEMA], {
           ok: false,
           reason: { kind: 'no-token' },
         });
 
-        expect(warnings).toHaveLength(1);
-      });
-
-      it('mentions the missing token in the warning', () => {
-        const { warnings } = applyIntrospectionOutcome([BASE_SCHEMA], {
-          ok: false,
-          reason: { kind: 'no-token' },
-        });
-
-        expect(warnings[0]).toContain('no auth token found');
-      });
-
-      it('includes the accuracy impact statement in the warning', () => {
-        const { warnings } = applyIntrospectionOutcome([BASE_SCHEMA], {
-          ok: false,
-          reason: { kind: 'no-token' },
-        });
-
-        expect(warnings[0]).toContain('may not accurately reflect');
+        expect(warnings).toHaveLength(0);
       });
     });
 
     describe('with reason no-manifest', () => {
-      it('names the missing manifest path in the warning', () => {
-        const { warnings } = applyIntrospectionOutcome([BASE_SCHEMA], {
+      it('returns schemas unchanged', () => {
+        const { schemas } = applyIntrospectionOutcome([BASE_SCHEMA], {
           ok: false,
           reason: { kind: 'no-manifest', path: '/app/appManifest.json' },
         });
 
-        expect(warnings[0]).toContain('/app/appManifest.json');
+        expect(schemas[0]).toBe(BASE_SCHEMA);
       });
 
-      it('includes the accuracy impact statement in the warning', () => {
+      it('returns no warnings', () => {
         const { warnings } = applyIntrospectionOutcome([BASE_SCHEMA], {
           ok: false,
           reason: { kind: 'no-manifest', path: '/app/appManifest.json' },
         });
 
-        expect(warnings[0]).toContain('may not accurately reflect');
+        expect(warnings).toHaveLength(0);
       });
     });
 

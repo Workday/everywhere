@@ -83,11 +83,13 @@ export function generateModels(schemas: ModelSchema[]): string {
     const writableFields = schema.fields.filter((f) => !f.isDerived);
 
     if (schema.graph?.createInputFields) {
+      const createInputFields = schema.graph.createInputFields;
       lines.push(`export interface Create${schema.name}Input {`);
       for (const field of writableFields) {
+        const inputField = createInputFields[field.name];
+        if (!inputField) continue;
         const tsType = fieldTypeToTS(field, knownModelNames);
-        const required = schema.graph.createInputFields[field.name]?.required ?? false;
-        const opt = required ? '' : '?';
+        const opt = inputField.required ? '' : '?';
         lines.push(`  ${field.name}${opt}: ${tsType};`);
       }
       lines.push('}');
@@ -95,8 +97,10 @@ export function generateModels(schemas: ModelSchema[]): string {
     }
 
     if (schema.graph?.updateInputFields) {
+      const updateInputFields = schema.graph.updateInputFields;
       lines.push(`export interface Update${schema.name}Input {`);
       for (const field of writableFields) {
+        if (!updateInputFields[field.name]) continue;
         const tsType = fieldTypeToTS(field, knownModelNames);
         lines.push(`  ${field.name}?: ${tsType};`);
       }

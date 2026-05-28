@@ -65,7 +65,9 @@ export default class BindCommand extends EverywhereBaseCommand {
       result.source.kind === 'zip'
     );
     const { schemas, warnings } = applyIntrospectionOutcome(parsed, introspectionOutcome);
-    for (const w of warnings) this.warn(w);
+    if (verbose) {
+      for (const w of warnings) this.warn(w);
+    }
 
     if (verbose) {
       this.log(`Source: ${result.source.path} (${result.source.kind})`);

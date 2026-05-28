@@ -53,17 +53,12 @@ export function applyIntrospectionOutcome<T extends ModelSchema>(
 ): { schemas: T[]; warnings: string[] } {
   if (!outcome.ok) {
     const { reason } = outcome;
-    let detail: string;
-    if (reason.kind === 'no-token') {
-      detail = 'no auth token found. Run `everywhere auth login` to enable type enrichment.';
-    } else if (reason.kind === 'no-manifest') {
-      detail = `no appManifest.json found at ${reason.path}.`;
-    } else {
-      detail = `${reason.message}.`;
+    if (reason.kind === 'no-token' || reason.kind === 'no-manifest') {
+      return { schemas, warnings: [] };
     }
     return {
       schemas,
-      warnings: [`GraphQL introspection skipped — ${detail}\n${ACCURACY_IMPACT}`],
+      warnings: [`GraphQL introspection failed — ${reason.message}.\n${ACCURACY_IMPACT}`],
     };
   }
 
@@ -133,14 +128,11 @@ export async function introspectGraphTypes<T extends ModelSchema>(
   let manifestContent: string | null;
   try {
     manifestContent = await readManifestContent(extendSourcePath, isZip);
-  } catch (e) {
-    return {
-      ok: false,
-      reason: {
-        kind: 'network-error',
-        message: e instanceof Error ? e.message : String(e),
-      },
-    };
+  } catch {
+    const manifestPath = isZip
+      ? `${extendSourcePath}:appManifest.json`
+      : path.join(extendSourcePath, 'appManifest.json');
+    return { ok: false, reason: { kind: 'no-manifest', path: manifestPath } };
   }
 
   if (!manifestContent) {

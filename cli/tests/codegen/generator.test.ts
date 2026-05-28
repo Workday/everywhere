@@ -259,6 +259,31 @@ describe('generateModels()', () => {
         expect(createInputBlock).not.toContain('displayName');
       });
 
+      it('excludes writable fields absent from createInputFields', () => {
+        const schema: ModelSchema = {
+          ...EMPLOYEE_SCHEMA_WITH_NULLABLE_FIELDS,
+          fields: [
+            { name: 'name', type: 'TEXT' },
+            { name: 'internalNotes', type: 'TEXT' },
+            ...EMPLOYEE_SCHEMA_WITH_NULLABLE_FIELDS.fields.filter((f) => f.name === 'displayName'),
+          ],
+          graph: {
+            dataSourceKey: 'myApp_ns1_employees',
+            createInputType: 'MyApp_ns1_EmployeesSummary_Create_Input',
+            updateInputType: 'MyApp_ns1_EmployeesSummary_Update_Input',
+            createInputFields: { name: { required: true } },
+          },
+        };
+
+        const result = generateModels([schema]);
+        const createInputStart = result.indexOf('export interface CreateEmployeeInput');
+        const createInputEnd = result.indexOf('}', createInputStart);
+        const createInputBlock = result.slice(createInputStart, createInputEnd);
+
+        expect(createInputBlock).toContain('name: string;');
+        expect(createInputBlock).not.toContain('internalNotes');
+      });
+
       it('does not emit CreateEmployeeInput when createInputFields is absent', () => {
         const result = generateModels([EMPLOYEE_SCHEMA]);
 
@@ -298,6 +323,31 @@ describe('generateModels()', () => {
         const updateInputEnd = result.indexOf('}', updateInputStart);
         const updateInputBlock = result.slice(updateInputStart, updateInputEnd);
         expect(updateInputBlock).not.toContain('displayName');
+      });
+
+      it('excludes writable fields absent from updateInputFields', () => {
+        const schema: ModelSchema = {
+          ...EMPLOYEE_SCHEMA_WITH_NULLABLE_FIELDS,
+          fields: [
+            { name: 'name', type: 'TEXT' },
+            { name: 'internalNotes', type: 'TEXT' },
+            ...EMPLOYEE_SCHEMA_WITH_NULLABLE_FIELDS.fields.filter((f) => f.name === 'displayName'),
+          ],
+          graph: {
+            dataSourceKey: 'myApp_ns1_employees',
+            createInputType: 'MyApp_ns1_EmployeesSummary_Create_Input',
+            updateInputType: 'MyApp_ns1_EmployeesSummary_Update_Input',
+            updateInputFields: { name: { required: false } },
+          },
+        };
+
+        const result = generateModels([schema]);
+        const updateInputStart = result.indexOf('export interface UpdateEmployeeInput');
+        const updateInputEnd = result.indexOf('}', updateInputStart);
+        const updateInputBlock = result.slice(updateInputStart, updateInputEnd);
+
+        expect(updateInputBlock).toContain('name?: string;');
+        expect(updateInputBlock).not.toContain('internalNotes');
       });
 
       it('does not emit UpdateEmployeeInput when updateInputFields is absent', () => {
