@@ -404,14 +404,30 @@ describe('GraphQLResolver', () => {
 
     describe('update()', () => {
       it('uses graph.updateInputType instead of the convention-derived type', async () => {
-        const fetchMock = vi.fn().mockResolvedValue({
+        const findResponse = {
           ok: true,
           status: 200,
           json: () =>
             Promise.resolve({
-              data: { app_ns1_updateThing: { workdayID: { id: '1' } } },
+              data: {
+                app_ns1_Thing: {
+                  data: [{ workdayID: { id: '1', type: 'WID' } }],
+                },
+              },
             }),
-        });
+        };
+        const updateResponse = {
+          ok: true,
+          status: 200,
+          json: () =>
+            Promise.resolve({
+              data: { app_ns1_updateThing: { workdayID: { id: '1', type: 'WID' } } },
+            }),
+        };
+        const fetchMock = vi
+          .fn()
+          .mockResolvedValueOnce(findResponse)
+          .mockResolvedValueOnce(updateResponse);
         globalThis.fetch = fetchMock;
 
         await new GraphQLResolver('app_ns1', { Thing: SCHEMA_WITH_GRAPH }, ENDPOINT).update(
@@ -420,7 +436,7 @@ describe('GraphQLResolver', () => {
           {}
         );
 
-        const body = JSON.parse((fetchMock.mock.calls[0][1] as { body: string }).body) as {
+        const body = JSON.parse((fetchMock.mock.calls[1][1] as { body: string }).body) as {
           query: string;
         };
         expect(body.query).toContain('Custom_ThingsSummary_Update_Input');
