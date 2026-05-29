@@ -1,8 +1,8 @@
-import * as fs from 'node:fs';
 import { join, relative } from 'node:path';
 
 import { bundlePlugin, packagePlugin, slugify } from '../../build/index.js';
 import EverywhereBaseCommand from '../../lib/command.js';
+import { type PluginManifest, readPluginManifest } from '../../manifest/manifest.js';
 
 export default class BuildCommand extends EverywhereBaseCommand {
   static description = 'Build a plugin bundle.';
@@ -13,19 +13,11 @@ export default class BuildCommand extends EverywhereBaseCommand {
 
   async run(): Promise<void> {
     const pluginDir = await this.parsePluginDir();
-
-    const pkgPath = join(pluginDir, 'package.json');
-    if (!fs.existsSync(pkgPath)) {
-      this.error('No package.json found in the plugin directory.');
-    }
-
-    const pkg = JSON.parse(fs.readFileSync(pkgPath, 'utf-8'));
-    if (!pkg.name) this.error('package.json is missing required field: name');
-    if (!pkg.version) this.error('package.json is missing required field: version');
+    const manifest = this.loadManifest(pluginDir);
 
     this.log('Bundling plugin...');
-    const slug = slugify(pkg.name);
-    const bundle = await bundlePlugin(pluginDir, slug, pkg.name);
+    const slug = slugify(manifest.name);
+    const bundle = await bundlePlugin(pluginDir, slug, manifest.name);
 
     this.log('Packaging...');
     const outputDir = join(pluginDir, 'dist');
@@ -34,11 +26,20 @@ export default class BuildCommand extends EverywhereBaseCommand {
       bundle,
       outputDir,
       slug,
-      version: pkg.version,
+      version: manifest.version,
     });
 
     const sizeKB = (result.size / 1024).toFixed(1);
     const displayPath = relative(pluginDir, result.filePath);
     this.log(`Build complete → ${displayPath} (${sizeKB} KB)`);
+  }
+
+  private loadManifest(pluginDir: string): PluginManifest {
+    try {
+      return readPluginManifest(pluginDir);
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Failed to read package.json';
+      this.error(`${message}\nUpdate package.json and re-run \`everywhere build\`.`);
+    }
   }
 }
