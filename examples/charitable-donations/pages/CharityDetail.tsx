@@ -175,18 +175,24 @@ export default function CharityDetailPage() {
             <Flex flexDirection="column" gap="m">
               <Heading size="large">Edit charity</Heading>
 
-              <FormField label="Name" inputId="charity-name" required>
-                <TextInput
+              <FormField>
+                <FormField.Label>Name</FormField.Label>
+                <FormField.Input
+                  as={TextInput}
                   id="charity-name"
                   value={form.name}
+                  required
                   onChange={(e) => setForm((prev) => ({ ...prev, name: e.target.value }))}
                 />
               </FormField>
 
-              <FormField label="Description" inputId="charity-description" required>
-                <TextArea
+              <FormField>
+                <FormField.Label>Description</FormField.Label>
+                <FormField.Input
+                  as={TextArea}
                   id="charity-description"
                   value={form.description}
+                  required
                   onChange={(e) => setForm((prev) => ({ ...prev, description: e.target.value }))}
                   rows={4}
                 />
@@ -211,17 +217,15 @@ export default function CharityDetailPage() {
                     Replaces the current logo when you save.
                   </Text>
                 )}
-                <FormField
-                  label={charity.logo ? 'Replace logo' : 'Upload logo'}
-                  inputId="charity-logo"
-                  hintText="GIF, JPG, or PNG up to 5 MB"
-                >
+                <FormField>
+                  <FormField.Label>{charity.logo ? 'Replace logo' : 'Upload logo'}</FormField.Label>
                   <input
                     id="charity-logo"
                     type="file"
                     accept="image/gif,image/jpeg,image/jpg,image/png"
                     onChange={(e) => handleLogoChange(e.target.files?.[0])}
                   />
+                  <FormField.Hint>GIF, JPG, or PNG up to 5 MB</FormField.Hint>
                 </FormField>
               </Flex>
 
