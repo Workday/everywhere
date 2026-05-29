@@ -15,6 +15,7 @@ import {
   generateModelHooks,
   generateIndex,
 } from '../../codegen/generator.js';
+import { introspectGraphTypes, applyIntrospectionOutcome } from '../../codegen/introspect.js';
 import { pluginConfig } from '../../config.js';
 import { formatSchemas } from '../../format-schemas.js';
 
@@ -55,8 +56,18 @@ export default class BindCommand extends EverywhereBaseCommand {
     const verbose = flags.verbose || dryRun;
 
     const result = await this.loadRecords(args['app-source'], pluginDir);
-    const schemas = result.records.map((record) => parseBusinessObject(JSON.parse(record.content)));
+    const parsed = result.records.map((record) => parseBusinessObject(JSON.parse(record.content)));
     const outputDir = path.join(everywhereDir, OUTPUT_DIR);
+
+    const introspectionOutcome = await introspectGraphTypes(
+      parsed,
+      result.source.path,
+      result.source.kind === 'zip'
+    );
+    const { schemas, warnings } = applyIntrospectionOutcome(parsed, introspectionOutcome);
+    if (verbose) {
+      for (const w of warnings) this.warn(w);
+    }
 
     if (verbose) {
       this.log(`Source: ${result.source.path} (${result.source.kind})`);

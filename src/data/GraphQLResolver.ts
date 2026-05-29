@@ -199,7 +199,7 @@ export class GraphQLResolver implements DataResolver {
   async find<T>(model: string, filter?: Record<string, unknown>): Promise<T[]> {
     const schema = this.schema(model);
     const opName = `${this.referenceId}_${model}`;
-    const dsKey = `${this.referenceId}_${schema.collection}`;
+    const dsKey = schema.graph?.dataSourceKey ?? `${this.referenceId}_${schema.collection}`;
     const dataSourceLiteral = filter
       ? `{${dsKey}: {filter: {${dsKey}Filter: ${toGQLLiteral(filter)}}}}`
       : `{${dsKey}: {}}`;
@@ -230,7 +230,9 @@ export class GraphQLResolver implements DataResolver {
   async create<T>(model: string, input: Omit<T, 'id'>): Promise<T> {
     const schema = this.schema(model);
     const { collection } = schema;
-    const inputType = `${this.graphPrefix}_${capitalize(collection)}Summary_Create_Input`;
+    const inputType =
+      schema.graph?.createInputType ??
+      `${this.graphPrefix}_${capitalize(collection)}Summary_Create_Input`;
     const mutationName = `${this.referenceId}_create${model}`;
 
     const selectionSet = await this.selectionSetFor(schema);
@@ -254,7 +256,9 @@ export class GraphQLResolver implements DataResolver {
     const schema = this.schema(model);
     const { collection } = schema;
     const idArg = collectionIdArg(collection);
-    const inputType = `${this.graphPrefix}_${capitalize(collection)}Summary_Update_Input`;
+    const inputType =
+      schema.graph?.updateInputType ??
+      `${this.graphPrefix}_${capitalize(collection)}Summary_Update_Input`;
     const mutationName = `${this.referenceId}_update${model}`;
 
     await this.ensureWorkdayIdType(model, id);

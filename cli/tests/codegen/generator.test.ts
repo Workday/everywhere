@@ -58,6 +58,47 @@ const WORK_EVENT_WITH_REGISTRANTS_SCHEMA: ModelSchema = {
   ],
 };
 
+const EMPLOYEE_SCHEMA_WITH_GRAPH: ModelSchema = {
+  name: 'Employee',
+  label: 'Employee',
+  collection: 'employees',
+  fields: [{ name: 'title', type: 'TEXT' }],
+  graph: {
+    dataSourceKey: 'myApp_ns1_employees',
+    createInputType: 'MyApp_ns1_EmployeesSummary_Create_Input',
+    updateInputType: 'MyApp_ns1_EmployeesSummary_Update_Input',
+  },
+};
+
+const EMPLOYEE_SCHEMA_WITH_NULLABLE_FIELDS: ModelSchema = {
+  name: 'Employee',
+  label: 'Employee',
+  collection: 'employees',
+  fields: [
+    { name: 'name', type: 'TEXT' },
+    { name: 'email', type: 'TEXT' },
+    { name: 'displayName', type: 'TEXT', isDerived: true },
+  ],
+  graph: {
+    dataSourceKey: 'myApp_ns1_employees',
+    createInputType: 'MyApp_ns1_EmployeesSummary_Create_Input',
+    updateInputType: 'MyApp_ns1_EmployeesSummary_Update_Input',
+    fields: {
+      name: { nullable: false },
+      email: { nullable: true },
+      displayName: { nullable: true },
+    },
+    createInputFields: {
+      name: { required: true },
+      email: { required: false },
+    },
+    updateInputFields: {
+      name: { required: false },
+      email: { required: false },
+    },
+  },
+};
+
 describe('generateModels()', () => {
   it('starts with the auto-generated comment', () => {
     const result = generateModels([EMPLOYEE_SCHEMA]);
@@ -137,18 +178,184 @@ describe('generateModels()', () => {
     expect(result).toContain('proratedAmount: number;');
   });
 
-  it('marks derived fields as readonly', () => {
+  it('marks the proratedAmount derived field as readonly', () => {
     const result = generateModels([WORK_EVENT_SCHEMA]);
 
     expect(result).toContain('readonly proratedAmount: number;');
+  });
+
+  it('marks the isWorkdayEvent derived field as readonly', () => {
+    const result = generateModels([WORK_EVENT_SCHEMA]);
+
     expect(result).toContain('readonly isWorkdayEvent: boolean;');
   });
 
-  it('does not mark regular fields as readonly', () => {
+  it('does not mark the name regular field as readonly', () => {
     const result = generateModels([WORK_EVENT_SCHEMA]);
 
     expect(result).not.toContain('readonly name:');
+  });
+
+  it('does not mark the cost regular field as readonly', () => {
+    const result = generateModels([WORK_EVENT_SCHEMA]);
+
     expect(result).not.toContain('readonly cost:');
+  });
+
+  describe('when the schema has graph field metadata', () => {
+    describe('nullable fields', () => {
+      it('emits T | null for a nullable field', () => {
+        const result = generateModels([EMPLOYEE_SCHEMA_WITH_NULLABLE_FIELDS]);
+
+        expect(result).toContain('email: string | null;');
+      });
+
+      it('emits T for a non-null field', () => {
+        const result = generateModels([EMPLOYEE_SCHEMA_WITH_NULLABLE_FIELDS]);
+
+        expect(result).toContain('name: string;');
+      });
+
+      it('emits T | null for a nullable derived field', () => {
+        const result = generateModels([EMPLOYEE_SCHEMA_WITH_NULLABLE_FIELDS]);
+
+        expect(result).toContain('readonly displayName: string | null;');
+      });
+    });
+
+    describe('without graph field metadata', () => {
+      it('emits T for all fields (unchanged fallback)', () => {
+        const result = generateModels([EMPLOYEE_SCHEMA]);
+
+        expect(result).toContain('title: string;');
+      });
+    });
+
+    describe('CreateXxxInput', () => {
+      it('emits CreateEmployeeInput after the interface when createInputFields is present', () => {
+        const result = generateModels([EMPLOYEE_SCHEMA_WITH_NULLABLE_FIELDS]);
+
+        expect(result).toContain('export interface CreateEmployeeInput {');
+      });
+
+      it('emits required fields without ? in CreateEmployeeInput', () => {
+        const result = generateModels([EMPLOYEE_SCHEMA_WITH_NULLABLE_FIELDS]);
+
+        expect(result).toContain('  name: string;');
+      });
+
+      it('emits optional fields with ? in CreateEmployeeInput', () => {
+        const result = generateModels([EMPLOYEE_SCHEMA_WITH_NULLABLE_FIELDS]);
+
+        expect(result).toContain('  email?: string;');
+      });
+
+      it('excludes derived fields from CreateEmployeeInput', () => {
+        const result = generateModels([EMPLOYEE_SCHEMA_WITH_NULLABLE_FIELDS]);
+
+        const createInputStart = result.indexOf('export interface CreateEmployeeInput');
+        const createInputEnd = result.indexOf('}', createInputStart);
+        const createInputBlock = result.slice(createInputStart, createInputEnd);
+        expect(createInputBlock).not.toContain('displayName');
+      });
+
+      it('excludes writable fields absent from createInputFields', () => {
+        const schema: ModelSchema = {
+          ...EMPLOYEE_SCHEMA_WITH_NULLABLE_FIELDS,
+          fields: [
+            { name: 'name', type: 'TEXT' },
+            { name: 'internalNotes', type: 'TEXT' },
+            ...EMPLOYEE_SCHEMA_WITH_NULLABLE_FIELDS.fields.filter((f) => f.name === 'displayName'),
+          ],
+          graph: {
+            dataSourceKey: 'myApp_ns1_employees',
+            createInputType: 'MyApp_ns1_EmployeesSummary_Create_Input',
+            updateInputType: 'MyApp_ns1_EmployeesSummary_Update_Input',
+            createInputFields: { name: { required: true } },
+          },
+        };
+
+        const result = generateModels([schema]);
+        const createInputStart = result.indexOf('export interface CreateEmployeeInput');
+        const createInputEnd = result.indexOf('}', createInputStart);
+        const createInputBlock = result.slice(createInputStart, createInputEnd);
+
+        expect(createInputBlock).toContain('name: string;');
+        expect(createInputBlock).not.toContain('internalNotes');
+      });
+
+      it('does not emit CreateEmployeeInput when createInputFields is absent', () => {
+        const result = generateModels([EMPLOYEE_SCHEMA]);
+
+        expect(result).not.toContain('CreateEmployeeInput');
+      });
+    });
+
+    describe('UpdateXxxInput', () => {
+      it('emits UpdateEmployeeInput after the interface when updateInputFields is present', () => {
+        const result = generateModels([EMPLOYEE_SCHEMA_WITH_NULLABLE_FIELDS]);
+
+        expect(result).toContain('export interface UpdateEmployeeInput {');
+      });
+
+      it('emits all fields as optional in UpdateEmployeeInput', () => {
+        const result = generateModels([EMPLOYEE_SCHEMA_WITH_NULLABLE_FIELDS]);
+
+        const updateInputStart = result.indexOf('export interface UpdateEmployeeInput');
+        const updateInputEnd = result.indexOf('}', updateInputStart);
+        const updateInputBlock = result.slice(updateInputStart, updateInputEnd);
+        expect(updateInputBlock).toContain('name?: string;');
+      });
+
+      it('emits email as optional in UpdateEmployeeInput', () => {
+        const result = generateModels([EMPLOYEE_SCHEMA_WITH_NULLABLE_FIELDS]);
+
+        const updateInputStart = result.indexOf('export interface UpdateEmployeeInput');
+        const updateInputEnd = result.indexOf('}', updateInputStart);
+        const updateInputBlock = result.slice(updateInputStart, updateInputEnd);
+        expect(updateInputBlock).toContain('email?: string;');
+      });
+
+      it('excludes derived fields from UpdateEmployeeInput', () => {
+        const result = generateModels([EMPLOYEE_SCHEMA_WITH_NULLABLE_FIELDS]);
+
+        const updateInputStart = result.indexOf('export interface UpdateEmployeeInput');
+        const updateInputEnd = result.indexOf('}', updateInputStart);
+        const updateInputBlock = result.slice(updateInputStart, updateInputEnd);
+        expect(updateInputBlock).not.toContain('displayName');
+      });
+
+      it('excludes writable fields absent from updateInputFields', () => {
+        const schema: ModelSchema = {
+          ...EMPLOYEE_SCHEMA_WITH_NULLABLE_FIELDS,
+          fields: [
+            { name: 'name', type: 'TEXT' },
+            { name: 'internalNotes', type: 'TEXT' },
+            ...EMPLOYEE_SCHEMA_WITH_NULLABLE_FIELDS.fields.filter((f) => f.name === 'displayName'),
+          ],
+          graph: {
+            dataSourceKey: 'myApp_ns1_employees',
+            createInputType: 'MyApp_ns1_EmployeesSummary_Create_Input',
+            updateInputType: 'MyApp_ns1_EmployeesSummary_Update_Input',
+            updateInputFields: { name: { required: false } },
+          },
+        };
+
+        const result = generateModels([schema]);
+        const updateInputStart = result.indexOf('export interface UpdateEmployeeInput');
+        const updateInputEnd = result.indexOf('}', updateInputStart);
+        const updateInputBlock = result.slice(updateInputStart, updateInputEnd);
+
+        expect(updateInputBlock).toContain('name?: string;');
+        expect(updateInputBlock).not.toContain('internalNotes');
+      });
+
+      it('does not emit UpdateEmployeeInput when updateInputFields is absent', () => {
+        const result = generateModels([EMPLOYEE_SCHEMA]);
+
+        expect(result).not.toContain('UpdateEmployeeInput');
+      });
+    });
   });
 });
 
@@ -193,6 +400,34 @@ describe('generateSchema()', () => {
     const result = generateSchema([WORK_EVENT_SCHEMA]);
 
     expect(result).toContain('isDerived: true');
+  });
+
+  describe('when the schema has graph metadata', () => {
+    it('emits the dataSourceKey in the graph block', () => {
+      const result = generateSchema([EMPLOYEE_SCHEMA_WITH_GRAPH]);
+
+      expect(result).toContain("dataSourceKey: 'myApp_ns1_employees'");
+    });
+
+    it('emits the createInputType in the graph block', () => {
+      const result = generateSchema([EMPLOYEE_SCHEMA_WITH_GRAPH]);
+
+      expect(result).toContain("createInputType: 'MyApp_ns1_EmployeesSummary_Create_Input'");
+    });
+
+    it('emits the updateInputType in the graph block', () => {
+      const result = generateSchema([EMPLOYEE_SCHEMA_WITH_GRAPH]);
+
+      expect(result).toContain("updateInputType: 'MyApp_ns1_EmployeesSummary_Update_Input'");
+    });
+  });
+
+  describe('when the schema has no graph metadata', () => {
+    it('does not emit a graph key', () => {
+      const result = generateSchema([EMPLOYEE_SCHEMA]);
+
+      expect(result).not.toContain('graph:');
+    });
   });
 });
 
