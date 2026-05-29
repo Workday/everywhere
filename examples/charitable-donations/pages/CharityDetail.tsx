@@ -165,7 +165,7 @@ export default function CharityDetailPage() {
   return (
     <Flex flexDirection="column" gap="m" padding="m" maxWidth="800px" margin="0 auto">
       <Flex justifyContent="space-between" alignItems="center" flexWrap="wrap" gap="s">
-        <SecondaryButton onClick={() => navigate(home, {})}>← Back to charities</SecondaryButton>
+        <SecondaryButton onClick={() => navigate(home)}>← Back to charities</SecondaryButton>
         {!editing && <SecondaryButton onClick={startEditing}>Edit charity</SecondaryButton>}
       </Flex>
 

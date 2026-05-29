@@ -177,7 +177,7 @@ export default function BrowseEventsPage() {
       <div style={pageStyle}>
         <div style={containerStyle}>
           <div style={errorStyle}>Error loading events: {error.message}</div>
-          <button style={buttonStyle} onClick={() => navigate(home, {})}>
+          <button style={buttonStyle} onClick={() => navigate(home)}>
             ← Back to Home
           </button>
         </div>
@@ -207,7 +207,7 @@ export default function BrowseEventsPage() {
                 Clear Filter
               </button>
             )}
-            <button type="button" style={buttonStyle} onClick={() => navigate(home, {})}>
+            <button type="button" style={buttonStyle} onClick={() => navigate(home)}>
               ← Home
             </button>
           </div>
@@ -220,7 +220,7 @@ export default function BrowseEventsPage() {
         ) : events.length === 0 ? (
           <div style={emptyStyle}>
             <p style={{ fontSize: '18px', marginBottom: '16px' }}>No events available</p>
-            <button style={buttonStyle} onClick={() => navigate(home, {})}>
+            <button style={buttonStyle} onClick={() => navigate(home)}>
               Back to Home
             </button>
           </div>

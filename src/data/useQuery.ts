@@ -8,15 +8,17 @@ export interface QueryOptions {
 }
 
 export interface QueryResult<T> {
-  data: T[] | T | null;
+  data: T | null;
   loading: boolean;
   error: Error | null;
   refetch: () => void;
 }
 
-export function useQuery<T>(model: string, options?: QueryOptions): QueryResult<T> {
+export function useQuery<T>(model: string, options: QueryOptions & { id: string }): QueryResult<T>;
+export function useQuery<T>(model: string, options?: QueryOptions): QueryResult<T[]>;
+export function useQuery<T>(model: string, options?: QueryOptions): QueryResult<T | T[]> {
   const { resolver, invalidationKey } = useDataContext();
-  const [data, setData] = useState<T[] | T | null>(null);
+  const [data, setData] = useState<T | T[] | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
 

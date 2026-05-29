@@ -83,7 +83,7 @@ export default function MyEventsPage() {
       today: { bg: '#fff3e0', color: '#f57c00' },
       past: { bg: '#f3e5f5', color: '#7b1fa2' },
     };
-    const theme = colors[status] || colors.upcoming;
+    const theme = colors[status] ?? { bg: '#e3f2fd', color: '#1976d2' };
     return {
       padding: '6px 12px',
       background: theme.bg,
@@ -126,7 +126,7 @@ export default function MyEventsPage() {
         <div style={containerStyle}>
           <div style={headerStyle}>
             <h1 style={titleStyle}>Registered Events</h1>
-            <button style={buttonStyle('secondary')} onClick={() => navigate(home, {})}>
+            <button style={buttonStyle('secondary')} onClick={() => navigate(home)}>
               ← Home
             </button>
           </div>
@@ -152,7 +152,7 @@ export default function MyEventsPage() {
                 : `${registeredEvents.length} event${registeredEvents.length !== 1 ? 's' : ''} with registrations`}
             </p>
           </div>
-          <button style={buttonStyle('secondary')} onClick={() => navigate(home, {})}>
+          <button style={buttonStyle('secondary')} onClick={() => navigate(home)}>
             ← Home
           </button>
         </div>
@@ -166,7 +166,7 @@ export default function MyEventsPage() {
             <p style={{ fontSize: '18px', marginBottom: '16px' }}>
               No events currently have registrations
             </p>
-            <button style={buttonStyle('primary')} onClick={() => navigate(home, {})}>
+            <button style={buttonStyle('primary')} onClick={() => navigate(home)}>
               Browse Events
             </button>
           </div>

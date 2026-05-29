@@ -13,6 +13,7 @@ check:
     npx prettier --check .
     npx tsc --noEmit
     npx eslint src/ cli/src/
+    cd examples && just setup && npx tsc --noEmit -p tsconfig.json
 
 # Build package to dist/
 build:

@@ -152,7 +152,7 @@ export default function EventDetailPage() {
         <div style={containerStyle}>
           <div style={headerStyle}>
             <h1>Event Details</h1>
-            <button style={buttonStyle('secondary')} onClick={() => navigate(home, {})}>
+            <button style={buttonStyle('secondary')} onClick={() => navigate(home)}>
               ← Home
             </button>
           </div>
