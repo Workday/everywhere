@@ -40,7 +40,7 @@ describe('everywhere auth token', () => {
     let cmd: AuthTokenCommand;
 
     const loggedInConfig: AppConfig = {
-      auth: { gateway: 'gateway.example.com', https: false, token: 'test-token' },
+      auth: { gateway: 'http://gateway.example.com', token: 'test-token' },
     };
 
     const makeConfigProvider = (data: object) =>
@@ -81,9 +81,11 @@ describe('everywhere auth token', () => {
       );
     });
 
-    it('uses https when auth.https is true', async () => {
+    it('uses https when the stored gateway URL is https', async () => {
       vi.mocked(appConfig).mockReturnValue(
-        makeConfigProvider({ auth: { ...loggedInConfig.auth, https: true } })
+        makeConfigProvider({
+          auth: { gateway: 'https://gateway.example.com', token: 'test-token' },
+        })
       );
 
       await cmd.run();

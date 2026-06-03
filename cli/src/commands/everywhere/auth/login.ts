@@ -3,7 +3,8 @@ import { Flags } from '@oclif/core';
 import chalk from 'chalk';
 import EverywhereBaseCommand from '../../../lib/command.js';
 import { appConfig } from '../../../config.js';
-import { DEFAULT_GATEWAY, DEFAULT_HTTPS } from '../../../auth/defaults.js';
+import { DEFAULT_GATEWAY } from '../../../auth/defaults.js';
+import { parseGatewayUrl } from '../../../auth/gateway.js';
 import { decodeToken } from '../../../auth/token.js';
 
 export default class AuthLoginCommand extends EverywhereBaseCommand {
@@ -12,11 +13,7 @@ export default class AuthLoginCommand extends EverywhereBaseCommand {
   static flags = {
     ...EverywhereBaseCommand.baseFlags,
     gateway: Flags.string({
-      description: 'Workday API gateway hostname.',
-    }),
-    https: Flags.boolean({
-      description: 'Use HTTPS to contact the gateway (use --no-https to disable).',
-      allowNo: true,
+      description: 'Workday API gateway URL (e.g. https://api.workday.com).',
     }),
     token: Flags.string({
       description: 'Access token (omit to enter interactively).',
@@ -27,8 +24,14 @@ export default class AuthLoginCommand extends EverywhereBaseCommand {
     const { flags } = await this.parse(AuthLoginCommand);
     const config = appConfig();
     const saved = config.read();
-    const gateway = flags.gateway ?? saved.auth?.gateway ?? DEFAULT_GATEWAY;
-    const https = flags.https ?? saved.auth?.https ?? DEFAULT_HTTPS;
+
+    let gateway: string;
+    try {
+      gateway = parseGatewayUrl(flags.gateway ?? saved.auth?.gateway ?? DEFAULT_GATEWAY);
+    } catch (err) {
+      const message = err instanceof Error ? err.message : String(err);
+      this.error(message);
+    }
 
     const token = flags.token ?? (await this.promptForToken());
 
@@ -42,8 +45,7 @@ export default class AuthLoginCommand extends EverywhereBaseCommand {
       this.error('Invalid token format. Please provide a valid JWT.');
     }
 
-    const scheme = https ? 'https' : 'http';
-    const url = `${scheme}://${gateway}/api/v1/me`;
+    const url = new URL('/api/v1/me', gateway).toString();
 
     let response: Response;
     try {
@@ -61,7 +63,7 @@ export default class AuthLoginCommand extends EverywhereBaseCommand {
       this.error(`Token validation failed (HTTP ${response.status}).`);
     }
 
-    config.write({ auth: { gateway, https, token } });
+    config.write({ auth: { gateway, token } });
     this.log(chalk.green('Successfully authenticated.'));
   }
 

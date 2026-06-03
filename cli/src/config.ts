@@ -62,10 +62,31 @@ export function pluginConfig(): ConfigProvider<PluginConfig> {
 export interface AppConfig {
   auth?: {
     gateway?: string;
-    https?: boolean;
     token?: string;
   };
   [key: string]: unknown;
+}
+
+interface LegacyAuth {
+  gateway?: string;
+  https?: boolean;
+  token?: string;
+}
+
+function migrateAuth(auth: LegacyAuth | undefined): AppConfig['auth'] {
+  if (!auth) return undefined;
+
+  const migrated: NonNullable<AppConfig['auth']> = {};
+  if (auth.gateway !== undefined) {
+    const looksLikeUrl = /^https?:\/\//i.test(auth.gateway);
+    migrated.gateway = looksLikeUrl
+      ? auth.gateway
+      : `${auth.https === false ? 'http' : 'https'}://${auth.gateway}`;
+  }
+  if (auth.token !== undefined) {
+    migrated.token = auth.token;
+  }
+  return migrated;
 }
 
 function appMerge(existing: AppConfig, updates: Partial<AppConfig>): AppConfig {
@@ -80,5 +101,22 @@ export function appConfig(): ConfigProvider<AppConfig> {
   const xdg = process.env['XDG_CONFIG_HOME'];
   const base = xdg ?? path.join(os.homedir(), '.config');
   const dir = path.join(base, '@workday', 'everywhere');
-  return createConfig<AppConfig>(dir, 'config.json', appMerge);
+  const inner = createConfig<AppConfig & { auth?: LegacyAuth }>(dir, 'config.json', appMerge);
+  return {
+    get path(): string {
+      return inner.path;
+    },
+    read(): AppConfig {
+      const raw = inner.read();
+      const migratedAuth = migrateAuth(raw.auth);
+      if (migratedAuth === undefined) {
+        const { auth: _auth, ...rest } = raw;
+        return rest as AppConfig;
+      }
+      return { ...raw, auth: migratedAuth };
+    },
+    write(updates: Partial<AppConfig>): void {
+      inner.write(updates);
+    },
+  };
 }

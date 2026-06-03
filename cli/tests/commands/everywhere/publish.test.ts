@@ -46,7 +46,7 @@ describe('everywhere publish', () => {
     let pluginDir: string;
 
     const loggedInConfig = {
-      auth: { gateway: 'registry.example.com', token: 'test-auth-token' },
+      auth: { gateway: 'https://registry.example.com', token: 'test-auth-token' },
     };
 
     const makeConfigProvider = (data: object) => ({
@@ -252,7 +252,7 @@ describe('everywhere publish', () => {
         });
       });
 
-      it('posts the bundle to the https registry endpoint when auth.https is unset', async () => {
+      it('posts the bundle to the registry endpoint built from the stored gateway URL', async () => {
         await cmd.run();
 
         expect(fetch).toHaveBeenCalledWith(
@@ -268,11 +268,11 @@ describe('everywhere publish', () => {
         expect(logSpy).toHaveBeenLastCalledWith(expect.stringContaining('my-test-plugin'));
       });
 
-      describe('when auth.https is false', () => {
+      describe('when the gateway URL uses http', () => {
         beforeEach(() => {
           vi.mocked(appConfig).mockReturnValue(
             makeConfigProvider({
-              auth: { ...loggedInConfig.auth, https: false },
+              auth: { gateway: 'http://registry.example.com', token: 'test-auth-token' },
             }) as ConfigProvider<AppConfig>
           );
         });

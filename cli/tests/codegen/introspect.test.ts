@@ -31,7 +31,7 @@ describe('introspectGraphTypes()', () => {
     tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'we-introspect-'));
     vi.mocked(appConfig).mockReturnValue({
       read: () => ({
-        auth: { gateway: 'api.workday.com', https: true, token: 'test-token' },
+        auth: { gateway: 'https://api.workday.com', token: 'test-token' },
       }),
       write: () => {},
       path: '/fake/config',
