@@ -82,13 +82,13 @@ describe('everywhere auth token', () => {
       vi.restoreAllMocks();
     });
 
-    it('builds the client with the saved gateway and token', async () => {
+    it('builds the client with a logger and the saved gateway and token', async () => {
       await cmd.run();
 
-      expect(GatewayClient.fromCommand).toHaveBeenCalledWith(cmd, {
-        gateway: 'https://gateway.example.com',
-        token: 'test-token',
-      });
+      expect(GatewayClient.fromCommand).toHaveBeenCalledWith(
+        expect.objectContaining({ isVerbose: expect.any(Boolean), log: expect.any(Function) }),
+        { gateway: 'https://gateway.example.com', token: 'test-token' }
+      );
     });
 
     it('calls /api/v1/auth/token on the client', async () => {

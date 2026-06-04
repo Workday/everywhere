@@ -353,8 +353,8 @@ describe('GatewayClient', () => {
       vi.unstubAllGlobals();
     });
 
-    it('creates a client that uses the command for logging', async () => {
-      const cmd = {
+    it('uses the provided logger when isVerbose is true', async () => {
+      const logger = {
         get isVerbose() {
           return true;
         },
@@ -362,17 +362,17 @@ describe('GatewayClient', () => {
       };
       vi.stubGlobal('fetch', vi.fn().mockResolvedValue(new Response(null, { status: 200 })));
 
-      const client = GatewayClient.fromCommand(
-        cmd as unknown as Parameters<typeof GatewayClient.fromCommand>[0],
-        { gateway: 'https://api.example.com', token: 'tok' }
-      );
+      const client = GatewayClient.fromCommand(logger, {
+        gateway: 'https://api.example.com',
+        token: 'tok',
+      });
       await client.request({ method: 'GET', path: '/x' });
 
-      expect(cmd.log).toHaveBeenCalledWith('Requesting GET https://api.example.com/x');
+      expect(logger.log).toHaveBeenCalledWith('Requesting GET https://api.example.com/x');
     });
 
-    it('does not log when command isVerbose is false', async () => {
-      const cmd = {
+    it('does not log when logger isVerbose is false', async () => {
+      const logger = {
         get isVerbose() {
           return false;
         },
@@ -380,13 +380,13 @@ describe('GatewayClient', () => {
       };
       vi.stubGlobal('fetch', vi.fn().mockResolvedValue(new Response(null, { status: 200 })));
 
-      const client = GatewayClient.fromCommand(
-        cmd as unknown as Parameters<typeof GatewayClient.fromCommand>[0],
-        { gateway: 'https://api.example.com', token: 'tok' }
-      );
+      const client = GatewayClient.fromCommand(logger, {
+        gateway: 'https://api.example.com',
+        token: 'tok',
+      });
       await client.request({ method: 'GET', path: '/x' });
 
-      expect(cmd.log).not.toHaveBeenCalled();
+      expect(logger.log).not.toHaveBeenCalled();
     });
   });
 });

@@ -93,7 +93,7 @@ describe('everywhere auth login', () => {
       vi.restoreAllMocks();
     });
 
-    it('builds the client with the gateway and token', async () => {
+    it('builds the client with a logger and the gateway and token', async () => {
       const token = makeJwt({ sub: 'user-123', exp: 9999999999 });
       vi.spyOn(cmd, 'parse').mockResolvedValue({
         flags: { token },
@@ -101,10 +101,10 @@ describe('everywhere auth login', () => {
 
       await cmd.run();
 
-      expect(GatewayClient.fromCommand).toHaveBeenCalledWith(cmd, {
-        gateway: 'https://gateway.example.com',
-        token,
-      });
+      expect(GatewayClient.fromCommand).toHaveBeenCalledWith(
+        expect.objectContaining({ isVerbose: expect.any(Boolean), log: expect.any(Function) }),
+        { gateway: 'https://gateway.example.com', token }
+      );
     });
 
     it('calls /api/v1/me on the client', async () => {

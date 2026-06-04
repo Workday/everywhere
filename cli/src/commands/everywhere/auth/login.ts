@@ -46,7 +46,7 @@ export default class AuthLoginCommand extends EverywhereBaseCommand {
       this.error('Invalid token format. Please provide a valid JWT.');
     }
 
-    const client = GatewayClient.fromCommand(this, { gateway, token });
+    const client = GatewayClient.fromCommand(this.createGatewayLogger(), { gateway, token });
 
     let body: unknown;
     try {

@@ -3,6 +3,7 @@ import * as fs from 'node:fs';
 import * as path from 'node:path';
 
 import { setPluginDir } from '../config.js';
+import type { VerboseLogger } from '../gateway/client.js';
 
 const PLUGIN_EXTENSIONS = ['.tsx', '.ts'];
 
@@ -19,8 +20,16 @@ export default abstract class EverywhereBaseCommand extends Command {
     }),
   };
 
-  public get isVerbose(): boolean {
+  protected get isVerbose(): boolean {
     return this._verbose;
+  }
+
+  protected createGatewayLogger(): VerboseLogger {
+    return Object.defineProperty({ log: (msg: string) => this.log(msg) }, 'isVerbose', {
+      get: () => this._verbose,
+      enumerable: true,
+      configurable: true,
+    }) as VerboseLogger;
   }
 
   protected get pluginDir(): string {
