@@ -11,6 +11,18 @@ vi.mock('../../src/config.js', () => ({
 
 import { appConfig } from '../../src/config.js';
 
+vi.mock('../../src/gateway/client.js', async () => {
+  const actual = await vi.importActual<typeof import('../../src/gateway/client.js')>(
+    '../../src/gateway/client.js'
+  );
+  return {
+    ...actual,
+    GatewayClient: vi.fn(),
+  };
+});
+
+import { GatewayClient, GatewayRequestError } from '../../src/gateway/client.js';
+
 const BASE_SCHEMA: ModelSchema = {
   name: 'Employee',
   label: 'Employee',
@@ -26,6 +38,7 @@ const GRAPH_META: GraphMetadata = {
 
 describe('introspectGraphTypes()', () => {
   let tmpDir: string;
+  let requestMock: ReturnType<typeof vi.fn>;
 
   beforeEach(() => {
     tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'we-introspect-'));
@@ -36,7 +49,10 @@ describe('introspectGraphTypes()', () => {
       write: () => {},
       path: '/fake/config',
     });
-    globalThis.fetch = vi.fn();
+    requestMock = vi.fn();
+    vi.mocked(GatewayClient).mockImplementation(function (this: unknown) {
+      return { request: requestMock } as unknown as InstanceType<typeof GatewayClient>;
+    });
   });
 
   afterEach(() => {
@@ -49,11 +65,9 @@ describe('introspectGraphTypes()', () => {
   }
 
   function mockFetchOk(responseData: Record<string, unknown>): void {
-    (globalThis.fetch as ReturnType<typeof vi.fn>).mockResolvedValue({
-      ok: true,
-      status: 200,
-      json: () => Promise.resolve({ data: responseData }),
-    });
+    requestMock.mockResolvedValue(
+      new Response(JSON.stringify({ data: responseData }), { status: 200 })
+    );
   }
 
   const EMPLOYEE: ModelSchema = {
@@ -91,16 +105,29 @@ describe('introspectGraphTypes()', () => {
     });
   });
 
-  describe('when fetch throws a network error', () => {
+  describe('when the client throws a network error', () => {
     it('returns ok: false with reason network-error', async () => {
       writeManifest('myApp_ns1');
-      (globalThis.fetch as ReturnType<typeof vi.fn>).mockRejectedValue(new Error('ECONNREFUSED'));
+      requestMock.mockRejectedValue(
+        new GatewayRequestError(
+          'POST https://api.workday.com/api/v1/data/graphql failed: ECONNREFUSED: connection refused',
+          {
+            method: 'POST',
+            url: 'https://api.workday.com/api/v1/data/graphql',
+            code: 'ECONNREFUSED',
+          }
+        )
+      );
 
       const outcome = await introspectGraphTypes([EMPLOYEE], tmpDir, false);
 
       expect(outcome).toEqual({
         ok: false,
-        reason: { kind: 'network-error', message: 'ECONNREFUSED' },
+        reason: {
+          kind: 'network-error',
+          message:
+            'POST https://api.workday.com/api/v1/data/graphql failed: ECONNREFUSED: connection refused',
+        },
       });
     });
   });
@@ -108,17 +135,25 @@ describe('introspectGraphTypes()', () => {
   describe('when the API returns a non-200 response', () => {
     it('returns ok: false with reason api-error', async () => {
       writeManifest('myApp_ns1');
-      (globalThis.fetch as ReturnType<typeof vi.fn>).mockResolvedValue({
-        ok: false,
-        status: 401,
-        statusText: 'Unauthorized',
-      });
+      requestMock.mockRejectedValue(
+        new GatewayRequestError(
+          'POST https://api.workday.com/api/v1/data/graphql failed: HTTP 401 Unauthorized',
+          {
+            method: 'POST',
+            url: 'https://api.workday.com/api/v1/data/graphql',
+            status: 401,
+          }
+        )
+      );
 
       const outcome = await introspectGraphTypes([EMPLOYEE], tmpDir, false);
 
       expect(outcome).toEqual({
         ok: false,
-        reason: { kind: 'api-error', message: 'HTTP 401: Unauthorized' },
+        reason: {
+          kind: 'api-error',
+          message: 'POST https://api.workday.com/api/v1/data/graphql failed: HTTP 401 Unauthorized',
+        },
       });
     });
   });
@@ -126,11 +161,11 @@ describe('introspectGraphTypes()', () => {
   describe('when the API returns GraphQL errors', () => {
     it('returns ok: false with reason api-error', async () => {
       writeManifest('myApp_ns1');
-      (globalThis.fetch as ReturnType<typeof vi.fn>).mockResolvedValue({
-        ok: true,
-        status: 200,
-        json: () => Promise.resolve({ errors: [{ message: 'Syntax error in query' }] }),
-      });
+      requestMock.mockResolvedValue(
+        new Response(JSON.stringify({ errors: [{ message: 'Syntax error in query' }] }), {
+          status: 200,
+        })
+      );
 
       const outcome = await introspectGraphTypes([EMPLOYEE], tmpDir, false);
 
@@ -171,21 +206,6 @@ describe('introspectGraphTypes()', () => {
           missing: [],
         },
       });
-    });
-
-    it('sends the Bearer token in the Authorization header', async () => {
-      writeManifest('myApp_ns1');
-      mockFetchOk({
-        ds_Employee: { inputFields: [{ name: 'myApp_ns1_employees' }] },
-        create_Employee: { name: 'MyApp_ns1_EmployeesSummary_Create_Input', kind: 'INPUT_OBJECT' },
-        update_Employee: { name: 'MyApp_ns1_EmployeesSummary_Update_Input', kind: 'INPUT_OBJECT' },
-      });
-
-      await introspectGraphTypes([EMPLOYEE], tmpDir, false);
-
-      const headers = (globalThis.fetch as ReturnType<typeof vi.fn>).mock.calls[0][1]
-        .headers as Record<string, string>;
-      expect(headers['Authorization']).toBe('Bearer test-token');
     });
   });
 
