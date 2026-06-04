@@ -204,7 +204,9 @@ describe('GatewayClient', () => {
 
       await client.request({ method: 'GET', path: '/x' });
 
-      expect(logger.log).toHaveBeenCalledWith('Response: 200 OK');
+      expect(logger.log).toHaveBeenCalledWith(
+        expect.stringMatching(/^Response: 200 OK \(\d+ms\)$/)
+      );
     });
 
     it('logs the failure message when fetch throws', async () => {
@@ -219,7 +221,9 @@ describe('GatewayClient', () => {
 
       await client.request({ method: 'GET', path: '/x' }).catch(() => {});
 
-      expect(logger.log).toHaveBeenCalledWith('Request failed: ETIMEDOUT: boom');
+      expect(logger.log).toHaveBeenCalledWith(
+        expect.stringMatching(/^Request failed: ETIMEDOUT: boom \(\d+ms\)$/)
+      );
     });
 
     it('emits nothing when logger isVerbose is false', async () => {
@@ -241,6 +245,41 @@ describe('GatewayClient', () => {
       const client = new GatewayClient({ gateway: 'https://api.example.com', token: 'tok' });
 
       await expect(client.request({ method: 'GET', path: '/x' })).resolves.toBeDefined();
+    });
+
+    it('appends elapsed ms to the response line', async () => {
+      vi.stubGlobal(
+        'fetch',
+        vi.fn().mockResolvedValue(new Response(null, { status: 200, statusText: 'OK' }))
+      );
+      const logger = makeLogger();
+      const client = new GatewayClient({
+        gateway: 'https://api.example.com',
+        token: 'tok',
+        logger,
+      });
+
+      await client.request({ method: 'GET', path: '/x' });
+
+      expect(logger.log).toHaveBeenCalledWith(
+        expect.stringMatching(/^Response: 200 OK \(\d+ms\)$/)
+      );
+    });
+
+    it('appends elapsed ms to the failure line', async () => {
+      vi.stubGlobal('fetch', vi.fn().mockRejectedValue(new Error('socket hang up')));
+      const logger = makeLogger();
+      const client = new GatewayClient({
+        gateway: 'https://api.example.com',
+        token: 'tok',
+        logger,
+      });
+
+      await client.request({ method: 'GET', path: '/x' }).catch(() => {});
+
+      expect(logger.log).toHaveBeenCalledWith(
+        expect.stringMatching(/^Request failed: socket hang up \(\d+ms\)$/)
+      );
     });
   });
 

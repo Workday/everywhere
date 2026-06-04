@@ -117,6 +117,7 @@ export class GatewayClient {
       this.logger.log(`Requesting ${opts.method} ${url}`);
     }
 
+    const start = Date.now();
     let response: Response;
     try {
       response = await fetch(url, {
@@ -127,7 +128,7 @@ export class GatewayClient {
     } catch (err) {
       const described = describeFetchError(err);
       if (this.logger?.isVerbose) {
-        this.logger.log(`Request failed: ${described.message}`);
+        this.logger.log(`Request failed: ${described.message} (${Date.now() - start}ms)`);
       }
       throw new GatewayRequestError(`${opts.method} ${url} failed: ${described.message}`, {
         method: opts.method,
@@ -138,7 +139,9 @@ export class GatewayClient {
     }
 
     if (this.logger?.isVerbose) {
-      this.logger.log(`Response: ${response.status} ${response.statusText}`);
+      this.logger.log(
+        `Response: ${response.status} ${response.statusText} (${Date.now() - start}ms)`
+      );
     }
 
     if (!response.ok) {
