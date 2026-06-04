@@ -49,32 +49,46 @@ responsibilities clear.)
 ### Public API
 
 ```typescript
+export interface VerboseLogger {
+  readonly isVerbose: boolean;
+  log(message: string): void;
+}
+
 export interface ClientOptions {
   gateway: string; // parsed gateway URL (e.g. "https://api.workday.com")
   token: string; // bearer token
+  logger?: VerboseLogger; // optional — when present and isVerbose, client emits transport logs
 }
 
 export interface RequestOptions {
   method: 'GET' | 'POST' | 'DELETE';
   path: string; // joined onto gateway via new URL(path, gateway)
-  body?: unknown; // JSON-serialized when present
-  headers?: Record<string, string>; // merged onto defaults
+  body?: BodyInit; // passed through to fetch as-is (no automatic JSON serialization)
+  headers?: Record<string, string>; // merged onto defaults (Authorization is always set)
 }
 
 export class GatewayClient {
-  static fromCommand(cmd: EverywhereBaseCommand, opts: ClientOptions): GatewayClient;
+  constructor(opts: ClientOptions);
+  static fromCommand(
+    cmd: EverywhereBaseCommand,
+    opts: { gateway: string; token: string }
+  ): GatewayClient;
 
   getJson<T>(path: string): Promise<T>;
   postJson<T>(path: string, body: unknown): Promise<T>;
   delete(path: string): Promise<void>;
   getText(path: string): Promise<string>;
 
-  // Escape hatch for callers that need raw access (e.g. introspect's GraphQL response shape).
+  // Escape hatch for callers that need raw access (e.g. binary uploads, GraphQL responses).
   // Returns the raw Response after the status check passes; throws GatewayRequestError on
-  // network failure or non-2xx.
+  // network failure or non-2xx. Body is passed through to fetch unchanged — callers handle
+  // serialization and Content-Type for non-JSON bodies.
   request(opts: RequestOptions): Promise<Response>;
 }
 ```
+
+`fromCommand` is the convenience for commands (the common path). `new GatewayClient(...)` directly
+is for non-command callers (like `introspect.ts`), which may omit the logger entirely.
 
 The typed `getJson` / `postJson` exist for ergonomics — they don't validate response shape (callers
 do that). `delete` returns void because callers today never use the response body.
@@ -152,11 +166,31 @@ The local `describeFetchError` helper, the URL construction, the try/catch aroun
 `!response.ok` check, the JSON parse, the "not valid JSON" error, and the three transport-level
 verbose logs all move into the client. The login command shrinks notably.
 
-### `auth/token.ts`, `registry.ts`, `introspect.ts`
+### `auth/token.ts`
 
-Same pattern: replace local fetch + error handling with the client. `introspect.ts` uses
-`client.request({ method: 'POST', path: '/api/v1/data/graphql', body: ... })` and keeps its
-GraphQL-aware response handling.
+Uses `client.getText('/api/v1/auth/token')`. Existing JSON-parsing logic for the non-`--json` path
+stays in the command.
+
+### `registry.ts` (publish + unpublish)
+
+`uploadToRegistry` uses
+`client.request({ method: 'POST', path: ..., body: blob, headers: { 'Content-Type': 'application/zip' } })`
+because the body is a binary blob, not JSON — then calls `await response.json()` on the result and
+runs through the existing `parseRegistryUploadResult` validator. `deleteFromRegistry` uses
+`client.delete(...)`. Both functions construct the client directly (`new GatewayClient(...)`) since
+they are pure functions, not commands.
+
+### `codegen/introspect.ts`
+
+`introspect()` is a pure function returning a Result-style `{ ok, reason }` object — not a command.
+It uses
+`client.request({ method: 'POST', path: '/api/v1/data/graphql', body: JSON.stringify({ query }), headers: { 'content-type': 'application/json', accept: 'application/json' } })`,
+catches `GatewayRequestError`, and maps it back to its Result shape:
+
+- `err.code` present → `{ kind: 'network-error', message: err.message }`
+- `err.status` present → `{ kind: 'api-error', message: err.message }`
+
+The GraphQL `body.errors` check stays put.
 
 ## Testing
 
