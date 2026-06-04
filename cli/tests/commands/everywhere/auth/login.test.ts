@@ -81,6 +81,8 @@ describe('everywhere auth login', () => {
         vi.fn().mockResolvedValue({
           ok: true,
           status: 200,
+          statusText: 'OK',
+          json: () => Promise.resolve({ sub: 'user-123', tenant: 'tenant-abc' }),
         })
       );
     });
@@ -172,7 +174,12 @@ describe('everywhere auth login', () => {
       it('logs the response status on success', async () => {
         vi.stubGlobal(
           'fetch',
-          vi.fn().mockResolvedValue({ ok: true, status: 200, statusText: 'OK' })
+          vi.fn().mockResolvedValue({
+            ok: true,
+            status: 200,
+            statusText: 'OK',
+            json: () => Promise.resolve({ sub: 'user-123', tenant: 'tenant-abc' }),
+          })
         );
 
         await cmd.run();
@@ -198,6 +205,38 @@ describe('everywhere auth login', () => {
 
         expect(logSpy).toHaveBeenCalledWith(
           'Token verification request failed: connect ECONNREFUSED'
+        );
+      });
+    });
+
+    describe('identity validation', () => {
+      it('errors when the response body is not valid JSON', async () => {
+        vi.stubGlobal(
+          'fetch',
+          vi.fn().mockResolvedValue({
+            ok: true,
+            status: 200,
+            statusText: 'OK',
+            json: () => Promise.reject(new Error('Unexpected token')),
+          })
+        );
+
+        await expect(cmd.run()).rejects.toThrow('Token validation response was not valid JSON.');
+      });
+
+      it('errors when the response body is missing identity fields', async () => {
+        vi.stubGlobal(
+          'fetch',
+          vi.fn().mockResolvedValue({
+            ok: true,
+            status: 200,
+            statusText: 'OK',
+            json: () => Promise.resolve({ sub: 'user-123' }),
+          })
+        );
+
+        await expect(cmd.run()).rejects.toThrow(
+          'Token validation response missing identity fields.'
         );
       });
     });

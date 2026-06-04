@@ -72,6 +72,24 @@ export default class AuthLoginCommand extends EverywhereBaseCommand {
       this.error(`Token validation failed (HTTP ${response.status}).`);
     }
 
+    let body: unknown;
+    try {
+      body = await response.json();
+    } catch {
+      this.error('Token validation response was not valid JSON.');
+    }
+
+    if (
+      !body ||
+      typeof body !== 'object' ||
+      typeof (body as Record<string, unknown>).sub !== 'string' ||
+      typeof (body as Record<string, unknown>).tenant !== 'string'
+    ) {
+      this.error('Token validation response missing identity fields.');
+    }
+    const identity = body as { sub: string; tenant: string };
+    void identity;
+
     config.write({ auth: { gateway, https, token } });
     this.log(chalk.green('Successfully authenticated.'));
   }
