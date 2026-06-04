@@ -39,12 +39,8 @@ describe('everywhere auth login', () => {
       expect(LoginCommand.flags['token']).toBeDefined();
     });
 
-    it('has an https flag', () => {
-      expect(LoginCommand.flags['https']).toBeDefined();
-    });
-
-    it('allows disabling https via --no-https', () => {
-      expect(LoginCommand.flags['https']).toMatchObject({ allowNo: true });
+    it('does not have an https flag', () => {
+      expect(LoginCommand.flags['https']).toBeUndefined();
     });
 
     it('inherits the plugin-dir flag from the base command', () => {
@@ -57,7 +53,7 @@ describe('everywhere auth login', () => {
     let writeSpy: ReturnType<typeof vi.fn>;
 
     const baseConfig: AppConfig = {
-      auth: { gateway: 'gateway.example.com', https: true },
+      auth: { gateway: 'https://gateway.example.com' },
     };
 
     const makeConfigProvider = (data: AppConfig) =>
@@ -120,10 +116,35 @@ describe('everywhere auth login', () => {
 
       expect(writeSpy).toHaveBeenCalledWith({
         auth: {
-          gateway: 'gateway.example.com',
-          https: true,
+          gateway: 'https://gateway.example.com',
           token: makeJwt({ sub: 'user-123', exp: 9999999999 }),
         },
+      });
+    });
+
+    describe('when --gateway is a full URL with a trailing slash', () => {
+      it('persists the normalized origin', async () => {
+        const token = makeJwt({ sub: 'user-123', exp: 9999999999 });
+        vi.spyOn(cmd, 'parse').mockResolvedValue({
+          flags: { token, gateway: 'http://localhost:8080/' },
+        } as unknown as Awaited<ReturnType<LoginCommand['parse']>>);
+
+        await cmd.run();
+
+        expect(writeSpy).toHaveBeenCalledWith({
+          auth: { gateway: 'http://localhost:8080', token },
+        });
+      });
+    });
+
+    describe('when --gateway is not a valid URL', () => {
+      it('errors without writing config', async () => {
+        const token = makeJwt({ sub: 'user-123', exp: 9999999999 });
+        vi.spyOn(cmd, 'parse').mockResolvedValue({
+          flags: { token, gateway: 'not a url' },
+        } as unknown as Awaited<ReturnType<LoginCommand['parse']>>);
+
+        await expect(cmd.run()).rejects.toThrow(/gateway/i);
       });
     });
 

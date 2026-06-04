@@ -39,7 +39,7 @@ describe('everywhere unpublish', () => {
     let pluginDir: string;
 
     const loggedInConfig = {
-      auth: { gateway: 'registry.example.com', token: 'test-auth-token' },
+      auth: { gateway: 'https://registry.example.com', token: 'test-auth-token' },
     };
 
     const makeConfigProvider = (data: object) => ({
@@ -86,7 +86,7 @@ describe('everywhere unpublish', () => {
         it('errors with a login message', async () => {
           vi.mocked(appConfig).mockReturnValue(
             makeConfigProvider({
-              auth: { gateway: 'registry.example.com' },
+              auth: { gateway: 'https://registry.example.com' },
             }) as ConfigProvider<AppConfig>
           );
 
@@ -139,8 +139,7 @@ describe('everywhere unpublish', () => {
         await cmd.run();
 
         expect(deleteFromRegistry).toHaveBeenCalledWith({
-          gateway: 'registry.example.com',
-          httpsEnabled: true,
+          gateway: 'https://registry.example.com',
           token: 'test-auth-token',
           appId: 'my-test-plugin',
         });
@@ -151,24 +150,6 @@ describe('everywhere unpublish', () => {
         await cmd.run();
 
         expect(logSpy).toHaveBeenCalledWith(expect.stringContaining('my-test-plugin'));
-      });
-
-      describe('when auth.https is false', () => {
-        beforeEach(() => {
-          vi.mocked(appConfig).mockReturnValue(
-            makeConfigProvider({
-              auth: { ...loggedInConfig.auth, https: false },
-            }) as ConfigProvider<AppConfig>
-          );
-        });
-
-        it('calls deleteFromRegistry with httpsEnabled false', async () => {
-          await cmd.run();
-
-          expect(deleteFromRegistry).toHaveBeenCalledWith(
-            expect.objectContaining({ httpsEnabled: false })
-          );
-        });
       });
     });
 

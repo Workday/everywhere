@@ -7,7 +7,7 @@ import * as vite from 'vite';
 import { dataServicePlugin } from '../../data/vite-data-plugin.js';
 import { isUnauthenticated } from '../../data/proxy-auth.js';
 import { appConfig } from '../../config.js';
-import { DEFAULT_GATEWAY, DEFAULT_HTTPS } from '../../auth/defaults.js';
+import { DEFAULT_GATEWAY } from '../../auth/defaults.js';
 import EverywhereBaseCommand from '../../lib/command.js';
 import { UserConfig } from 'vite';
 
@@ -45,13 +45,8 @@ export default class ViewCommand extends EverywhereBaseCommand {
     const viewerDir = path.join(cliDistRoot, 'viewer');
     const sdkRoot = path.resolve(cliDistRoot, '..', '..');
 
-    const {
-      gateway = DEFAULT_GATEWAY,
-      https = DEFAULT_HTTPS,
-      token,
-    } = appConfig().read().auth ?? {};
-    const scheme = https ? 'https' : 'http';
-    const apiServer = `${scheme}://${gateway}`;
+    const { gateway = DEFAULT_GATEWAY, token } = appConfig().read().auth ?? {};
+    const apiServer = new URL(gateway).origin;
 
     this.log(`Plugin: ${pluginEntry}`);
     this.log(`Starting viewer on port ${flags.port}...`);

@@ -2,7 +2,7 @@ import chalk from 'chalk';
 import { Flags } from '@oclif/core';
 import EverywhereBaseCommand from '../../../lib/command.js';
 import { appConfig } from '../../../config.js';
-import { DEFAULT_GATEWAY, DEFAULT_HTTPS } from '../../../auth/defaults.js';
+import { DEFAULT_GATEWAY } from '../../../auth/defaults.js';
 
 export default class AuthTokenCommand extends EverywhereBaseCommand {
   static description = 'Fetch and display an access token from the gateway.';
@@ -25,8 +25,7 @@ export default class AuthTokenCommand extends EverywhereBaseCommand {
     }
 
     const gateway = saved.auth?.gateway ?? DEFAULT_GATEWAY;
-    const scheme = (saved.auth?.https ?? DEFAULT_HTTPS) ? 'https' : 'http';
-    const url = `${scheme}://${gateway}/api/v1/auth/token`;
+    const url = new URL('/api/v1/auth/token', gateway).toString();
 
     let response: Response;
     try {

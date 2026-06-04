@@ -36,7 +36,6 @@ export default class PublishCommand extends EverywhereBaseCommand {
     this.log('Publishing plugin...');
     const result = await this.publishPlugin({
       gateway,
-      httpsEnabled: config.auth?.https ?? true,
       token,
       archivePath: archive.filePath,
     });
@@ -83,11 +82,13 @@ export default class PublishCommand extends EverywhereBaseCommand {
   }
 
   private formatSuccessMessage(result: RegistryUploadResult, config: AppConfig): string {
-    const scheme = (config.auth?.https ?? true) ? 'https' : 'http';
+    const bundleUrl = config.auth?.gateway
+      ? new URL(result.bundleUrl, config.auth.gateway).toString()
+      : result.bundleUrl;
     return [
       `Successfully published your plugin: ${result.name}`,
       '',
-      `Bundle: ${scheme}://${config.auth?.gateway}${result.bundleUrl}`,
+      `Bundle: ${bundleUrl}`,
       '',
       `Tenant: ${result.tenant}`,
       `Title: ${result.title}`,

@@ -3,8 +3,7 @@ import { deleteFromRegistry } from '../../src/registry/registry.js';
 
 describe('deleteFromRegistry', () => {
   const baseOptions = {
-    gateway: 'registry.example.com',
-    httpsEnabled: false,
+    gateway: 'http://registry.example.com',
     token: 'test-token',
     appId: 'abc123',
   };
@@ -24,7 +23,7 @@ describe('deleteFromRegistry', () => {
       );
     });
 
-    it('sends a DELETE request to the http app endpoint when httpsEnabled is false', async () => {
+    it('sends a DELETE request to the http app endpoint when the gateway is http', async () => {
       await deleteFromRegistry(baseOptions);
       expect(fetch).toHaveBeenCalledWith(
         new URL('http://registry.example.com/api/v1/app/abc123'),
@@ -32,8 +31,8 @@ describe('deleteFromRegistry', () => {
       );
     });
 
-    it('sends a DELETE request to the https app endpoint when httpsEnabled is true', async () => {
-      await deleteFromRegistry({ ...baseOptions, httpsEnabled: true });
+    it('sends a DELETE request to the https app endpoint when the gateway is https', async () => {
+      await deleteFromRegistry({ ...baseOptions, gateway: 'https://registry.example.com' });
       expect(fetch).toHaveBeenCalledWith(
         new URL('https://registry.example.com/api/v1/app/abc123'),
         expect.objectContaining({ method: 'DELETE' })

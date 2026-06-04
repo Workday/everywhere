@@ -2,7 +2,6 @@ import * as fs from 'node:fs';
 
 export interface RegistryUploadOptions {
   gateway: string;
-  httpsEnabled: boolean;
   token: string;
   archivePath: string;
 }
@@ -47,16 +46,14 @@ function parseRegistryUploadResult(json: unknown): RegistryUploadResult {
 
 export interface RegistryDeleteOptions {
   gateway: string;
-  httpsEnabled: boolean;
   token: string;
   appId: string;
 }
 
 export async function deleteFromRegistry(options: RegistryDeleteOptions): Promise<void> {
-  const { gateway, httpsEnabled, token, appId } = options;
+  const { gateway, token, appId } = options;
 
-  const scheme = httpsEnabled ? 'https' : 'http';
-  const url = new URL(`${scheme}://${gateway}/api/v1/app/${appId}`);
+  const url = new URL(`/api/v1/app/${appId}`, gateway);
 
   let response: Response;
   try {
@@ -77,10 +74,9 @@ export async function deleteFromRegistry(options: RegistryDeleteOptions): Promis
 export async function uploadToRegistry(
   options: RegistryUploadOptions
 ): Promise<RegistryUploadResult> {
-  const { gateway, httpsEnabled, token, archivePath } = options;
+  const { gateway, token, archivePath } = options;
 
-  const scheme = httpsEnabled ? 'https' : 'http';
-  const url = new URL(`${scheme}://${gateway}/api/v1/apps/publish`);
+  const url = new URL('/api/v1/apps/publish', gateway);
 
   const blob = await fs.openAsBlob(archivePath, { type: 'application/zip' });
 

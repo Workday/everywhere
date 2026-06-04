@@ -19,7 +19,6 @@ export default class UnpublishCommand extends EverywhereBaseCommand {
 
     await this.unpublishPlugin({
       gateway,
-      httpsEnabled: config.auth?.https ?? true,
       token,
       appId: name,
     });
