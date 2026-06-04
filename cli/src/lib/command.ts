@@ -19,7 +19,7 @@ export default abstract class EverywhereBaseCommand extends Command {
     }),
   };
 
-  protected get isVerbose(): boolean {
+  public get isVerbose(): boolean {
     return this._verbose;
   }
 

@@ -23,8 +23,19 @@ vi.mock('../../../src/build/index.js', () => ({
   slugify: vi.fn(),
 }));
 
+vi.mock('../../../src/gateway/client.js', async () => {
+  const actual = await vi.importActual<typeof import('../../../src/gateway/client.js')>(
+    '../../../src/gateway/client.js'
+  );
+  return {
+    ...actual,
+    GatewayClient: vi.fn(),
+  };
+});
+
 import { appConfig } from '../../../src/config.js';
 import * as plugins from '../../../src/build/index.js';
+import { GatewayClient, GatewayRequestError } from '../../../src/gateway/client.js';
 
 describe('everywhere publish', () => {
   describe('when accessing the description', () => {
@@ -221,13 +232,15 @@ describe('everywhere publish', () => {
           new Blob(['zip-content'], { type: 'application/zip' })
         );
 
-        vi.stubGlobal(
-          'fetch',
-          vi.fn().mockResolvedValue({
-            ok: true,
-            json: () => Promise.resolve(registryUploadSuccessResponse),
-          })
-        );
+        vi.mocked(GatewayClient).mockImplementation(function (this: unknown) {
+          return {
+            request: vi
+              .fn()
+              .mockResolvedValue(
+                new Response(JSON.stringify(registryUploadSuccessResponse), { status: 200 })
+              ),
+          } as unknown as InstanceType<typeof GatewayClient>;
+        });
       });
 
       it('bundles the plugin from the plugin directory', async () => {
@@ -252,13 +265,13 @@ describe('everywhere publish', () => {
         });
       });
 
-      it('posts the bundle to the registry endpoint built from the stored gateway URL', async () => {
+      it('builds the gateway client from the stored gateway URL', async () => {
         await cmd.run();
 
-        expect(fetch).toHaveBeenCalledWith(
-          new URL('https://registry.example.com/api/v1/apps/publish'),
-          expect.objectContaining({ method: 'POST' })
-        );
+        expect(GatewayClient).toHaveBeenCalledWith({
+          gateway: 'https://registry.example.com',
+          token: 'test-auth-token',
+        });
       });
 
       it('logs a success message with the registry response details', async () => {
@@ -277,13 +290,13 @@ describe('everywhere publish', () => {
           );
         });
 
-        it('posts the bundle to the http registry endpoint', async () => {
+        it('builds the gateway client from the http gateway URL', async () => {
           await cmd.run();
 
-          expect(fetch).toHaveBeenCalledWith(
-            new URL('http://registry.example.com/api/v1/apps/publish'),
-            expect.objectContaining({ method: 'POST' })
-          );
+          expect(GatewayClient).toHaveBeenCalledWith({
+            gateway: 'http://registry.example.com',
+            token: 'test-auth-token',
+          });
         });
       });
     });
@@ -308,17 +321,22 @@ describe('everywhere publish', () => {
           filePath: path.join(pluginDir, 'dist', 'my-test-plugin.zip'),
         } as unknown as Awaited<ReturnType<typeof plugins.packagePlugin>>);
         (fs.openAsBlob as ReturnType<typeof vi.fn>).mockResolvedValue(new Blob(['zip-content']));
-        vi.stubGlobal(
-          'fetch',
-          vi.fn().mockResolvedValue({
-            ok: false,
-            json: () => Promise.resolve({ error: 'Upload failed' }),
-          })
-        );
+        vi.mocked(GatewayClient).mockImplementation(function (this: unknown) {
+          return {
+            request: vi.fn().mockRejectedValue(
+              new GatewayRequestError(
+                'POST https://registry.example.com/api/v1/apps/publish failed: HTTP 500',
+                {
+                  method: 'POST',
+                  url: 'https://registry.example.com/api/v1/apps/publish',
+                  status: 500,
+                }
+              )
+            ),
+          } as unknown as InstanceType<typeof GatewayClient>;
+        });
 
-        await expect(cmd.run()).rejects.toThrow(
-          'There was an error uploading your plugin to the registry'
-        );
+        await expect(cmd.run()).rejects.toThrow(/Failed to upload plugin: /);
       });
     });
   });
