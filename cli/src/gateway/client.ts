@@ -43,4 +43,32 @@ export class GatewayClient {
     this.token = opts.token;
     this.logger = opts.logger;
   }
+
+  async request(opts: {
+    method: 'GET' | 'POST' | 'DELETE';
+    path: string;
+    body?: BodyInit;
+    headers?: Record<string, string>;
+  }): Promise<Response> {
+    const url = new URL(opts.path, this.gateway).toString();
+    const headers: Record<string, string> = {
+      Authorization: `Bearer ${this.token}`,
+      ...(opts.headers ?? {}),
+    };
+
+    const response = await fetch(url, {
+      method: opts.method,
+      headers,
+      body: opts.body,
+    });
+
+    if (!response.ok) {
+      throw new GatewayRequestError(
+        `${opts.method} ${url} failed: HTTP ${response.status} ${response.statusText}`,
+        { method: opts.method, url, status: response.status }
+      );
+    }
+
+    return response;
+  }
 }

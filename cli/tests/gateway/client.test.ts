@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { GatewayClient, GatewayRequestError } from '../../src/gateway/client.js';
 
 describe('GatewayRequestError', () => {
@@ -50,6 +50,71 @@ describe('GatewayClient', () => {
       });
 
       expect(client).toBeInstanceOf(GatewayClient);
+    });
+  });
+
+  describe('request', () => {
+    beforeEach(() => {
+      vi.unstubAllGlobals();
+    });
+
+    it('joins the path onto the gateway URL', async () => {
+      const fetchMock = vi.fn().mockResolvedValue(new Response(null, { status: 200 }));
+      vi.stubGlobal('fetch', fetchMock);
+      const client = new GatewayClient({
+        gateway: 'https://api.example.com',
+        token: 'tok',
+      });
+
+      await client.request({ method: 'GET', path: '/api/v1/me' });
+
+      expect(fetchMock).toHaveBeenCalledWith(
+        'https://api.example.com/api/v1/me',
+        expect.anything()
+      );
+    });
+
+    it('sends a bearer authorization header', async () => {
+      const fetchMock = vi.fn().mockResolvedValue(new Response(null, { status: 200 }));
+      vi.stubGlobal('fetch', fetchMock);
+      const client = new GatewayClient({
+        gateway: 'https://api.example.com',
+        token: 'tok-abc',
+      });
+
+      await client.request({ method: 'GET', path: '/x' });
+
+      expect(fetchMock).toHaveBeenCalledWith(
+        expect.anything(),
+        expect.objectContaining({
+          headers: expect.objectContaining({ Authorization: 'Bearer tok-abc' }),
+        })
+      );
+    });
+
+    it('returns the raw Response on success', async () => {
+      const response = new Response('hi', { status: 200 });
+      vi.stubGlobal('fetch', vi.fn().mockResolvedValue(response));
+      const client = new GatewayClient({ gateway: 'https://api.example.com', token: 'tok' });
+
+      const result = await client.request({ method: 'GET', path: '/x' });
+
+      expect(result).toBe(response);
+    });
+
+    it('throws GatewayRequestError with status when response is not ok', async () => {
+      vi.stubGlobal(
+        'fetch',
+        vi.fn().mockResolvedValue(new Response('nope', { status: 401, statusText: 'Unauthorized' }))
+      );
+      const client = new GatewayClient({ gateway: 'https://api.example.com', token: 'tok' });
+
+      await expect(client.request({ method: 'GET', path: '/x' })).rejects.toMatchObject({
+        name: 'GatewayRequestError',
+        method: 'GET',
+        url: 'https://api.example.com/x',
+        status: 401,
+      });
     });
   });
 });
