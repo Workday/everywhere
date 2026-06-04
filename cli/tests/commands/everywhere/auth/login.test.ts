@@ -225,6 +225,24 @@ describe('everywhere auth login', () => {
       });
     });
 
+    describe('non-verbose output', () => {
+      it('does not emit verbose lines when verbose is off', async () => {
+        const logSpy = vi.spyOn(cmd, 'log').mockImplementation(() => {});
+
+        await cmd.run();
+
+        const verboseCalls = logSpy.mock.calls.filter(
+          ([msg]) =>
+            typeof msg === 'string' &&
+            (msg.startsWith('Verifying token at') ||
+              msg.startsWith('Token verification response:') ||
+              msg.startsWith('Token verification request failed:') ||
+              msg.startsWith('Authenticated as '))
+        );
+        expect(verboseCalls).toHaveLength(0);
+      });
+    });
+
     describe('identity validation', () => {
       it('errors when the response body is not valid JSON', async () => {
         vi.stubGlobal(
