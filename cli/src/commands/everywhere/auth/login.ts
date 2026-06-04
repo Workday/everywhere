@@ -45,6 +45,10 @@ export default class AuthLoginCommand extends EverywhereBaseCommand {
     const scheme = https ? 'https' : 'http';
     const url = `${scheme}://${gateway}/api/v1/me`;
 
+    if (this.isVerbose) {
+      this.log(`Verifying token at ${url}`);
+    }
+
     let response: Response;
     try {
       response = await fetch(url, {

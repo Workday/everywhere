@@ -152,5 +152,20 @@ describe('everywhere auth login', () => {
 
       await expect(cmd.run()).rejects.toThrow('Token validation failed (HTTP 401).');
     });
+
+    describe('verbose output', () => {
+      let logSpy: ReturnType<typeof vi.spyOn>;
+
+      beforeEach(() => {
+        Object.defineProperty(cmd, 'isVerbose', { get: () => true, configurable: true });
+        logSpy = vi.spyOn(cmd, 'log').mockImplementation(() => {});
+      });
+
+      it('logs the verification URL before contacting the server', async () => {
+        await cmd.run();
+
+        expect(logSpy).toHaveBeenCalledWith('Verifying token at https://gateway.example.com/api/v1/me');
+      });
+    });
   });
 });
