@@ -286,4 +286,65 @@ describe('GatewayClient', () => {
       expect(result).toBe('hello world');
     });
   });
+
+  describe('postJson', () => {
+    beforeEach(() => {
+      vi.unstubAllGlobals();
+    });
+
+    it('serializes the body as JSON with content-type header', async () => {
+      const fetchMock = vi.fn().mockResolvedValue(new Response('{}', { status: 200 }));
+      vi.stubGlobal('fetch', fetchMock);
+      const client = new GatewayClient({ gateway: 'https://api.example.com', token: 'tok' });
+
+      await client.postJson('/x', { hello: 'world' });
+
+      expect(fetchMock).toHaveBeenCalledWith(
+        'https://api.example.com/x',
+        expect.objectContaining({
+          method: 'POST',
+          body: JSON.stringify({ hello: 'world' }),
+          headers: expect.objectContaining({ 'Content-Type': 'application/json' }),
+        })
+      );
+    });
+
+    it('returns the parsed response on success', async () => {
+      vi.stubGlobal(
+        'fetch',
+        vi.fn().mockResolvedValue(new Response(JSON.stringify({ id: 'abc' }), { status: 200 }))
+      );
+      const client = new GatewayClient({ gateway: 'https://api.example.com', token: 'tok' });
+
+      const result = await client.postJson<{ id: string }>('/x', {});
+
+      expect(result).toEqual({ id: 'abc' });
+    });
+  });
+
+  describe('delete', () => {
+    beforeEach(() => {
+      vi.unstubAllGlobals();
+    });
+
+    it('issues a DELETE request', async () => {
+      const fetchMock = vi.fn().mockResolvedValue(new Response(null, { status: 204 }));
+      vi.stubGlobal('fetch', fetchMock);
+      const client = new GatewayClient({ gateway: 'https://api.example.com', token: 'tok' });
+
+      await client.delete('/x');
+
+      expect(fetchMock).toHaveBeenCalledWith(
+        'https://api.example.com/x',
+        expect.objectContaining({ method: 'DELETE' })
+      );
+    });
+
+    it('resolves when the status check passes', async () => {
+      vi.stubGlobal('fetch', vi.fn().mockResolvedValue(new Response(null, { status: 200 })));
+      const client = new GatewayClient({ gateway: 'https://api.example.com', token: 'tok' });
+
+      await expect(client.delete('/x')).resolves.toBeUndefined();
+    });
+  });
 });
