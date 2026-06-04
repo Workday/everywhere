@@ -1,5 +1,9 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { GatewayClient, GatewayRequestError } from '../../src/gateway/client.js';
+import {
+  GatewayClient,
+  GatewayRequestError,
+  resetEnvLoggedForTesting,
+} from '../../src/gateway/client.js';
 
 describe('GatewayRequestError', () => {
   it('carries the method and url', () => {
@@ -56,6 +60,7 @@ describe('GatewayClient', () => {
   describe('request', () => {
     beforeEach(() => {
       vi.unstubAllGlobals();
+      resetEnvLoggedForTesting();
     });
 
     it('joins the path onto the gateway URL', async () => {
@@ -168,6 +173,7 @@ describe('GatewayClient', () => {
 
     beforeEach(() => {
       vi.unstubAllGlobals();
+      resetEnvLoggedForTesting();
     });
 
     it('logs the method and url before the request', async () => {
@@ -348,9 +354,96 @@ describe('GatewayClient', () => {
     });
   });
 
+  describe('environment dump', () => {
+    beforeEach(() => {
+      vi.unstubAllGlobals();
+      resetEnvLoggedForTesting();
+    });
+
+    function makeLogger() {
+      return { isVerbose: true, log: vi.fn() };
+    }
+
+    it('logs the environment block before the first request', async () => {
+      vi.stubGlobal('fetch', vi.fn().mockResolvedValue(new Response(null, { status: 200 })));
+      const logger = makeLogger();
+      const client = new GatewayClient({
+        gateway: 'https://api.example.com',
+        token: 'tok',
+        logger,
+      });
+
+      await client.request({ method: 'GET', path: '/x' });
+
+      expect(logger.log).toHaveBeenCalledWith(expect.stringContaining('Environment:'));
+    });
+
+    it('does not log the environment block on subsequent requests', async () => {
+      vi.stubGlobal('fetch', vi.fn().mockResolvedValue(new Response(null, { status: 200 })));
+      const logger = makeLogger();
+      const client = new GatewayClient({
+        gateway: 'https://api.example.com',
+        token: 'tok',
+        logger,
+      });
+
+      await client.request({ method: 'GET', path: '/x' });
+      logger.log.mockClear();
+      await client.request({ method: 'GET', path: '/y' });
+
+      const envCalls = logger.log.mock.calls.filter(
+        ([msg]) => typeof msg === 'string' && msg.includes('Environment:')
+      );
+      expect(envCalls).toHaveLength(0);
+    });
+
+    it('shows (not set) for unset env vars', async () => {
+      vi.stubEnv('HTTPS_PROXY', '');
+      vi.stubEnv('HTTP_PROXY', '');
+      vi.stubEnv('NO_PROXY', '');
+      vi.stubEnv('NODE_EXTRA_CA_CERTS', '');
+      vi.stubGlobal('fetch', vi.fn().mockResolvedValue(new Response(null, { status: 200 })));
+      const logger = makeLogger();
+      const client = new GatewayClient({
+        gateway: 'https://api.example.com',
+        token: 'tok',
+        logger,
+      });
+
+      await client.request({ method: 'GET', path: '/x' });
+
+      expect(logger.log).toHaveBeenCalledWith(expect.stringContaining('HTTPS_PROXY: (not set)'));
+    });
+
+    it('shows the value when HTTPS_PROXY is set', async () => {
+      vi.stubEnv('HTTPS_PROXY', 'http://proxy.example.com:8080');
+      vi.stubGlobal('fetch', vi.fn().mockResolvedValue(new Response(null, { status: 200 })));
+      const logger = makeLogger();
+      const client = new GatewayClient({
+        gateway: 'https://api.example.com',
+        token: 'tok',
+        logger,
+      });
+
+      await client.request({ method: 'GET', path: '/x' });
+
+      expect(logger.log).toHaveBeenCalledWith(
+        expect.stringContaining('HTTPS_PROXY: http://proxy.example.com:8080')
+      );
+    });
+
+    it('does not throw when no logger is provided', async () => {
+      vi.stubGlobal('fetch', vi.fn().mockResolvedValue(new Response(null, { status: 200 })));
+      const client = new GatewayClient({ gateway: 'https://api.example.com', token: 'tok' });
+
+      await expect(client.request({ method: 'GET', path: '/x' })).resolves.toBeDefined();
+    });
+  });
+
   describe('fromCommand', () => {
     beforeEach(() => {
       vi.unstubAllGlobals();
+      resetEnvLoggedForTesting();
     });
 
     it('uses the provided logger when isVerbose is true', async () => {

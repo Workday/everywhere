@@ -33,6 +33,33 @@ export class GatewayRequestError extends Error {
   }
 }
 
+let envLogged = false;
+
+export function resetEnvLoggedForTesting(): void {
+  envLogged = false;
+}
+
+function logEnvironment(logger: VerboseLogger): void {
+  const envVar = (name: string): string => {
+    const value = process.env[name];
+    return value && value.length > 0 ? value : '(not set)';
+  };
+  const tlsReject = process.env['NODE_TLS_REJECT_UNAUTHORIZED'];
+  const tlsRejectDisplay = tlsReject === undefined ? '(default)' : tlsReject;
+
+  logger.log(
+    [
+      'Environment:',
+      `  Node: ${process.version}`,
+      `  HTTPS_PROXY: ${envVar('HTTPS_PROXY')}`,
+      `  HTTP_PROXY: ${envVar('HTTP_PROXY')}`,
+      `  NO_PROXY: ${envVar('NO_PROXY')}`,
+      `  NODE_EXTRA_CA_CERTS: ${envVar('NODE_EXTRA_CA_CERTS')}`,
+      `  NODE_TLS_REJECT_UNAUTHORIZED: ${tlsRejectDisplay}`,
+    ].join('\n')
+  );
+}
+
 function describeFetchError(err: unknown): { message: string; code?: string; cause: Error } {
   if (!(err instanceof Error)) {
     return { message: String(err), cause: new Error(String(err)) };
@@ -75,6 +102,11 @@ export class GatewayClient {
     body?: BodyInit;
     headers?: Record<string, string>;
   }): Promise<Response> {
+    if (this.logger?.isVerbose && !envLogged) {
+      envLogged = true;
+      logEnvironment(this.logger);
+    }
+
     const url = new URL(opts.path, this.gateway).toString();
     const headers: Record<string, string> = {
       Authorization: `Bearer ${this.token}`,
