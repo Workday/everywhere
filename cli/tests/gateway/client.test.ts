@@ -187,7 +187,25 @@ describe('GatewayClient', () => {
 
       await client.request({ method: 'GET', path: '/x' });
 
-      expect(logger.log).toHaveBeenCalledWith('Requesting GET https://api.example.com/x');
+      expect(logger.log).toHaveBeenCalledWith(
+        'Requesting GET https://api.example.com/x (bearer: 3 chars)'
+      );
+    });
+
+    it('appends the bearer token length to the request line', async () => {
+      vi.stubGlobal('fetch', vi.fn().mockResolvedValue(new Response(null, { status: 200 })));
+      const logger = makeLogger();
+      const client = new GatewayClient({
+        gateway: 'https://api.example.com',
+        token: 'token-with-12chars',
+        logger,
+      });
+
+      await client.request({ method: 'GET', path: '/x' });
+
+      expect(logger.log).toHaveBeenCalledWith(
+        'Requesting GET https://api.example.com/x (bearer: 18 chars)'
+      );
     });
 
     it('logs the response status after the request', async () => {
@@ -595,7 +613,9 @@ describe('GatewayClient', () => {
       });
       await client.request({ method: 'GET', path: '/x' });
 
-      expect(logger.log).toHaveBeenCalledWith('Requesting GET https://api.example.com/x');
+      expect(logger.log).toHaveBeenCalledWith(
+        'Requesting GET https://api.example.com/x (bearer: 3 chars)'
+      );
     });
 
     it('does not log when logger isVerbose is false', async () => {

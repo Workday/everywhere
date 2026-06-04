@@ -114,7 +114,7 @@ export class GatewayClient {
     };
 
     if (this.logger?.isVerbose) {
-      this.logger.log(`Requesting ${opts.method} ${url}`);
+      this.logger.log(`Requesting ${opts.method} ${url} (bearer: ${this.token.length} chars)`);
     }
 
     const start = Date.now();
