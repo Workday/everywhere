@@ -6,16 +6,7 @@ import { appConfig } from '../../../config.js';
 import { DEFAULT_GATEWAY } from '../../../auth/defaults.js';
 import { parseGatewayUrl } from '../../../auth/gateway.js';
 import { decodeToken } from '../../../auth/token.js';
-
-function describeFetchError(err: unknown): string {
-  if (!(err instanceof Error)) return String(err);
-  let current: Error = err;
-  while (current.cause instanceof Error) {
-    current = current.cause;
-  }
-  const code = (current as { code?: unknown }).code;
-  return typeof code === 'string' ? `${code}: ${current.message}` : current.message;
-}
+import { GatewayClient, GatewayRequestError } from '../../../gateway/client.js';
 
 export default class AuthLoginCommand extends EverywhereBaseCommand {
   static description = 'Authenticate with a Workday server using an access token.';
@@ -55,40 +46,14 @@ export default class AuthLoginCommand extends EverywhereBaseCommand {
       this.error('Invalid token format. Please provide a valid JWT.');
     }
 
-    const url = new URL('/api/v1/me', gateway).toString();
-
-    if (this.isVerbose) {
-      this.log(`Verifying token at ${url}`);
-    }
-
-    let response: Response;
-    try {
-      response = await fetch(url, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
-    } catch (err) {
-      const message = describeFetchError(err);
-      if (this.isVerbose) {
-        this.log(`Token verification request failed: ${message}`);
-      }
-      this.error(`Token validation request failed: ${message}`);
-    }
-
-    if (this.isVerbose) {
-      this.log(`Token verification response: ${response.status} ${response.statusText}`);
-    }
-
-    if (!response.ok) {
-      this.error(`Token validation failed (HTTP ${response.status}).`);
-    }
+    const client = GatewayClient.fromCommand(this, { gateway, token });
 
     let body: unknown;
     try {
-      body = await response.json();
-    } catch {
-      this.error('Token validation response was not valid JSON.');
+      body = await client.getJson('/api/v1/me');
+    } catch (err) {
+      if (err instanceof GatewayRequestError) this.error(err.message);
+      throw err;
     }
 
     if (
