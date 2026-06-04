@@ -58,6 +58,9 @@ export default class AuthLoginCommand extends EverywhereBaseCommand {
       });
     } catch (err) {
       const message = err instanceof Error ? err.message : String(err);
+      if (this.isVerbose) {
+        this.log(`Token verification request failed: ${message}`);
+      }
       this.error(`Token validation request failed: ${message}`);
     }
 

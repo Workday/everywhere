@@ -164,7 +164,9 @@ describe('everywhere auth login', () => {
       it('logs the verification URL before contacting the server', async () => {
         await cmd.run();
 
-        expect(logSpy).toHaveBeenCalledWith('Verifying token at https://gateway.example.com/api/v1/me');
+        expect(logSpy).toHaveBeenCalledWith(
+          'Verifying token at https://gateway.example.com/api/v1/me'
+        );
       });
 
       it('logs the response status on success', async () => {
@@ -187,6 +189,16 @@ describe('everywhere auth login', () => {
         await cmd.run().catch(() => {});
 
         expect(logSpy).toHaveBeenCalledWith('Token verification response: 401 Unauthorized');
+      });
+
+      it('logs the network error message when fetch throws', async () => {
+        vi.stubGlobal('fetch', vi.fn().mockRejectedValue(new Error('connect ECONNREFUSED')));
+
+        await cmd.run().catch(() => {});
+
+        expect(logSpy).toHaveBeenCalledWith(
+          'Token verification request failed: connect ECONNREFUSED'
+        );
       });
     });
   });
