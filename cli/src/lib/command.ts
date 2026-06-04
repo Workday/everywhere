@@ -7,7 +7,7 @@ import { GatewayRequestError, type VerboseLogger } from '../gateway/client.js';
 
 const PLUGIN_EXTENSIONS = ['.tsx', '.ts'];
 
-export default abstract class EverywhereBaseCommand extends Command {
+export default abstract class EverywhereBaseCommand extends Command implements VerboseLogger {
   static baseFlags = {
     'plugin-dir': Flags.directory({
       char: 'D',
@@ -20,16 +20,8 @@ export default abstract class EverywhereBaseCommand extends Command {
     }),
   };
 
-  protected get isVerbose(): boolean {
+  public get isVerbose(): boolean {
     return this._verbose;
-  }
-
-  protected createGatewayLogger(): VerboseLogger {
-    return Object.defineProperty({ log: (msg: string) => this.log(msg) }, 'isVerbose', {
-      get: () => this._verbose,
-      enumerable: true,
-      configurable: true,
-    }) as VerboseLogger;
   }
 
   protected surfaceGatewayError(err: unknown): never {

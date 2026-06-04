@@ -26,7 +26,7 @@ export default class AuthTokenCommand extends EverywhereBaseCommand {
     }
 
     const gateway = saved.auth?.gateway ?? DEFAULT_GATEWAY;
-    const client = GatewayClient.fromCommand(this.createGatewayLogger(), { gateway, token });
+    const client = GatewayClient.fromCommand(this, { gateway, token });
 
     let body: string;
     try {

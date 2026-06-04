@@ -63,7 +63,7 @@ export default class BindCommand extends EverywhereBaseCommand {
       parsed,
       result.source.path,
       result.source.kind === 'zip',
-      this.createGatewayLogger()
+      this
     );
     const { schemas, warnings } = applyIntrospectionOutcome(parsed, introspectionOutcome);
     if (verbose) {
