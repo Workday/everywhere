@@ -88,7 +88,9 @@ export default class AuthLoginCommand extends EverywhereBaseCommand {
       this.error('Token validation response missing identity fields.');
     }
     const identity = body as { sub: string; tenant: string };
-    void identity;
+    if (this.isVerbose) {
+      this.log(`Authenticated as ${identity.sub} on tenant ${identity.tenant}`);
+    }
 
     config.write({ auth: { gateway, https, token } });
     this.log(chalk.green('Successfully authenticated.'));

@@ -207,6 +207,22 @@ describe('everywhere auth login', () => {
           'Token verification request failed: connect ECONNREFUSED'
         );
       });
+
+      it('logs the identity on successful verification', async () => {
+        vi.stubGlobal(
+          'fetch',
+          vi.fn().mockResolvedValue({
+            ok: true,
+            status: 200,
+            statusText: 'OK',
+            json: () => Promise.resolve({ sub: 'user-123', tenant: 'tenant-abc' }),
+          })
+        );
+
+        await cmd.run();
+
+        expect(logSpy).toHaveBeenCalledWith('Authenticated as user-123 on tenant tenant-abc');
+      });
     });
 
     describe('identity validation', () => {
