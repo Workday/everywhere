@@ -312,33 +312,26 @@ In `cli/src/commands/everywhere/auth/login.ts`, after the `if (!response.ok) { .
 before the existing `config.write(...)` call, insert:
 
 ```typescript
-let identity: { sub: string; tenant: string };
+let body: unknown;
 try {
-  const body = (await response.json()) as unknown;
-  if (
-    !body ||
-    typeof body !== 'object' ||
-    typeof (body as Record<string, unknown>).sub !== 'string' ||
-    typeof (body as Record<string, unknown>).tenant !== 'string'
-  ) {
-    this.error('Token validation response missing identity fields.');
-  }
-  identity = body as { sub: string; tenant: string };
-} catch (err) {
-  if (
-    err instanceof Error &&
-    err.message === 'Token validation response missing identity fields.'
-  ) {
-    throw err;
-  }
+  body = await response.json();
+} catch {
   this.error('Token validation response was not valid JSON.');
 }
+
+if (
+  !body ||
+  typeof body !== 'object' ||
+  typeof (body as Record<string, unknown>).sub !== 'string' ||
+  typeof (body as Record<string, unknown>).tenant !== 'string'
+) {
+  this.error('Token validation response missing identity fields.');
+}
+const identity = body as { sub: string; tenant: string };
 ```
 
-Note: `this.error()` throws an `Error` whose message is exactly the string passed in. The inner
-`if (err instanceof Error && err.message === ...)` rethrows the missing-fields error so it is not
-swallowed by the JSON catch — the outer `catch (err)` would otherwise re-classify it as a parse
-failure.
+`this.error()` is typed `never`, so after each call TypeScript knows execution does not continue —
+no rethrow or `else` branch is needed.
 
 The unused-binding lint rule may complain that `identity` is never read at this stage. Suppress it
 by adding the next line so the variable is referenced:
