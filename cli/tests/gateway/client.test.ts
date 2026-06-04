@@ -237,4 +237,53 @@ describe('GatewayClient', () => {
       await expect(client.request({ method: 'GET', path: '/x' })).resolves.toBeDefined();
     });
   });
+
+  describe('getJson', () => {
+    beforeEach(() => {
+      vi.unstubAllGlobals();
+    });
+
+    it('returns the parsed JSON body on success', async () => {
+      vi.stubGlobal(
+        'fetch',
+        vi
+          .fn()
+          .mockResolvedValue(
+            new Response(JSON.stringify({ sub: 'u1', tenant: 't1' }), { status: 200 })
+          )
+      );
+      const client = new GatewayClient({ gateway: 'https://api.example.com', token: 'tok' });
+
+      const result = await client.getJson<{ sub: string; tenant: string }>('/api/v1/me');
+
+      expect(result).toEqual({ sub: 'u1', tenant: 't1' });
+    });
+
+    it('throws GatewayRequestError when the body is not valid JSON', async () => {
+      vi.stubGlobal('fetch', vi.fn().mockResolvedValue(new Response('not-json', { status: 200 })));
+      const client = new GatewayClient({ gateway: 'https://api.example.com', token: 'tok' });
+
+      await expect(client.getJson('/x')).rejects.toThrow(
+        'GET https://api.example.com/x failed: response was not valid JSON'
+      );
+    });
+  });
+
+  describe('getText', () => {
+    beforeEach(() => {
+      vi.unstubAllGlobals();
+    });
+
+    it('returns the response body as text', async () => {
+      vi.stubGlobal(
+        'fetch',
+        vi.fn().mockResolvedValue(new Response('hello world', { status: 200 }))
+      );
+      const client = new GatewayClient({ gateway: 'https://api.example.com', token: 'tok' });
+
+      const result = await client.getText('/x');
+
+      expect(result).toBe('hello world');
+    });
+  });
 });

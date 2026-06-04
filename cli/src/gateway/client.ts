@@ -107,4 +107,23 @@ export class GatewayClient {
 
     return response;
   }
+
+  async getJson<T>(path: string): Promise<T> {
+    const response = await this.request({ method: 'GET', path });
+    try {
+      return (await response.json()) as T;
+    } catch (err) {
+      const url = new URL(path, this.gateway).toString();
+      throw new GatewayRequestError(`GET ${url} failed: response was not valid JSON`, {
+        method: 'GET',
+        url,
+        cause: err instanceof Error ? err : undefined,
+      });
+    }
+  }
+
+  async getText(path: string): Promise<string> {
+    const response = await this.request({ method: 'GET', path });
+    return response.text();
+  }
 }
