@@ -138,11 +138,13 @@ describe('everywhere unpublish', () => {
       it('calls deleteFromRegistry with the plugin name and auth details', async () => {
         await cmd.run();
 
-        expect(deleteFromRegistry).toHaveBeenCalledWith({
-          gateway: 'https://registry.example.com',
-          token: 'test-auth-token',
-          appId: 'my-test-plugin',
-        });
+        expect(deleteFromRegistry).toHaveBeenCalledWith(
+          expect.objectContaining({
+            gateway: 'https://registry.example.com',
+            token: 'test-auth-token',
+            appId: 'my-test-plugin',
+          })
+        );
       });
 
       it('logs a success message', async () => {

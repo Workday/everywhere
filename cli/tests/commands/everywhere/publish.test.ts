@@ -268,10 +268,12 @@ describe('everywhere publish', () => {
       it('builds the gateway client from the stored gateway URL', async () => {
         await cmd.run();
 
-        expect(GatewayClient).toHaveBeenCalledWith({
-          gateway: 'https://registry.example.com',
-          token: 'test-auth-token',
-        });
+        expect(GatewayClient).toHaveBeenCalledWith(
+          expect.objectContaining({
+            gateway: 'https://registry.example.com',
+            token: 'test-auth-token',
+          })
+        );
       });
 
       it('logs a success message with the registry response details', async () => {
@@ -293,10 +295,12 @@ describe('everywhere publish', () => {
         it('builds the gateway client from the http gateway URL', async () => {
           await cmd.run();
 
-          expect(GatewayClient).toHaveBeenCalledWith({
-            gateway: 'http://registry.example.com',
-            token: 'test-auth-token',
-          });
+          expect(GatewayClient).toHaveBeenCalledWith(
+            expect.objectContaining({
+              gateway: 'http://registry.example.com',
+              token: 'test-auth-token',
+            })
+          );
         });
       });
     });

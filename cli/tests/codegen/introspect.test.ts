@@ -467,6 +467,26 @@ describe('introspectGraphTypes()', () => {
     });
   });
 
+  describe('when called with a logger', () => {
+    it('forwards the logger to the GatewayClient constructor', async () => {
+      writeManifest('myApp_ns1');
+      mockFetchOk({
+        ds_Employee: { inputFields: [{ name: 'myApp_ns1_employees' }] },
+        create_Employee: { name: 'MyApp_ns1_EmployeesSummary_Create_Input', kind: 'INPUT_OBJECT' },
+        update_Employee: { name: 'MyApp_ns1_EmployeesSummary_Update_Input', kind: 'INPUT_OBJECT' },
+      });
+      const logger = { isVerbose: true, log: vi.fn() };
+
+      await introspectGraphTypes([EMPLOYEE], tmpDir, false, logger);
+
+      expect(GatewayClient).toHaveBeenCalledWith({
+        gateway: 'https://api.workday.com',
+        token: 'test-token',
+        logger,
+      });
+    });
+  });
+
   describe('update input field requirements', () => {
     it('populates graph.updateInputFields with required: true for a NON_NULL update input field', async () => {
       writeManifest('myApp_ns1');

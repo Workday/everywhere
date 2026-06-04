@@ -53,9 +53,23 @@ describe('uploadToRegistry', () => {
   it('constructs the client with the gateway and token', async () => {
     await uploadToRegistry(baseOptions);
 
+    expect(GatewayClient).toHaveBeenCalledWith(
+      expect.objectContaining({
+        gateway: 'https://registry.example.com',
+        token: 'test-token',
+      })
+    );
+  });
+
+  it('forwards the provided logger to the GatewayClient constructor', async () => {
+    const logger = { isVerbose: true, log: vi.fn() };
+
+    await uploadToRegistry({ ...baseOptions, logger });
+
     expect(GatewayClient).toHaveBeenCalledWith({
       gateway: 'https://registry.example.com',
       token: 'test-token',
+      logger,
     });
   });
 

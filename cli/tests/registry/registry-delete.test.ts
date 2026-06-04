@@ -35,9 +35,23 @@ describe('deleteFromRegistry', () => {
   it('constructs the client with the gateway and token', async () => {
     await deleteFromRegistry(baseOptions);
 
+    expect(GatewayClient).toHaveBeenCalledWith(
+      expect.objectContaining({
+        gateway: 'https://registry.example.com',
+        token: 'test-token',
+      })
+    );
+  });
+
+  it('forwards the provided logger to the GatewayClient constructor', async () => {
+    const logger = { isVerbose: true, log: vi.fn() };
+
+    await deleteFromRegistry({ ...baseOptions, logger });
+
     expect(GatewayClient).toHaveBeenCalledWith({
       gateway: 'https://registry.example.com',
       token: 'test-token',
+      logger,
     });
   });
 

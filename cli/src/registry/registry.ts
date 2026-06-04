@@ -1,10 +1,11 @@
 import * as fs from 'node:fs';
-import { GatewayClient, GatewayRequestError } from '../gateway/client.js';
+import { GatewayClient, GatewayRequestError, type VerboseLogger } from '../gateway/client.js';
 
 export interface RegistryUploadOptions {
   gateway: string;
   token: string;
   archivePath: string;
+  logger?: VerboseLogger;
 }
 
 export interface RegistryUploadResult {
@@ -49,11 +50,12 @@ export interface RegistryDeleteOptions {
   gateway: string;
   token: string;
   appId: string;
+  logger?: VerboseLogger;
 }
 
 export async function deleteFromRegistry(options: RegistryDeleteOptions): Promise<void> {
   const { gateway, token, appId } = options;
-  const client = new GatewayClient({ gateway, token });
+  const client = new GatewayClient({ gateway, token, logger: options.logger });
 
   try {
     await client.delete(`/api/v1/app/${appId}`);
@@ -69,7 +71,7 @@ export async function uploadToRegistry(
   options: RegistryUploadOptions
 ): Promise<RegistryUploadResult> {
   const { gateway, token, archivePath } = options;
-  const client = new GatewayClient({ gateway, token });
+  const client = new GatewayClient({ gateway, token, logger: options.logger });
 
   const blob = await fs.openAsBlob(archivePath, { type: 'application/zip' });
 

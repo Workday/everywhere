@@ -21,6 +21,7 @@ export default class UnpublishCommand extends EverywhereBaseCommand {
       gateway,
       token,
       appId: name,
+      logger: this.createGatewayLogger(),
     });
 
     this.log(`Successfully unpublished plugin: ${name}`);

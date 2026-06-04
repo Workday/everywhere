@@ -4,7 +4,7 @@ import * as path from 'node:path';
 import JSZip from 'jszip';
 import { appConfig } from '../config.js';
 import { DEFAULT_GATEWAY } from '../auth/defaults.js';
-import { GatewayClient, GatewayRequestError } from '../gateway/client.js';
+import { GatewayClient, GatewayRequestError, type VerboseLogger } from '../gateway/client.js';
 
 interface GraphMetadata {
   dataSourceKey: string;
@@ -118,7 +118,8 @@ function buildQuery(graphPrefix: string, schemas: ModelSchema[]): string {
 export async function introspectGraphTypes<T extends ModelSchema>(
   schemas: T[],
   extendSourcePath: string,
-  isZip: boolean
+  isZip: boolean,
+  logger?: VerboseLogger
 ): Promise<IntrospectionOutcome> {
   const { auth = {} } = appConfig().read();
   if (!auth.token) {
@@ -169,7 +170,7 @@ export async function introspectGraphTypes<T extends ModelSchema>(
   const { referenceId } = manifest;
   const graphPrefix = referenceIdToGraphTypePrefix(referenceId);
   const query = buildQuery(graphPrefix, schemas);
-  const client = new GatewayClient({ gateway, token });
+  const client = new GatewayClient({ gateway, token, logger });
 
   let response: Response;
   try {
