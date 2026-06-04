@@ -70,6 +70,10 @@ export class GatewayClient {
       ...(opts.headers ?? {}),
     };
 
+    if (this.logger?.isVerbose) {
+      this.logger.log(`Requesting ${opts.method} ${url}`);
+    }
+
     let response: Response;
     try {
       response = await fetch(url, {
@@ -79,12 +83,19 @@ export class GatewayClient {
       });
     } catch (err) {
       const described = describeFetchError(err);
+      if (this.logger?.isVerbose) {
+        this.logger.log(`Request failed: ${described.message}`);
+      }
       throw new GatewayRequestError(`${opts.method} ${url} failed: ${described.message}`, {
         method: opts.method,
         url,
         code: described.code,
         cause: described.cause,
       });
+    }
+
+    if (this.logger?.isVerbose) {
+      this.logger.log(`Response: ${response.status} ${response.statusText}`);
     }
 
     if (!response.ok) {

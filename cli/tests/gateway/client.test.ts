@@ -157,4 +157,84 @@ describe('GatewayClient', () => {
       );
     });
   });
+
+  describe('verbose logging', () => {
+    function makeLogger(isVerbose = true) {
+      return {
+        isVerbose,
+        log: vi.fn(),
+      };
+    }
+
+    beforeEach(() => {
+      vi.unstubAllGlobals();
+    });
+
+    it('logs the method and url before the request', async () => {
+      vi.stubGlobal('fetch', vi.fn().mockResolvedValue(new Response(null, { status: 200 })));
+      const logger = makeLogger();
+      const client = new GatewayClient({
+        gateway: 'https://api.example.com',
+        token: 'tok',
+        logger,
+      });
+
+      await client.request({ method: 'GET', path: '/x' });
+
+      expect(logger.log).toHaveBeenCalledWith('Requesting GET https://api.example.com/x');
+    });
+
+    it('logs the response status after the request', async () => {
+      vi.stubGlobal(
+        'fetch',
+        vi.fn().mockResolvedValue(new Response(null, { status: 200, statusText: 'OK' }))
+      );
+      const logger = makeLogger();
+      const client = new GatewayClient({
+        gateway: 'https://api.example.com',
+        token: 'tok',
+        logger,
+      });
+
+      await client.request({ method: 'GET', path: '/x' });
+
+      expect(logger.log).toHaveBeenCalledWith('Response: 200 OK');
+    });
+
+    it('logs the failure message when fetch throws', async () => {
+      const cause = Object.assign(new Error('boom'), { code: 'ETIMEDOUT' });
+      vi.stubGlobal('fetch', vi.fn().mockRejectedValue(new TypeError('fetch failed', { cause })));
+      const logger = makeLogger();
+      const client = new GatewayClient({
+        gateway: 'https://api.example.com',
+        token: 'tok',
+        logger,
+      });
+
+      await client.request({ method: 'GET', path: '/x' }).catch(() => {});
+
+      expect(logger.log).toHaveBeenCalledWith('Request failed: ETIMEDOUT: boom');
+    });
+
+    it('emits nothing when logger isVerbose is false', async () => {
+      vi.stubGlobal('fetch', vi.fn().mockResolvedValue(new Response(null, { status: 200 })));
+      const logger = makeLogger(false);
+      const client = new GatewayClient({
+        gateway: 'https://api.example.com',
+        token: 'tok',
+        logger,
+      });
+
+      await client.request({ method: 'GET', path: '/x' });
+
+      expect(logger.log).not.toHaveBeenCalled();
+    });
+
+    it('does not throw when no logger is provided', async () => {
+      vi.stubGlobal('fetch', vi.fn().mockResolvedValue(new Response(null, { status: 200 })));
+      const client = new GatewayClient({ gateway: 'https://api.example.com', token: 'tok' });
+
+      await expect(client.request({ method: 'GET', path: '/x' })).resolves.toBeDefined();
+    });
+  });
 });
