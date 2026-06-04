@@ -536,7 +536,121 @@ git commit -m "test(auth): guard against verbose output leaking when flag is off
 
 ---
 
-## Task 7: Full verification
+## Task 8: Unwrap fetch error cause for diagnosable messages
+
+**Files:**
+
+- Modify: `cli/src/commands/everywhere/auth/login.ts` (add a module-level helper, use it in the
+  existing catch block)
+- Modify: `cli/tests/commands/everywhere/auth/login.test.ts` (add new tests; update one existing
+  test if needed)
+
+Node's `fetch` (undici) throws a `TypeError: fetch failed` for TLS, DNS, and socket errors. The
+actual diagnostic (`UNABLE_TO_GET_ISSUER_CERT_LOCALLY`, `ENOTFOUND`, `ECONNREFUSED`, etc.) lives on
+`err.cause` (or further down the chain). This task replaces the bare `"fetch failed"` message with
+the unwrapped cause so users can diagnose cert and network issues.
+
+- [ ] **Step 1: Write the failing tests**
+
+In `cli/tests/commands/everywhere/auth/login.test.ts`, add these two tests inside the existing
+`describe('verbose output')` block:
+
+```typescript
+it('unwraps the underlying cause when fetch throws with a cause', async () => {
+  const cause = Object.assign(new Error('unable to get local issuer certificate'), {
+    code: 'UNABLE_TO_GET_ISSUER_CERT_LOCALLY',
+  });
+  const err = new TypeError('fetch failed', { cause });
+  vi.stubGlobal('fetch', vi.fn().mockRejectedValue(err));
+
+  await cmd.run().catch(() => {});
+
+  expect(logSpy).toHaveBeenCalledWith(
+    'Token verification request failed: UNABLE_TO_GET_ISSUER_CERT_LOCALLY: unable to get local issuer certificate'
+  );
+});
+
+it('falls back to the cause message when no code is present', async () => {
+  const cause = new Error('socket hang up');
+  const err = new TypeError('fetch failed', { cause });
+  vi.stubGlobal('fetch', vi.fn().mockRejectedValue(err));
+
+  await cmd.run().catch(() => {});
+
+  expect(logSpy).toHaveBeenCalledWith('Token verification request failed: socket hang up');
+});
+```
+
+- [ ] **Step 2: Run new tests to verify they fail**
+
+```bash
+npx vitest run cli/tests/commands/everywhere/auth/login.test.ts -t "unwraps the underlying cause"
+npx vitest run cli/tests/commands/everywhere/auth/login.test.ts -t "falls back to the cause message"
+```
+
+Expected: FAIL for both — current code only reads `err.message`, which is `"fetch failed"`.
+
+- [ ] **Step 3: Add the helper and use it in `login.ts`**
+
+In `cli/src/commands/everywhere/auth/login.ts`, add this module-level function above the
+`AuthLoginCommand` class (e.g., right after the imports):
+
+```typescript
+function describeFetchError(err: unknown): string {
+  if (!(err instanceof Error)) return String(err);
+  let current: Error = err;
+  while (current.cause instanceof Error) {
+    current = current.cause;
+  }
+  const code = (current as { code?: unknown }).code;
+  return typeof code === 'string' ? `${code}: ${current.message}` : current.message;
+}
+```
+
+Then replace the existing catch block:
+
+```typescript
+    } catch (err) {
+      const message = err instanceof Error ? err.message : String(err);
+      if (this.isVerbose) {
+        this.log(`Token verification request failed: ${message}`);
+      }
+      this.error(`Token validation request failed: ${message}`);
+    }
+```
+
+with:
+
+```typescript
+    } catch (err) {
+      const message = describeFetchError(err);
+      if (this.isVerbose) {
+        this.log(`Token verification request failed: ${message}`);
+      }
+      this.error(`Token validation request failed: ${message}`);
+    }
+```
+
+- [ ] **Step 4: Run the full login test file to verify everything passes**
+
+```bash
+npx vitest run cli/tests/commands/everywhere/auth/login.test.ts
+```
+
+Expected: ALL tests PASS. The existing `'logs the network error message when fetch throws'` test
+uses `new Error('connect ECONNREFUSED')` (no cause, no code) — `describeFetchError` returns
+`'connect ECONNREFUSED'`, so it still passes unchanged.
+
+- [ ] **Step 5: Commit**
+
+```bash
+git add cli/src/commands/everywhere/auth/login.ts cli/tests/commands/everywhere/auth/login.test.ts
+git commit -m "feat(auth): unwrap fetch error cause for diagnosable messages"
+```
+
+---
+
+## Task 9: Full verification
 
 - [ ] **Step 1: Run the full check suite**
 
