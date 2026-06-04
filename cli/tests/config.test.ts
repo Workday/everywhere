@@ -108,11 +108,53 @@ describe('appConfig', () => {
         fs.mkdirSync(dir, { recursive: true });
         fs.writeFileSync(
           path.join(dir, 'config.json'),
+          JSON.stringify({ auth: { gateway: 'https://example.com' } })
+        );
+
+        const config = appConfig();
+        expect(config.read()).toEqual({ auth: { gateway: 'https://example.com' } });
+      });
+    });
+
+    describe('when config file has legacy split auth (gateway + https=true)', () => {
+      it('returns gateway as a full https URL', () => {
+        const dir = path.join(tmpDir, '@workday', 'everywhere');
+        fs.mkdirSync(dir, { recursive: true });
+        fs.writeFileSync(
+          path.join(dir, 'config.json'),
+          JSON.stringify({ auth: { gateway: 'example.com', https: true, token: 'abc' } })
+        );
+
+        const config = appConfig();
+        expect(config.read().auth).toEqual({ gateway: 'https://example.com', token: 'abc' });
+      });
+    });
+
+    describe('when config file has legacy split auth (gateway + https=false)', () => {
+      it('returns gateway as a full http URL', () => {
+        const dir = path.join(tmpDir, '@workday', 'everywhere');
+        fs.mkdirSync(dir, { recursive: true });
+        fs.writeFileSync(
+          path.join(dir, 'config.json'),
+          JSON.stringify({ auth: { gateway: 'localhost:8080', https: false } })
+        );
+
+        const config = appConfig();
+        expect(config.read().auth).toEqual({ gateway: 'http://localhost:8080' });
+      });
+    });
+
+    describe('when config file has legacy gateway with no https field', () => {
+      it('defaults to https', () => {
+        const dir = path.join(tmpDir, '@workday', 'everywhere');
+        fs.mkdirSync(dir, { recursive: true });
+        fs.writeFileSync(
+          path.join(dir, 'config.json'),
           JSON.stringify({ auth: { gateway: 'example.com' } })
         );
 
         const config = appConfig();
-        expect(config.read()).toEqual({ auth: { gateway: 'example.com' } });
+        expect(config.read().auth).toEqual({ gateway: 'https://example.com' });
       });
     });
   });
@@ -121,7 +163,7 @@ describe('appConfig', () => {
     describe('when config file does not exist', () => {
       it('creates the directory and file', () => {
         const config = appConfig();
-        config.write({ auth: { gateway: 'example.com' } });
+        config.write({ auth: { gateway: 'https://example.com' } });
 
         expect(fs.existsSync(config.path)).toBe(true);
       });
@@ -131,19 +173,22 @@ describe('appConfig', () => {
       it('merges with existing config', () => {
         const config = appConfig();
         config.write({ other: 'value' });
-        config.write({ auth: { gateway: 'example.com' } });
+        config.write({ auth: { gateway: 'https://example.com' } });
 
-        expect(config.read()).toEqual({ other: 'value', auth: { gateway: 'example.com' } });
+        expect(config.read()).toEqual({
+          other: 'value',
+          auth: { gateway: 'https://example.com' },
+        });
       });
     });
 
     describe('when writing to the auth key', () => {
       it('deep-merges the auth object', () => {
         const config = appConfig();
-        config.write({ auth: { gateway: 'example.com' } });
+        config.write({ auth: { gateway: 'https://example.com' } });
         config.write({ auth: { token: 'abc123' } });
 
-        expect(config.read().auth).toEqual({ gateway: 'example.com', token: 'abc123' });
+        expect(config.read().auth).toEqual({ gateway: 'https://example.com', token: 'abc123' });
       });
     });
   });

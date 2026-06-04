@@ -9,8 +9,7 @@ vi.mock('node:fs', async (importOriginal) => {
 
 describe('uploadToRegistry', () => {
   const baseOptions = {
-    gateway: 'registry.example.com',
-    httpsEnabled: false,
+    gateway: 'http://registry.example.com',
     token: 'test-token',
     archivePath: '/tmp/test-plugin.zip',
   };
@@ -49,16 +48,16 @@ describe('uploadToRegistry', () => {
       expect(result).toEqual(successResponse);
     });
 
-    it('posts to the http registry URL when httpsEnabled is false', async () => {
-      await uploadToRegistry({ ...baseOptions, httpsEnabled: false });
+    it('posts to the http registry URL when the gateway is http', async () => {
+      await uploadToRegistry({ ...baseOptions, gateway: 'http://registry.example.com' });
       expect(fetch).toHaveBeenCalledWith(
         new URL('http://registry.example.com/api/v1/apps/publish'),
         expect.anything()
       );
     });
 
-    it('posts to the https registry URL when httpsEnabled is true', async () => {
-      await uploadToRegistry({ ...baseOptions, httpsEnabled: true });
+    it('posts to the https registry URL when the gateway is https', async () => {
+      await uploadToRegistry({ ...baseOptions, gateway: 'https://registry.example.com' });
       expect(fetch).toHaveBeenCalledWith(
         new URL('https://registry.example.com/api/v1/apps/publish'),
         expect.anything()

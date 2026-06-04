@@ -1,2 +1,1 @@
-export const DEFAULT_GATEWAY = 'api.workday.com';
-export const DEFAULT_HTTPS = true;
+export const DEFAULT_GATEWAY = 'https://api.workday.com';

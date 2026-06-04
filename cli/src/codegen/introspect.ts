@@ -3,7 +3,7 @@ import * as fsp from 'node:fs/promises';
 import * as path from 'node:path';
 import JSZip from 'jszip';
 import { appConfig } from '../config.js';
-import { DEFAULT_GATEWAY, DEFAULT_HTTPS } from '../auth/defaults.js';
+import { DEFAULT_GATEWAY } from '../auth/defaults.js';
 
 interface GraphMetadata {
   dataSourceKey: string;
@@ -123,7 +123,7 @@ export async function introspectGraphTypes<T extends ModelSchema>(
   if (!auth.token) {
     return { ok: false, reason: { kind: 'no-token' } };
   }
-  const { gateway = DEFAULT_GATEWAY, https: useHttps = DEFAULT_HTTPS, token } = auth;
+  const { gateway = DEFAULT_GATEWAY, token } = auth;
 
   let manifestContent: string | null;
   try {
@@ -167,7 +167,7 @@ export async function introspectGraphTypes<T extends ModelSchema>(
 
   const { referenceId } = manifest;
   const graphPrefix = referenceIdToGraphTypePrefix(referenceId);
-  const endpoint = `${useHttps ? 'https' : 'http'}://${gateway}/api/v1/data/graphql`;
+  const endpoint = new URL('/api/v1/data/graphql', gateway).toString();
   const query = buildQuery(graphPrefix, schemas);
 
   let response: Response;

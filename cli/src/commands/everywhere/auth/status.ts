@@ -1,7 +1,7 @@
 import chalk from 'chalk';
 import EverywhereBaseCommand from '../../../lib/command.js';
 import { appConfig } from '../../../config.js';
-import { DEFAULT_GATEWAY, DEFAULT_HTTPS } from '../../../auth/defaults.js';
+import { DEFAULT_GATEWAY } from '../../../auth/defaults.js';
 import { getTokenExpiryStatus, decodeToken } from '../../../auth/token.js';
 
 export default class AuthStatusCommand extends EverywhereBaseCommand {
@@ -31,10 +31,6 @@ export default class AuthStatusCommand extends EverywhereBaseCommand {
     const gateway = saved.auth?.gateway ?? DEFAULT_GATEWAY;
     const gatewayDisplay = gateway === DEFAULT_GATEWAY ? gateway : chalk.white.bold(gateway);
     this.log(`Gateway: ${gatewayDisplay}`);
-
-    const https = saved.auth?.https ?? DEFAULT_HTTPS;
-    const httpsDisplay = https ? chalk.green('yes') : chalk.red.bold('no');
-    this.log(`HTTPS: ${httpsDisplay}`);
 
     const payload = decodeToken(token);
     const expiryValue = payload.exp ? new Date(payload.exp * 1000).toLocaleString() : 'unknown';
