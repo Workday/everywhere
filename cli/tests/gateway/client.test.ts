@@ -281,6 +281,62 @@ describe('GatewayClient', () => {
         expect.stringMatching(/^Request failed: socket hang up \(\d+ms\)$/)
       );
     });
+
+    it('logs the response body preview on non-2xx', async () => {
+      vi.stubGlobal(
+        'fetch',
+        vi
+          .fn()
+          .mockResolvedValue(
+            new Response('{"error":"invalid manifest"}', { status: 400, statusText: 'Bad Request' })
+          )
+      );
+      const logger = makeLogger();
+      const client = new GatewayClient({
+        gateway: 'https://api.example.com',
+        token: 'tok',
+        logger,
+      });
+
+      await client.request({ method: 'GET', path: '/x' }).catch(() => {});
+
+      expect(logger.log).toHaveBeenCalledWith('Response body: {"error":"invalid manifest"}');
+    });
+
+    it('does not log a response body line when the body is empty', async () => {
+      vi.stubGlobal(
+        'fetch',
+        vi.fn().mockResolvedValue(new Response('', { status: 500, statusText: 'Server Error' }))
+      );
+      const logger = makeLogger();
+      const client = new GatewayClient({
+        gateway: 'https://api.example.com',
+        token: 'tok',
+        logger,
+      });
+
+      await client.request({ method: 'GET', path: '/x' }).catch(() => {});
+
+      const bodyCalls = logger.log.mock.calls.filter(
+        ([msg]) => typeof msg === 'string' && msg.startsWith('Response body:')
+      );
+      expect(bodyCalls).toHaveLength(0);
+    });
+
+    it('truncates response body longer than 500 characters', async () => {
+      const longBody = 'x'.repeat(800);
+      vi.stubGlobal('fetch', vi.fn().mockResolvedValue(new Response(longBody, { status: 500 })));
+      const logger = makeLogger();
+      const client = new GatewayClient({
+        gateway: 'https://api.example.com',
+        token: 'tok',
+        logger,
+      });
+
+      await client.request({ method: 'GET', path: '/x' }).catch(() => {});
+
+      expect(logger.log).toHaveBeenCalledWith(`Response body: ${'x'.repeat(500)}… (truncated)`);
+    });
   });
 
   describe('getJson', () => {

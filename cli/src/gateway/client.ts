@@ -145,6 +145,18 @@ export class GatewayClient {
     }
 
     if (!response.ok) {
+      if (this.logger?.isVerbose) {
+        let body = '';
+        try {
+          body = await response.text();
+        } catch {
+          // unreadable body — skip
+        }
+        if (body.length > 0) {
+          const preview = body.length > 500 ? `${body.slice(0, 500)}… (truncated)` : body;
+          this.logger.log(`Response body: ${preview}`);
+        }
+      }
       throw new GatewayRequestError(
         `${opts.method} ${url} failed: HTTP ${response.status} ${response.statusText}`,
         { method: opts.method, url, status: response.status }
