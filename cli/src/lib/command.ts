@@ -3,7 +3,7 @@ import * as fs from 'node:fs';
 import * as path from 'node:path';
 
 import { setPluginDir } from '../config.js';
-import type { VerboseLogger } from '../gateway/client.js';
+import { GatewayRequestError, type VerboseLogger } from '../gateway/client.js';
 
 const PLUGIN_EXTENSIONS = ['.tsx', '.ts'];
 
@@ -30,6 +30,11 @@ export default abstract class EverywhereBaseCommand extends Command {
       enumerable: true,
       configurable: true,
     }) as VerboseLogger;
+  }
+
+  protected surfaceGatewayError(err: unknown): never {
+    if (err instanceof GatewayRequestError) this.error(err.message);
+    throw err;
   }
 
   protected get pluginDir(): string {

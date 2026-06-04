@@ -3,7 +3,7 @@ import { Flags } from '@oclif/core';
 import EverywhereBaseCommand from '../../../lib/command.js';
 import { appConfig } from '../../../config.js';
 import { DEFAULT_GATEWAY } from '../../../auth/defaults.js';
-import { GatewayClient, GatewayRequestError } from '../../../gateway/client.js';
+import { GatewayClient } from '../../../gateway/client.js';
 
 export default class AuthTokenCommand extends EverywhereBaseCommand {
   static description = 'Fetch and display an access token from the gateway.';
@@ -32,8 +32,7 @@ export default class AuthTokenCommand extends EverywhereBaseCommand {
     try {
       body = await client.getText('/api/v1/auth/token');
     } catch (err) {
-      if (err instanceof GatewayRequestError) this.error(err.message);
-      throw err;
+      this.surfaceGatewayError(err);
     }
 
     if (flags.json) {

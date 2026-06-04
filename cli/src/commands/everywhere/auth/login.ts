@@ -6,7 +6,7 @@ import { appConfig } from '../../../config.js';
 import { DEFAULT_GATEWAY } from '../../../auth/defaults.js';
 import { parseGatewayUrl } from '../../../auth/gateway.js';
 import { decodeToken } from '../../../auth/token.js';
-import { GatewayClient, GatewayRequestError } from '../../../gateway/client.js';
+import { GatewayClient } from '../../../gateway/client.js';
 
 export default class AuthLoginCommand extends EverywhereBaseCommand {
   static description = 'Authenticate with a Workday server using an access token.';
@@ -52,8 +52,7 @@ export default class AuthLoginCommand extends EverywhereBaseCommand {
     try {
       body = await client.getJson('/api/v1/me');
     } catch (err) {
-      if (err instanceof GatewayRequestError) this.error(err.message);
-      throw err;
+      this.surfaceGatewayError(err);
     }
 
     if (
