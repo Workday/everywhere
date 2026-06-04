@@ -208,6 +208,30 @@ describe('everywhere auth login', () => {
         );
       });
 
+      it('unwraps the underlying cause when fetch throws with a cause', async () => {
+        const cause = Object.assign(new Error('unable to get local issuer certificate'), {
+          code: 'UNABLE_TO_GET_ISSUER_CERT_LOCALLY',
+        });
+        const err = new TypeError('fetch failed', { cause });
+        vi.stubGlobal('fetch', vi.fn().mockRejectedValue(err));
+
+        await cmd.run().catch(() => {});
+
+        expect(logSpy).toHaveBeenCalledWith(
+          'Token verification request failed: UNABLE_TO_GET_ISSUER_CERT_LOCALLY: unable to get local issuer certificate'
+        );
+      });
+
+      it('falls back to the cause message when no code is present', async () => {
+        const cause = new Error('socket hang up');
+        const err = new TypeError('fetch failed', { cause });
+        vi.stubGlobal('fetch', vi.fn().mockRejectedValue(err));
+
+        await cmd.run().catch(() => {});
+
+        expect(logSpy).toHaveBeenCalledWith('Token verification request failed: socket hang up');
+      });
+
       it('logs the identity on successful verification', async () => {
         vi.stubGlobal(
           'fetch',

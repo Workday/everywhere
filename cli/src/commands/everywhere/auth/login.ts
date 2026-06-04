@@ -6,6 +6,16 @@ import { appConfig } from '../../../config.js';
 import { DEFAULT_GATEWAY, DEFAULT_HTTPS } from '../../../auth/defaults.js';
 import { decodeToken } from '../../../auth/token.js';
 
+function describeFetchError(err: unknown): string {
+  if (!(err instanceof Error)) return String(err);
+  let current: Error = err;
+  while (current.cause instanceof Error) {
+    current = current.cause;
+  }
+  const code = (current as { code?: unknown }).code;
+  return typeof code === 'string' ? `${code}: ${current.message}` : current.message;
+}
+
 export default class AuthLoginCommand extends EverywhereBaseCommand {
   static description = 'Authenticate with a Workday server using an access token.';
 
@@ -57,7 +67,7 @@ export default class AuthLoginCommand extends EverywhereBaseCommand {
         },
       });
     } catch (err) {
-      const message = err instanceof Error ? err.message : String(err);
+      const message = describeFetchError(err);
       if (this.isVerbose) {
         this.log(`Token verification request failed: ${message}`);
       }
