@@ -1,77 +1,72 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+
+vi.mock('../../src/gateway/client.js', async () => {
+  const actual = await vi.importActual<typeof import('../../src/gateway/client.js')>(
+    '../../src/gateway/client.js'
+  );
+  return {
+    ...actual,
+    GatewayClient: vi.fn(),
+  };
+});
+
 import { deleteFromRegistry } from '../../src/registry/registry.js';
+import { GatewayClient, GatewayRequestError } from '../../src/gateway/client.js';
 
 describe('deleteFromRegistry', () => {
   const baseOptions = {
-    gateway: 'http://registry.example.com',
+    gateway: 'https://registry.example.com',
     token: 'test-token',
     appId: 'abc123',
   };
+  let deleteSpy: ReturnType<typeof vi.fn>;
+
+  beforeEach(() => {
+    deleteSpy = vi.fn().mockResolvedValue(undefined);
+    vi.mocked(GatewayClient).mockImplementation(function () {
+      return { delete: deleteSpy } as unknown as InstanceType<typeof GatewayClient>;
+    });
+  });
 
   afterEach(() => {
     vi.restoreAllMocks();
-    vi.unstubAllGlobals();
   });
 
-  describe('when the delete succeeds', () => {
-    beforeEach(() => {
-      vi.stubGlobal(
-        'fetch',
-        vi.fn().mockResolvedValue({
-          ok: true,
-        })
-      );
-    });
+  it('constructs the client with the gateway and token', async () => {
+    await deleteFromRegistry(baseOptions);
 
-    it('sends a DELETE request to the http app endpoint when the gateway is http', async () => {
-      await deleteFromRegistry(baseOptions);
-      expect(fetch).toHaveBeenCalledWith(
-        new URL('http://registry.example.com/api/v1/app/abc123'),
-        expect.objectContaining({ method: 'DELETE' })
-      );
-    });
-
-    it('sends a DELETE request to the https app endpoint when the gateway is https', async () => {
-      await deleteFromRegistry({ ...baseOptions, gateway: 'https://registry.example.com' });
-      expect(fetch).toHaveBeenCalledWith(
-        new URL('https://registry.example.com/api/v1/app/abc123'),
-        expect.objectContaining({ method: 'DELETE' })
-      );
-    });
-
-    it('includes the authorization bearer token in the request header', async () => {
-      await deleteFromRegistry(baseOptions);
-      expect(fetch).toHaveBeenCalledWith(
-        expect.anything(),
-        expect.objectContaining({
-          headers: { Authorization: 'Bearer test-token' },
-        })
-      );
+    expect(GatewayClient).toHaveBeenCalledWith({
+      gateway: 'https://registry.example.com',
+      token: 'test-token',
     });
   });
 
-  describe('when the server returns a non-OK response', () => {
-    it('throws with a delete error message', async () => {
-      vi.stubGlobal(
-        'fetch',
-        vi.fn().mockResolvedValue({
-          ok: false,
-        })
-      );
+  it('issues a DELETE for the app id path', async () => {
+    await deleteFromRegistry(baseOptions);
 
-      await expect(deleteFromRegistry(baseOptions)).rejects.toThrow(
-        'There was an error unpublishing your plugin from the registry'
-      );
-    });
+    expect(deleteSpy).toHaveBeenCalledWith('/api/v1/app/abc123');
   });
 
-  describe('when the network request fails', () => {
-    it('throws with a failure message that includes the cause', async () => {
-      vi.stubGlobal('fetch', vi.fn().mockRejectedValue(new Error('connection refused')));
+  it('wraps GatewayRequestError with an unpublish message', async () => {
+    deleteSpy.mockRejectedValue(
+      new GatewayRequestError(
+        'DELETE https://registry.example.com/api/v1/app/abc123 failed: HTTP 500',
+        {
+          method: 'DELETE',
+          url: 'https://registry.example.com/api/v1/app/abc123',
+          status: 500,
+        }
+      )
+    );
 
-      await expect(deleteFromRegistry(baseOptions)).rejects.toThrow(
-        'Failed to unpublish plugin: connection refused'
-      );
-    });
+    await expect(deleteFromRegistry(baseOptions)).rejects.toThrow(
+      'Failed to unpublish plugin: DELETE https://registry.example.com/api/v1/app/abc123 failed: HTTP 500'
+    );
+  });
+
+  it('rethrows non-GatewayRequestError errors as-is', async () => {
+    deleteSpy.mockRejectedValue(new Error('something else'));
+
+    await expect(deleteFromRegistry(baseOptions)).rejects.toThrow('something else');
   });
 });

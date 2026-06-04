@@ -1,4 +1,5 @@
 import * as fs from 'node:fs';
+import { GatewayClient, GatewayRequestError } from '../gateway/client.js';
 
 export interface RegistryUploadOptions {
   gateway: string;
@@ -52,22 +53,15 @@ export interface RegistryDeleteOptions {
 
 export async function deleteFromRegistry(options: RegistryDeleteOptions): Promise<void> {
   const { gateway, token, appId } = options;
+  const client = new GatewayClient({ gateway, token });
 
-  const url = new URL(`/api/v1/app/${appId}`, gateway);
-
-  let response: Response;
   try {
-    response = await fetch(url, {
-      method: 'DELETE',
-      headers: { Authorization: `Bearer ${token}` },
-    });
-  } catch (error: unknown) {
-    const message = error instanceof Error ? error.message : 'Unknown error occurred';
-    throw new Error(`Failed to unpublish plugin: ${message}`, { cause: error });
-  }
-
-  if (!response.ok) {
-    throw new Error('There was an error unpublishing your plugin from the registry');
+    await client.delete(`/api/v1/app/${appId}`);
+  } catch (err) {
+    if (err instanceof GatewayRequestError) {
+      throw new Error(`Failed to unpublish plugin: ${err.message}`, { cause: err });
+    }
+    throw err;
   }
 }
 
@@ -75,28 +69,23 @@ export async function uploadToRegistry(
   options: RegistryUploadOptions
 ): Promise<RegistryUploadResult> {
   const { gateway, token, archivePath } = options;
-
-  const url = new URL('/api/v1/apps/publish', gateway);
+  const client = new GatewayClient({ gateway, token });
 
   const blob = await fs.openAsBlob(archivePath, { type: 'application/zip' });
 
   let response: Response;
   try {
-    response = await fetch(url, {
+    response = await client.request({
       method: 'POST',
-      headers: {
-        Authorization: `Bearer ${token}`,
-        'Content-Type': 'application/zip',
-      },
+      path: '/api/v1/apps/publish',
       body: blob,
+      headers: { 'Content-Type': 'application/zip' },
     });
-  } catch (error: unknown) {
-    const message = error instanceof Error ? error.message : 'Unknown error occurred';
-    throw new Error(`Failed to upload plugin: ${message}`, { cause: error });
-  }
-
-  if (!response.ok) {
-    throw new Error('There was an error uploading your plugin to the registry');
+  } catch (err) {
+    if (err instanceof GatewayRequestError) {
+      throw new Error(`Failed to upload plugin: ${err.message}`, { cause: err });
+    }
+    throw err;
   }
 
   const body: unknown = await response.json();
