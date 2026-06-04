@@ -347,4 +347,46 @@ describe('GatewayClient', () => {
       await expect(client.delete('/x')).resolves.toBeUndefined();
     });
   });
+
+  describe('fromCommand', () => {
+    beforeEach(() => {
+      vi.unstubAllGlobals();
+    });
+
+    it('creates a client that uses the command for logging', async () => {
+      const cmd = {
+        get isVerbose() {
+          return true;
+        },
+        log: vi.fn(),
+      };
+      vi.stubGlobal('fetch', vi.fn().mockResolvedValue(new Response(null, { status: 200 })));
+
+      const client = GatewayClient.fromCommand(
+        cmd as unknown as Parameters<typeof GatewayClient.fromCommand>[0],
+        { gateway: 'https://api.example.com', token: 'tok' }
+      );
+      await client.request({ method: 'GET', path: '/x' });
+
+      expect(cmd.log).toHaveBeenCalledWith('Requesting GET https://api.example.com/x');
+    });
+
+    it('does not log when command isVerbose is false', async () => {
+      const cmd = {
+        get isVerbose() {
+          return false;
+        },
+        log: vi.fn(),
+      };
+      vi.stubGlobal('fetch', vi.fn().mockResolvedValue(new Response(null, { status: 200 })));
+
+      const client = GatewayClient.fromCommand(
+        cmd as unknown as Parameters<typeof GatewayClient.fromCommand>[0],
+        { gateway: 'https://api.example.com', token: 'tok' }
+      );
+      await client.request({ method: 'GET', path: '/x' });
+
+      expect(cmd.log).not.toHaveBeenCalled();
+    });
+  });
 });

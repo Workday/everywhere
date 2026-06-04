@@ -52,6 +52,22 @@ export class GatewayClient {
   private readonly token: string;
   private readonly logger?: VerboseLogger;
 
+  static fromCommand(
+    cmd: { readonly isVerbose: boolean; log(message: string): void },
+    opts: { gateway: string; token: string }
+  ): GatewayClient {
+    return new GatewayClient({
+      gateway: opts.gateway,
+      token: opts.token,
+      logger: {
+        get isVerbose() {
+          return cmd.isVerbose;
+        },
+        log: (msg) => cmd.log(msg),
+      },
+    });
+  }
+
   constructor(opts: ClientOptions) {
     this.gateway = opts.gateway;
     this.token = opts.token;
