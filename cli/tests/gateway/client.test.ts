@@ -282,6 +282,45 @@ describe('GatewayClient', () => {
       );
     });
 
+    it('logs X-Request-Id when present in the response', async () => {
+      vi.stubGlobal(
+        'fetch',
+        vi.fn().mockResolvedValue(
+          new Response(null, {
+            status: 200,
+            headers: { 'X-Request-Id': 'abc-123' },
+          })
+        )
+      );
+      const logger = makeLogger();
+      const client = new GatewayClient({
+        gateway: 'https://api.example.com',
+        token: 'tok',
+        logger,
+      });
+
+      await client.request({ method: 'GET', path: '/x' });
+
+      expect(logger.log).toHaveBeenCalledWith('X-Request-Id: abc-123');
+    });
+
+    it('does not log X-Request-Id when absent', async () => {
+      vi.stubGlobal('fetch', vi.fn().mockResolvedValue(new Response(null, { status: 200 })));
+      const logger = makeLogger();
+      const client = new GatewayClient({
+        gateway: 'https://api.example.com',
+        token: 'tok',
+        logger,
+      });
+
+      await client.request({ method: 'GET', path: '/x' });
+
+      const idCalls = logger.log.mock.calls.filter(
+        ([msg]) => typeof msg === 'string' && msg.startsWith('X-Request-Id:')
+      );
+      expect(idCalls).toHaveLength(0);
+    });
+
     it('logs the response body preview on non-2xx', async () => {
       vi.stubGlobal(
         'fetch',

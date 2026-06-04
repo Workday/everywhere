@@ -142,6 +142,10 @@ export class GatewayClient {
       this.logger.log(
         `Response: ${response.status} ${response.statusText} (${Date.now() - start}ms)`
       );
+      const requestId = response.headers.get('x-request-id');
+      if (requestId) {
+        this.logger.log(`X-Request-Id: ${requestId}`);
+      }
     }
 
     if (!response.ok) {
