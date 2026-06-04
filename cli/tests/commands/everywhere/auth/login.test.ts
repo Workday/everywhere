@@ -166,6 +166,28 @@ describe('everywhere auth login', () => {
 
         expect(logSpy).toHaveBeenCalledWith('Verifying token at https://gateway.example.com/api/v1/me');
       });
+
+      it('logs the response status on success', async () => {
+        vi.stubGlobal(
+          'fetch',
+          vi.fn().mockResolvedValue({ ok: true, status: 200, statusText: 'OK' })
+        );
+
+        await cmd.run();
+
+        expect(logSpy).toHaveBeenCalledWith('Token verification response: 200 OK');
+      });
+
+      it('logs the response status before failing on non-2xx', async () => {
+        vi.stubGlobal(
+          'fetch',
+          vi.fn().mockResolvedValue({ ok: false, status: 401, statusText: 'Unauthorized' })
+        );
+
+        await cmd.run().catch(() => {});
+
+        expect(logSpy).toHaveBeenCalledWith('Token verification response: 401 Unauthorized');
+      });
     });
   });
 });

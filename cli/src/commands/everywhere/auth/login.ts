@@ -61,6 +61,10 @@ export default class AuthLoginCommand extends EverywhereBaseCommand {
       this.error(`Token validation request failed: ${message}`);
     }
 
+    if (this.isVerbose) {
+      this.log(`Token verification response: ${response.status} ${response.statusText}`);
+    }
+
     if (!response.ok) {
       this.error(`Token validation failed (HTTP ${response.status}).`);
     }
