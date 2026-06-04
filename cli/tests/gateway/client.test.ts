@@ -116,5 +116,45 @@ describe('GatewayClient', () => {
         status: 401,
       });
     });
+
+    it('throws GatewayRequestError with code when fetch throws with a cause', async () => {
+      const cause = Object.assign(new Error('unable to get local issuer certificate'), {
+        code: 'UNABLE_TO_GET_ISSUER_CERT_LOCALLY',
+      });
+      const fetchErr = new TypeError('fetch failed', { cause });
+      vi.stubGlobal('fetch', vi.fn().mockRejectedValue(fetchErr));
+      const client = new GatewayClient({ gateway: 'https://api.example.com', token: 'tok' });
+
+      await expect(client.request({ method: 'GET', path: '/x' })).rejects.toMatchObject({
+        name: 'GatewayRequestError',
+        method: 'GET',
+        url: 'https://api.example.com/x',
+        code: 'UNABLE_TO_GET_ISSUER_CERT_LOCALLY',
+      });
+    });
+
+    it('formats the message with the unwrapped cause', async () => {
+      const cause = Object.assign(new Error('unable to get local issuer certificate'), {
+        code: 'UNABLE_TO_GET_ISSUER_CERT_LOCALLY',
+      });
+      const fetchErr = new TypeError('fetch failed', { cause });
+      vi.stubGlobal('fetch', vi.fn().mockRejectedValue(fetchErr));
+      const client = new GatewayClient({ gateway: 'https://api.example.com', token: 'tok' });
+
+      await expect(client.request({ method: 'GET', path: '/x' })).rejects.toThrow(
+        'GET https://api.example.com/x failed: UNABLE_TO_GET_ISSUER_CERT_LOCALLY: unable to get local issuer certificate'
+      );
+    });
+
+    it('falls back to message when no code is present', async () => {
+      const cause = new Error('socket hang up');
+      const fetchErr = new TypeError('fetch failed', { cause });
+      vi.stubGlobal('fetch', vi.fn().mockRejectedValue(fetchErr));
+      const client = new GatewayClient({ gateway: 'https://api.example.com', token: 'tok' });
+
+      await expect(client.request({ method: 'GET', path: '/x' })).rejects.toThrow(
+        'GET https://api.example.com/x failed: socket hang up'
+      );
+    });
   });
 });

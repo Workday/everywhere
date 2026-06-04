@@ -33,6 +33,20 @@ export class GatewayRequestError extends Error {
   }
 }
 
+function describeFetchError(err: unknown): { message: string; code?: string; cause: Error } {
+  if (!(err instanceof Error)) {
+    return { message: String(err), cause: new Error(String(err)) };
+  }
+  let current: Error = err;
+  while (current.cause instanceof Error) {
+    current = current.cause;
+  }
+  const code = (current as { code?: unknown }).code;
+  const codeStr = typeof code === 'string' ? code : undefined;
+  const message = codeStr ? `${codeStr}: ${current.message}` : current.message;
+  return { message, code: codeStr, cause: err };
+}
+
 export class GatewayClient {
   private readonly gateway: string;
   private readonly token: string;
@@ -56,11 +70,22 @@ export class GatewayClient {
       ...(opts.headers ?? {}),
     };
 
-    const response = await fetch(url, {
-      method: opts.method,
-      headers,
-      body: opts.body,
-    });
+    let response: Response;
+    try {
+      response = await fetch(url, {
+        method: opts.method,
+        headers,
+        body: opts.body,
+      });
+    } catch (err) {
+      const described = describeFetchError(err);
+      throw new GatewayRequestError(`${opts.method} ${url} failed: ${described.message}`, {
+        method: opts.method,
+        url,
+        code: described.code,
+        cause: described.cause,
+      });
+    }
 
     if (!response.ok) {
       throw new GatewayRequestError(
