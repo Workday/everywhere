@@ -123,7 +123,7 @@ npx @workday/everywhere auth status
 Navigate to the example directory and install dependencies:
 
 ```sh
-cd examples/create-work-event
+cd examples/work-events
 npm install
 ```
 
@@ -152,7 +152,7 @@ Once you're satisfied with the plugin, package it for distribution:
 npx @workday/everywhere build
 ```
 
-This generates a distributable zip file at `dist/create-work-event-<version>.zip` containing:
+This generates a distributable zip file at `dist/work-events-<version>.zip` containing:
 
 - `package.json` - Plugin metadata
 - `plugin.js` - Bundled plugin code
@@ -175,7 +175,7 @@ discover and install.
 ## Project Structure
 
 ```
-create-work-event/
+work-events/
 ├── plugin.tsx                 # Main plugin entry point
 ├── routes.ts                  # Route definitions for all pages
 ├── package.json               # Project metadata and dependencies

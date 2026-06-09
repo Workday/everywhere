@@ -1,6 +1,6 @@
 {
-  "name": "create-work-event",
-  "title": "Create Work Event",
+  "name": "work-events",
+  "title": "Events",
   "version": "1.0.0",
   "description": "",
   "license": "ISC",
