@@ -1149,62 +1149,50 @@ npx vitest run cli/tests/data/proxy-forwarder.test.ts
 
 Expected: 4 passes.
 
-- [ ] **Step 6.6: Add forwarder integration tests using a local upstream**
+- [ ] **Step 6.6: Add forwarder behavior tests (using a mocked global `fetch`)**
+
+The forwarder uses `globalThis.fetch` to call upstream Workday. Tests mock that
+instead of standing up a local server — simpler, deterministic, no race conditions.
 
 Append to `cli/tests/data/proxy-forwarder.test.ts`:
 
 ```ts
-import { createServer } from 'node:http';
-import type { AddressInfo } from 'node:net';
+import type { IncomingMessage, ServerResponse } from 'node:http';
+import { vi, afterEach } from 'vitest';
 import { createProxyForwarder } from '../../src/data/proxy-forwarder.js';
 
-interface CapturedUpstream {
-  method?: string;
-  path?: string;
-  headers?: Record<string, unknown>;
-  body?: string;
+interface FakeRes {
+  res: ServerResponse;
+  status: () => number;
+  headers: () => Record<string, string>;
+  body: () => string;
 }
 
-async function withUpstream<T>(
-  handler: (captured: CapturedUpstream, req: IncomingMessage, res: ServerResponse) => void,
-  fn: (gateway: string) => Promise<T>
-): Promise<T> {
-  const captured: CapturedUpstream = {};
-  const server = createServer((req, res) => {
-    const chunks: Buffer[] = [];
-    req.on('data', (c: Buffer) => chunks.push(c));
-    req.on('end', () => {
-      captured.method = req.method;
-      captured.path = req.url;
-      captured.headers = req.headers as unknown as Record<string, unknown>;
-      captured.body = Buffer.concat(chunks).toString();
-      handler(captured, req, res);
-    });
-  });
-  await new Promise<void>((resolve) => server.listen(0, '127.0.0.1', resolve));
-  const port = (server.address() as AddressInfo).port;
-  try {
-    return await fn(`http://127.0.0.1:${port}`);
-  } finally {
-    await new Promise<void>((resolve) => server.close(() => resolve()));
-  }
-}
-
-import type { IncomingMessage, ServerResponse } from 'node:http';
-
-function fakeResponse(): { res: ServerResponse; status: () => number; body: () => string } {
+function fakeResponse(): FakeRes {
   let status = 0;
   let body = '';
+  let headers: Record<string, string> = {};
   const res = {
-    writeHead(s: number) { status = s; return res; },
-    end(b?: string) { body = b ?? ''; return res; },
+    writeHead(s: number, h?: Record<string, string>) {
+      status = s;
+      if (h) headers = h;
+      return res;
+    },
+    end(b?: string) {
+      body = b ?? '';
+      return res;
+    },
     setHeader() {},
   } as unknown as ServerResponse;
-  return { res, status: () => status, body: () => body };
+  return { res, status: () => status, headers: () => headers, body: () => body };
 }
 
-function fakeRequest(opts: { method: string; url: string; body?: string; headers?: Record<string, string> }): IncomingMessage {
-  // EventEmitter-like minimal shim
+function fakeRequest(opts: {
+  method: string;
+  url: string;
+  body?: string;
+  headers?: Record<string, string>;
+}): IncomingMessage {
   const listeners: Record<string, ((arg: unknown) => void)[]> = {};
   const req = {
     method: opts.method,
@@ -1216,7 +1204,6 @@ function fakeRequest(opts: { method: string; url: string; body?: string; headers
       return req;
     },
   } as unknown as IncomingMessage;
-  // emit body asynchronously
   setImmediate(() => {
     if (opts.body) listeners['data']?.forEach((l) => l(Buffer.from(opts.body!)));
     listeners['end']?.forEach((l) => l(undefined));
@@ -1224,59 +1211,142 @@ function fakeRequest(opts: { method: string; url: string; body?: string; headers
   return req;
 }
 
+const originalFetch = globalThis.fetch;
+afterEach(() => {
+  globalThis.fetch = originalFetch;
+});
+
+function mockFetch(impl: (url: string, init: RequestInit) => Promise<Response>): ReturnType<typeof vi.fn> {
+  const mock = vi.fn().mockImplementation(impl);
+  globalThis.fetch = mock as unknown as typeof fetch;
+  return mock;
+}
+
+function okResponse(body = '{}'): Response {
+  return new Response(body, { status: 200, headers: { 'content-type': 'application/json' } });
+}
+
 describe('createProxyForwarder', () => {
   describe('upstream forwarding', () => {
-    it('rewrites the path and forwards the request', async () => {
-      await withUpstream(
-        (_c, _req, res) => { res.writeHead(200, { 'content-type': 'application/json' }); res.end('{"ok":true}'); },
-        async (gateway) => {
-          const captured: CapturedUpstream = {};
-          await withUpstream(
-            (c, _r, res) => { Object.assign(captured, c); res.writeHead(200, { 'content-type': 'application/json' }); res.end('{"ok":true}'); },
-            async (gw) => {
-              const forwarder = createProxyForwarder({ gateway: gw, tenant: 'acmeco', getToken: async () => 'tok' });
-              const { res } = fakeResponse();
-              await forwarder(fakeRequest({ method: 'GET', url: '/api/v1/proxy/common/v1/workers/me' }), res);
-              await new Promise((r) => setTimeout(r, 10));
-              expect(captured.path).toBe('/ccx/api/common/v1/acmeco/workers/me');
-            }
-          );
-          return gateway;
-        }
+    it('rewrites the path before calling upstream', async () => {
+      const fetchMock = mockFetch(async () => okResponse());
+      const forwarder = createProxyForwarder({
+        gateway: 'https://impl.example',
+        tenant: 'acmeco',
+        getToken: async () => 'tok',
+      });
+      const { res } = fakeResponse();
+      await forwarder(
+        fakeRequest({ method: 'GET', url: '/api/v1/proxy/common/v1/workers/me' }),
+        res
       );
+      expect(fetchMock.mock.calls[0]?.[0]).toBe(
+        'https://impl.example/ccx/api/common/v1/acmeco/workers/me'
+      );
+    });
+
+    it('forwards the HTTP method', async () => {
+      const fetchMock = mockFetch(async () => okResponse());
+      const forwarder = createProxyForwarder({
+        gateway: 'https://impl.example',
+        tenant: 'acmeco',
+        getToken: async () => 'tok',
+      });
+      const { res } = fakeResponse();
+      await forwarder(
+        fakeRequest({ method: 'POST', url: '/api/v1/proxy/common/v1/workers/me', body: '{}' }),
+        res
+      );
+      const init = fetchMock.mock.calls[0]?.[1] as RequestInit;
+      expect(init.method).toBe('POST');
+    });
+
+    it('passes upstream status through to the response', async () => {
+      mockFetch(async () => new Response('{"err":true}', { status: 418 }));
+      const forwarder = createProxyForwarder({
+        gateway: 'https://impl.example',
+        tenant: 'acmeco',
+        getToken: async () => 'tok',
+      });
+      const { res, status } = fakeResponse();
+      await forwarder(
+        fakeRequest({ method: 'GET', url: '/api/v1/proxy/common/v1/workers/me' }),
+        res
+      );
+      expect(status()).toBe(418);
     });
   });
 
   describe('auth header', () => {
-    it('injects Bearer <token> in the Authorization header', async () => {
-      await withUpstream(
-        (captured, _r, res) => {
-          expect(captured.headers?.['authorization']).toBe('Bearer my-token');
-          res.writeHead(200, { 'content-type': 'application/json' });
-          res.end('{}');
-        },
-        async (gateway) => {
-          const forwarder = createProxyForwarder({ gateway, tenant: 'acmeco', getToken: async () => 'my-token' });
-          const { res } = fakeResponse();
-          await forwarder(fakeRequest({ method: 'GET', url: '/api/v1/proxy/common/v1/workers/me' }), res);
-          await new Promise((r) => setTimeout(r, 10));
-        }
+    it('injects Authorization: Bearer <token>', async () => {
+      const fetchMock = mockFetch(async () => okResponse());
+      const forwarder = createProxyForwarder({
+        gateway: 'https://impl.example',
+        tenant: 'acmeco',
+        getToken: async () => 'my-token',
+      });
+      const { res } = fakeResponse();
+      await forwarder(
+        fakeRequest({ method: 'GET', url: '/api/v1/proxy/common/v1/workers/me' }),
+        res
       );
+      const init = fetchMock.mock.calls[0]?.[1] as RequestInit;
+      expect((init.headers as Record<string, string>)['authorization']).toBe('Bearer my-token');
     });
   });
 
   describe('missing token', () => {
     it('responds 401 without contacting upstream', async () => {
-      const forwarder = createProxyForwarder({ gateway: 'http://unreachable.invalid', tenant: 'acmeco', getToken: async () => null });
+      const fetchMock = mockFetch(async () => okResponse());
+      const forwarder = createProxyForwarder({
+        gateway: 'https://impl.example',
+        tenant: 'acmeco',
+        getToken: async () => null,
+      });
       const { res, status } = fakeResponse();
-      await forwarder(fakeRequest({ method: 'GET', url: '/api/v1/proxy/common/v1/workers/me' }), res);
+      await forwarder(
+        fakeRequest({ method: 'GET', url: '/api/v1/proxy/common/v1/workers/me' }),
+        res
+      );
       expect(status()).toBe(401);
+    });
+
+    it('does not call fetch when token is missing', async () => {
+      const fetchMock = mockFetch(async () => okResponse());
+      const forwarder = createProxyForwarder({
+        gateway: 'https://impl.example',
+        tenant: 'acmeco',
+        getToken: async () => null,
+      });
+      const { res } = fakeResponse();
+      await forwarder(
+        fakeRequest({ method: 'GET', url: '/api/v1/proxy/common/v1/workers/me' }),
+        res
+      );
+      expect(fetchMock).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('upstream failure', () => {
+    it('responds 502 when fetch rejects', async () => {
+      mockFetch(async () => {
+        throw new Error('connection refused');
+      });
+      const forwarder = createProxyForwarder({
+        gateway: 'https://impl.example',
+        tenant: 'acmeco',
+        getToken: async () => 'tok',
+      });
+      const { res, status } = fakeResponse();
+      await forwarder(
+        fakeRequest({ method: 'GET', url: '/api/v1/proxy/common/v1/workers/me' }),
+        res
+      );
+      expect(status()).toBe(502);
     });
   });
 });
 ```
-
-> NOTE FOR IMPLEMENTOR: the nested `withUpstream` calls in the first test above are accidental — collapse to one and capture inside it. Pattern: spin up upstream → invoke forwarder → assert against `captured.*`. Use the second test as the template for the first.
 
 - [ ] **Step 6.7: Run forwarder tests; confirm green**
 
@@ -1597,6 +1667,6 @@ with "per `cli/src/commands/everywhere/view.ts`" so the implementor verifies it.
 Task 2 and Task 5. `GraphQLClient` constructor signature is identical in Task 3 and Task 4.
 `DataProviderProps` field name (`client`) consistent in Tasks 5, 7, and the spec.
 
-**Known plan quirk:** Step 6.6's first integration test has accidentally-nested `withUpstream`
-calls; the inline note tells the implementor to collapse it. This is intentional — the working
-shape is identical to the second test below it, which serves as the template.
+**Note:** Step 6.6 mocks global `fetch` rather than standing up a local upstream server.
+This keeps tests deterministic, removes timing races, and matches the pattern used by
+`HttpClient.test.ts`.
