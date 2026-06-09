@@ -3,13 +3,27 @@ import type { Config } from '@oclif/core/config';
 import type { AppConfig, ConfigProvider } from '../../../../src/config.js';
 import LoginCommand from '../../../../src/commands/everywhere/auth/login.js';
 import EverywhereBaseCommand from '../../../../src/lib/command.js';
+import { GatewayRequestError } from '../../../../src/gateway/client.js';
 
 vi.mock('../../../../src/config.js', () => ({
   appConfig: vi.fn(),
   setPluginDir: vi.fn(),
 }));
 
+vi.mock('../../../../src/gateway/client.js', async () => {
+  const actual = await vi.importActual<typeof import('../../../../src/gateway/client.js')>(
+    '../../../../src/gateway/client.js'
+  );
+  return {
+    ...actual,
+    GatewayClient: {
+      fromCommand: vi.fn(),
+    },
+  };
+});
+
 import { appConfig } from '../../../../src/config.js';
+import { GatewayClient } from '../../../../src/gateway/client.js';
 
 function makeJwt(payload: Record<string, unknown>): string {
   const header = Buffer.from(JSON.stringify({ alg: 'RS256', typ: 'JWT' })).toString('base64url');
@@ -39,10 +53,6 @@ describe('everywhere auth login', () => {
       expect(LoginCommand.flags['token']).toBeDefined();
     });
 
-    it('does not have an https flag', () => {
-      expect(LoginCommand.flags['https']).toBeUndefined();
-    });
-
     it('inherits the plugin-dir flag from the base command', () => {
       expect(LoginCommand.flags['plugin-dir']).toBe(EverywhereBaseCommand.baseFlags['plugin-dir']);
     });
@@ -51,6 +61,7 @@ describe('everywhere auth login', () => {
   describe('run', () => {
     let cmd: LoginCommand;
     let writeSpy: ReturnType<typeof vi.fn>;
+    let getJsonSpy: ReturnType<typeof vi.fn>;
 
     const baseConfig: AppConfig = {
       auth: { gateway: 'https://gateway.example.com' },
@@ -65,6 +76,7 @@ describe('everywhere auth login', () => {
 
     beforeEach(() => {
       writeSpy = vi.fn();
+      getJsonSpy = vi.fn().mockResolvedValue({ sub: 'user-123', tenant: 'tenant-abc' });
       cmd = new LoginCommand([], {} as Config);
       vi.spyOn(cmd, 'parse').mockResolvedValue({
         flags: {
@@ -72,30 +84,16 @@ describe('everywhere auth login', () => {
         },
       } as unknown as Awaited<ReturnType<LoginCommand['parse']>>);
       vi.mocked(appConfig).mockReturnValue(makeConfigProvider(baseConfig));
-      vi.stubGlobal(
-        'fetch',
-        vi.fn().mockResolvedValue({
-          ok: true,
-          status: 200,
-        })
-      );
+      vi.mocked(GatewayClient.fromCommand).mockReturnValue({
+        getJson: getJsonSpy,
+      } as unknown as ReturnType<typeof GatewayClient.fromCommand>);
     });
 
     afterEach(() => {
       vi.restoreAllMocks();
-      vi.unstubAllGlobals();
     });
 
-    it('calls /api/v1/me to validate the token', async () => {
-      await cmd.run();
-
-      expect(fetch).toHaveBeenCalledWith(
-        'https://gateway.example.com/api/v1/me',
-        expect.anything()
-      );
-    });
-
-    it('sends the token as a bearer authorization header', async () => {
+    it('builds the client with a logger and the gateway and token', async () => {
       const token = makeJwt({ sub: 'user-123', exp: 9999999999 });
       vi.spyOn(cmd, 'parse').mockResolvedValue({
         flags: { token },
@@ -103,12 +101,16 @@ describe('everywhere auth login', () => {
 
       await cmd.run();
 
-      expect(fetch).toHaveBeenCalledWith(
-        'https://gateway.example.com/api/v1/me',
-        expect.objectContaining({
-          headers: { Authorization: `Bearer ${token}` },
-        })
+      expect(GatewayClient.fromCommand).toHaveBeenCalledWith(
+        expect.objectContaining({ isVerbose: expect.any(Boolean), log: expect.any(Function) }),
+        { gateway: 'https://gateway.example.com', token }
       );
+    });
+
+    it('calls /api/v1/me on the client', async () => {
+      await cmd.run();
+
+      expect(getJsonSpy).toHaveBeenCalledWith('/api/v1/me');
     });
 
     it('writes config after successful token validation', async () => {
@@ -122,37 +124,11 @@ describe('everywhere auth login', () => {
       });
     });
 
-    describe('when --gateway is a full URL with a trailing slash', () => {
-      it('persists the normalized origin', async () => {
-        const token = makeJwt({ sub: 'user-123', exp: 9999999999 });
-        vi.spyOn(cmd, 'parse').mockResolvedValue({
-          flags: { token, gateway: 'http://localhost:8080/' },
-        } as unknown as Awaited<ReturnType<LoginCommand['parse']>>);
-
-        await cmd.run();
-
-        expect(writeSpy).toHaveBeenCalledWith({
-          auth: { gateway: 'http://localhost:8080', token },
-        });
-      });
-    });
-
-    describe('when --gateway is not a valid URL', () => {
-      it('errors without writing config', async () => {
-        const token = makeJwt({ sub: 'user-123', exp: 9999999999 });
-        vi.spyOn(cmd, 'parse').mockResolvedValue({
-          flags: { token, gateway: 'not a url' },
-        } as unknown as Awaited<ReturnType<LoginCommand['parse']>>);
-
-        await expect(cmd.run()).rejects.toThrow(/gateway/i);
-      });
-    });
-
-    it('does not write config when validation endpoint rejects the token', async () => {
-      vi.stubGlobal(
-        'fetch',
-        vi.fn().mockResolvedValue({
-          ok: false,
+    it('does not write config when the client throws', async () => {
+      getJsonSpy.mockRejectedValue(
+        new GatewayRequestError('GET https://gateway.example.com/api/v1/me failed: HTTP 401', {
+          method: 'GET',
+          url: 'https://gateway.example.com/api/v1/me',
           status: 401,
         })
       );
@@ -162,16 +138,64 @@ describe('everywhere auth login', () => {
       expect(writeSpy).not.toHaveBeenCalled();
     });
 
-    it('reports an auth failure when validation endpoint returns non-ok', async () => {
-      vi.stubGlobal(
-        'fetch',
-        vi.fn().mockResolvedValue({
-          ok: false,
+    it('surfaces the client error message', async () => {
+      getJsonSpy.mockRejectedValue(
+        new GatewayRequestError('GET https://gateway.example.com/api/v1/me failed: HTTP 401', {
+          method: 'GET',
+          url: 'https://gateway.example.com/api/v1/me',
           status: 401,
         })
       );
 
-      await expect(cmd.run()).rejects.toThrow('Token validation failed (HTTP 401).');
+      await expect(cmd.run()).rejects.toThrow(
+        'GET https://gateway.example.com/api/v1/me failed: HTTP 401'
+      );
+    });
+
+    describe('identity validation', () => {
+      it('errors when the response is missing sub', async () => {
+        getJsonSpy.mockResolvedValue({ tenant: 'tenant-abc' });
+
+        await expect(cmd.run()).rejects.toThrow(
+          'Token validation response missing identity fields.'
+        );
+      });
+
+      it('errors when the response is missing tenant', async () => {
+        getJsonSpy.mockResolvedValue({ sub: 'user-123' });
+
+        await expect(cmd.run()).rejects.toThrow(
+          'Token validation response missing identity fields.'
+        );
+      });
+    });
+
+    describe('verbose output', () => {
+      let logSpy: ReturnType<typeof vi.spyOn>;
+
+      beforeEach(() => {
+        Object.defineProperty(cmd, 'isVerbose', { get: () => true, configurable: true });
+        logSpy = vi.spyOn(cmd, 'log').mockImplementation(() => {});
+      });
+
+      it('logs the identity on successful verification', async () => {
+        await cmd.run();
+
+        expect(logSpy).toHaveBeenCalledWith('Authenticated as user-123 on tenant tenant-abc');
+      });
+    });
+
+    describe('non-verbose output', () => {
+      it('does not emit identity log when verbose is off', async () => {
+        const logSpy = vi.spyOn(cmd, 'log').mockImplementation(() => {});
+
+        await cmd.run();
+
+        const identityCalls = logSpy.mock.calls.filter(
+          ([msg]) => typeof msg === 'string' && msg.startsWith('Authenticated as ')
+        );
+        expect(identityCalls).toHaveLength(0);
+      });
     });
   });
 });

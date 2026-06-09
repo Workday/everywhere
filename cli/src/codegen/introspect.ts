@@ -4,6 +4,7 @@ import * as path from 'node:path';
 import JSZip from 'jszip';
 import { appConfig } from '../config.js';
 import { DEFAULT_GATEWAY } from '../auth/defaults.js';
+import { GatewayClient, GatewayRequestError, type VerboseLogger } from '../gateway/client.js';
 
 interface GraphMetadata {
   dataSourceKey: string;
@@ -117,7 +118,8 @@ function buildQuery(graphPrefix: string, schemas: ModelSchema[]): string {
 export async function introspectGraphTypes<T extends ModelSchema>(
   schemas: T[],
   extendSourcePath: string,
-  isZip: boolean
+  isZip: boolean,
+  logger?: VerboseLogger
 ): Promise<IntrospectionOutcome> {
   const { auth = {} } = appConfig().read();
   if (!auth.token) {
@@ -167,34 +169,31 @@ export async function introspectGraphTypes<T extends ModelSchema>(
 
   const { referenceId } = manifest;
   const graphPrefix = referenceIdToGraphTypePrefix(referenceId);
-  const endpoint = new URL('/api/v1/data/graphql', gateway).toString();
   const query = buildQuery(graphPrefix, schemas);
+  const client = new GatewayClient({ gateway, token, logger });
 
   let response: Response;
   try {
-    response = await fetch(endpoint, {
+    response = await client.request({
       method: 'POST',
+      path: '/api/v1/data/graphql',
       headers: {
         accept: 'application/json',
         'content-type': 'application/json',
-        Authorization: `Bearer ${token}`,
       },
       body: JSON.stringify({ query }),
     });
   } catch (e) {
+    if (e instanceof GatewayRequestError) {
+      const kind = e.status !== undefined ? 'api-error' : 'network-error';
+      return { ok: false, reason: { kind, message: e.message } };
+    }
     return {
       ok: false,
       reason: {
         kind: 'network-error',
         message: e instanceof Error ? e.message : String(e),
       },
-    };
-  }
-
-  if (!response.ok) {
-    return {
-      ok: false,
-      reason: { kind: 'api-error', message: `HTTP ${response.status}: ${response.statusText}` },
     };
   }
 

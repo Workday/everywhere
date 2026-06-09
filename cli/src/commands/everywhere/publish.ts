@@ -38,6 +38,7 @@ export default class PublishCommand extends EverywhereBaseCommand {
       gateway,
       token,
       archivePath: archive.filePath,
+      logger: this,
     });
 
     this.log(this.formatSuccessMessage(result, config));

@@ -62,7 +62,8 @@ export default class BindCommand extends EverywhereBaseCommand {
     const introspectionOutcome = await introspectGraphTypes(
       parsed,
       result.source.path,
-      result.source.kind === 'zip'
+      result.source.kind === 'zip',
+      this
     );
     const { schemas, warnings } = applyIntrospectionOutcome(parsed, introspectionOutcome);
     if (verbose) {

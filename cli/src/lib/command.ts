@@ -3,10 +3,11 @@ import * as fs from 'node:fs';
 import * as path from 'node:path';
 
 import { setPluginDir } from '../config.js';
+import { GatewayRequestError, type VerboseLogger } from '../gateway/client.js';
 
 const PLUGIN_EXTENSIONS = ['.tsx', '.ts'];
 
-export default abstract class EverywhereBaseCommand extends Command {
+export default abstract class EverywhereBaseCommand extends Command implements VerboseLogger {
   static baseFlags = {
     'plugin-dir': Flags.directory({
       char: 'D',
@@ -19,8 +20,13 @@ export default abstract class EverywhereBaseCommand extends Command {
     }),
   };
 
-  protected get isVerbose(): boolean {
+  public get isVerbose(): boolean {
     return this._verbose;
+  }
+
+  protected surfaceGatewayError(err: unknown): never {
+    if (err instanceof GatewayRequestError) this.error(err.message);
+    throw err;
   }
 
   protected get pluginDir(): string {

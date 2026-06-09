@@ -3,6 +3,7 @@ import { Flags } from '@oclif/core';
 import EverywhereBaseCommand from '../../../lib/command.js';
 import { appConfig } from '../../../config.js';
 import { DEFAULT_GATEWAY } from '../../../auth/defaults.js';
+import { GatewayClient } from '../../../gateway/client.js';
 
 export default class AuthTokenCommand extends EverywhereBaseCommand {
   static description = 'Fetch and display an access token from the gateway.';
@@ -25,25 +26,14 @@ export default class AuthTokenCommand extends EverywhereBaseCommand {
     }
 
     const gateway = saved.auth?.gateway ?? DEFAULT_GATEWAY;
-    const url = new URL('/api/v1/auth/token', gateway).toString();
+    const client = GatewayClient.fromCommand(this, { gateway, token });
 
-    let response: Response;
+    let body: string;
     try {
-      response = await fetch(url, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
+      body = await client.getText('/api/v1/auth/token');
     } catch (err) {
-      const message = err instanceof Error ? err.message : String(err);
-      this.error(`Token request failed: ${message}`);
+      this.surfaceGatewayError(err);
     }
-
-    if (!response.ok) {
-      this.error(`Token request failed (HTTP ${response.status})`);
-    }
-
-    const body = await response.text();
 
     if (flags.json) {
       this.log(body);

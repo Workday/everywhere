@@ -6,6 +6,7 @@ import { appConfig } from '../../../config.js';
 import { DEFAULT_GATEWAY } from '../../../auth/defaults.js';
 import { parseGatewayUrl } from '../../../auth/gateway.js';
 import { decodeToken } from '../../../auth/token.js';
+import { GatewayClient } from '../../../gateway/client.js';
 
 export default class AuthLoginCommand extends EverywhereBaseCommand {
   static description = 'Authenticate with a Workday server using an access token.';
@@ -45,22 +46,26 @@ export default class AuthLoginCommand extends EverywhereBaseCommand {
       this.error('Invalid token format. Please provide a valid JWT.');
     }
 
-    const url = new URL('/api/v1/me', gateway).toString();
+    const client = GatewayClient.fromCommand(this, { gateway, token });
 
-    let response: Response;
+    let body: unknown;
     try {
-      response = await fetch(url, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
+      body = await client.getJson('/api/v1/me');
     } catch (err) {
-      const message = err instanceof Error ? err.message : String(err);
-      this.error(`Token validation request failed: ${message}`);
+      this.surfaceGatewayError(err);
     }
 
-    if (!response.ok) {
-      this.error(`Token validation failed (HTTP ${response.status}).`);
+    if (
+      !body ||
+      typeof body !== 'object' ||
+      typeof (body as Record<string, unknown>).sub !== 'string' ||
+      typeof (body as Record<string, unknown>).tenant !== 'string'
+    ) {
+      this.error('Token validation response missing identity fields.');
+    }
+    const identity = body as { sub: string; tenant: string };
+    if (this.isVerbose) {
+      this.log(`Authenticated as ${identity.sub} on tenant ${identity.tenant}`);
     }
 
     config.write({ auth: { gateway, token } });
