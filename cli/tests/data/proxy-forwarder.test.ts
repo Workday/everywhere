@@ -8,6 +8,16 @@ describe('rewriteProxyPath', () => {
       const out = rewriteProxyPath('/api/v1/proxy/common/v1/workers/me', 'acmeco');
       expect(out).toBe('/ccx/api/common/v1/acmeco/workers/me');
     });
+
+    it('preserves the query string', () => {
+      const out = rewriteProxyPath('/api/v1/proxy/common/v1/workers?limit=10', 'acmeco');
+      expect(out).toBe('/ccx/api/common/v1/acmeco/workers?limit=10');
+    });
+
+    it('preserves the query string when the path ends at the version', () => {
+      const out = rewriteProxyPath('/api/v1/proxy/graphql/v5?op=foo', 'acmeco');
+      expect(out).toBe('/ccx/api/graphql/v5/acmeco?op=foo');
+    });
   });
 
   describe('GraphQL path', () => {
@@ -194,6 +204,34 @@ describe('createProxyForwarder', () => {
         res
       );
       expect(fetchMock).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('request body error', () => {
+    it('responds 400 when the request body cannot be read', async () => {
+      mockFetch(async () => okResponse());
+      const forwarder = createProxyForwarder({
+        gateway: 'https://impl.example',
+        tenant: 'acmeco',
+        getToken: async () => 'tok',
+      });
+      const { res, status } = fakeResponse();
+      const listeners: Record<string, ((arg: unknown) => void)[]> = {};
+      const req = {
+        method: 'POST',
+        url: '/api/v1/proxy/common/v1/workers',
+        headers: {},
+        on(event: string, cb: (arg: unknown) => void) {
+          listeners[event] = listeners[event] ?? [];
+          listeners[event].push(cb);
+          return req;
+        },
+      } as unknown as IncomingMessage;
+      setImmediate(() => {
+        listeners['error']?.forEach((l) => l(new Error('client aborted')));
+      });
+      await forwarder(req, res);
+      expect(status()).toBe(400);
     });
   });
 

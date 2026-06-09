@@ -13,12 +13,15 @@ const PROXY_PREFIX = '/api/v1/proxy/';
  */
 export function rewriteProxyPath(path: string, tenant: string): string | null {
   if (!path.startsWith(PROXY_PREFIX)) return null;
-  const rest = path.slice(PROXY_PREFIX.length);
+  const queryIndex = path.indexOf('?');
+  const pathPart = queryIndex === -1 ? path : path.slice(0, queryIndex);
+  const queryPart = queryIndex === -1 ? '' : path.slice(queryIndex);
+  const rest = pathPart.slice(PROXY_PREFIX.length);
   const segments = rest.split('/');
   if (segments.length < 2) return null;
   const [service, version, ...remainder] = segments;
   const tail = remainder.length > 0 ? `/${remainder.join('/')}` : '';
-  return `/ccx/api/${service}/${version}/${tenant}${tail}`;
+  return `/ccx/api/${service}/${version}/${tenant}${tail}${queryPart}`;
 }
 
 export interface ForwarderConfig {
@@ -48,7 +51,16 @@ export function createProxyForwarder(config: ForwarderConfig) {
       return;
     }
 
-    const body = await readBody(req);
+    let body: Buffer;
+    try {
+      body = await readBody(req);
+    } catch (err) {
+      res.writeHead(400, { 'content-type': 'application/json' });
+      res.end(
+        JSON.stringify({ error: `failed to read request body: ${(err as Error).message}` })
+      );
+      return;
+    }
     const upstreamUrl = `${config.gateway}${rewritten}`;
 
     const headers: Record<string, string> = {
@@ -79,9 +91,10 @@ export function createProxyForwarder(config: ForwarderConfig) {
 }
 
 async function readBody(req: IncomingMessage): Promise<Buffer> {
-  return new Promise((resolve) => {
+  return new Promise((resolve, reject) => {
     const chunks: Buffer[] = [];
     req.on('data', (chunk: Buffer) => chunks.push(chunk));
     req.on('end', () => resolve(Buffer.concat(chunks)));
+    req.on('error', reject);
   });
 }

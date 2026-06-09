@@ -1,7 +1,7 @@
 import type { IncomingMessage, ServerResponse } from 'node:http';
 import { appConfig } from '../config.js';
 import { DEFAULT_GATEWAY } from '../auth/defaults.js';
-import { GatewayClient } from '../gateway/client.js';
+import { GatewayClient, GatewayRequestError } from '../gateway/client.js';
 import { createProxyForwarder } from './proxy-forwarder.js';
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -48,6 +48,16 @@ export function dataServicePlugin(_pluginDir: string): VitePlugin {
           } catch (err) {
             // Reset cache so a subsequent request can retry after the user re-authenticates.
             cached = undefined;
+            const status = err instanceof GatewayRequestError ? err.status : undefined;
+            if (status === 401 || status === 403) {
+              res.writeHead(401, { 'content-type': 'application/json' });
+              res.end(
+                JSON.stringify({
+                  error: 'auth token rejected — run: npx @workday/everywhere auth login',
+                })
+              );
+              return;
+            }
             res.writeHead(500, { 'content-type': 'application/json' });
             res.end(
               JSON.stringify({
