@@ -4,7 +4,7 @@ import { home, browseEvents, eventDetail, myEvents, createEvent, manageEvents } 
 import { schemas } from './everywhere/data/schema.js';
 
 // Replace this placeholder with the Extend App ID from your deployed Marketplace app.
-const resolver = new GraphQLResolver('createAWorkEventNjjhnta_wtmhcd', schemas);
+const resolver = new GraphQLResolver('createAWorkEventNjjhnta_zdylpt', schemas);
 
 function WorkEventProvider({ children }: { children: ReactNode }) {
   return <DataProvider resolver={resolver}>{children}</DataProvider>;

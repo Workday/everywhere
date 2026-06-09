@@ -206,7 +206,7 @@ The plugin uses a `GraphQLResolver` to connect to Workday's GraphQL API and mana
 `DataProvider`:
 
 ```typescript
-const resolver = new GraphQLResolver('createAWorkEventNjjhnta_wtmhcd', schemas);
+const resolver = new GraphQLResolver('createAWorkEventNjjhnta_zdylpt', schemas);
 
 function WorkEventProvider({ children }) {
   return <DataProvider resolver={resolver}>{children}</DataProvider>;
