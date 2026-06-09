@@ -1,9 +1,6 @@
-import { HttpClient } from './HttpClient.js';
+import { HttpClient, type HttpRequestOptions } from './HttpClient.js';
 
-export interface RestRequestOptions {
-  headers?: Record<string, string>;
-  signal?: AbortSignal;
-}
+export type RestRequestOptions = Pick<HttpRequestOptions, 'headers' | 'signal'>;
 
 export class RestClient {
   private readonly http: HttpClient;

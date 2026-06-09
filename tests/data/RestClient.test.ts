@@ -1,6 +1,11 @@
-import { describe, it, expect, vi } from 'vitest';
+import { describe, it, expect, vi, afterEach } from 'vitest';
 import { RestClient } from '../../src/data/RestClient.js';
 import { HttpClient } from '../../src/data/HttpClient.js';
+
+const originalFetch = globalThis.fetch;
+afterEach(() => {
+  globalThis.fetch = originalFetch;
+});
 
 function fakeHttpClient(): HttpClient & { request: ReturnType<typeof vi.fn> } {
   const request = vi.fn().mockResolvedValue({ ok: true });
