@@ -1,43 +1,78 @@
-import * as path from 'node:path';
 import type { IncomingMessage, ServerResponse } from 'node:http';
-import { handleGraphQL } from './graphql-handler.js';
+import { appConfig } from '../config.js';
+import { DEFAULT_GATEWAY } from '../auth/defaults.js';
+import { GatewayClient } from '../gateway/client.js';
+import { createProxyForwarder } from './proxy-forwarder.js';
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type VitePlugin = any;
 
-export function dataServicePlugin(pluginDir: string): VitePlugin {
-  const dataDir = path.join(pluginDir, '.data');
+interface ResolvedAuth {
+  gateway: string;
+  tenant: string;
+  token: string;
+}
+
+async function resolveAuth(): Promise<ResolvedAuth | null> {
+  const saved = appConfig().read();
+  const token = saved.auth?.token;
+  if (!token) return null;
+  const gateway = saved.auth?.gateway ?? DEFAULT_GATEWAY;
+  const client = new GatewayClient({ gateway, token });
+  const body = await client.getJson<{ tenant?: unknown }>('/api/v1/me');
+  if (typeof body.tenant !== 'string' || body.tenant.length === 0) {
+    throw new Error('gateway /api/v1/me response missing tenant');
+  }
+  return { gateway, tenant: body.tenant, token };
+}
+
+export function dataServicePlugin(_pluginDir: string): VitePlugin {
+  let cached: Promise<ResolvedAuth | null> | undefined;
+  const getResolved = (): Promise<ResolvedAuth | null> => {
+    if (!cached) cached = resolveAuth();
+    return cached;
+  };
 
   return {
     name: 'workday-everywhere-data',
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    configureServer(server: { middlewares: { use: (...args: any[]) => void } }) {
+    configureServer(server: {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      middlewares: { use: (...args: any[]) => void };
+    }) {
       server.middlewares.use(
-        '/api/v1/data/graphql',
+        '/api/v1/proxy',
         async (req: IncomingMessage, res: ServerResponse) => {
-          if (req.method !== 'POST') {
-            res.writeHead(405, { 'Content-Type': 'application/json' });
-            res.end(JSON.stringify({ error: 'Method not allowed' }));
+          let resolved: ResolvedAuth | null;
+          try {
+            resolved = await getResolved();
+          } catch (err) {
+            // Reset cache so a subsequent request can retry after the user re-authenticates.
+            cached = undefined;
+            res.writeHead(500, { 'content-type': 'application/json' });
+            res.end(
+              JSON.stringify({
+                error: `failed to resolve auth state: ${(err as Error).message}`,
+              })
+            );
             return;
           }
 
-          const body = await new Promise<string>((resolve) => {
-            const chunks: Buffer[] = [];
-            req.on('data', (chunk: Buffer) => chunks.push(chunk));
-            req.on('end', () => resolve(Buffer.concat(chunks).toString()));
-          });
+          if (!resolved) {
+            res.writeHead(401, { 'content-type': 'application/json' });
+            res.end(
+              JSON.stringify({
+                error: 'no stored auth token — run: npx @workday/everywhere auth login',
+              })
+            );
+            return;
+          }
 
-          const request = JSON.parse(body) as {
-            query: string;
-            variables: Record<string, unknown>;
-          };
-          const result = await handleGraphQL(dataDir, request);
-
-          res.writeHead(200, {
-            'Content-Type': 'application/json',
-            'Access-Control-Allow-Origin': '*',
+          const forwarder = createProxyForwarder({
+            gateway: resolved.gateway,
+            tenant: resolved.tenant,
+            getToken: async () => resolved.token,
           });
-          res.end(JSON.stringify(result));
+          await forwarder(req, res);
         }
       );
     },
