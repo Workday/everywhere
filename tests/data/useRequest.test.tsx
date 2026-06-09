@@ -43,13 +43,21 @@ describe('useRequest', () => {
     });
   });
 
-  describe('skip', () => {
-    it('does not fetch when skip is true', async () => {
+  describe('enabled', () => {
+    it('does not fetch when enabled is false', async () => {
       const impl = vi.fn().mockResolvedValue({});
       const client = fakeRestClient(impl);
-      renderHook(() => useRequest('/x', { skip: true }), { wrapper: makeWrapper(client) });
+      renderHook(() => useRequest('/x', { enabled: false }), { wrapper: makeWrapper(client) });
       await new Promise((r) => setTimeout(r, 0));
       expect(impl).not.toHaveBeenCalled();
+    });
+
+    it('starts in non-loading state when enabled is false', () => {
+      const client = fakeRestClient(() => new Promise(() => {}));
+      const { result } = renderHook(() => useRequest('/x', { enabled: false }), {
+        wrapper: makeWrapper(client),
+      });
+      expect(result.current.loading).toBe(false);
     });
   });
 
@@ -63,6 +71,18 @@ describe('useRequest', () => {
         await result.current.refetch();
       });
       expect(impl).toHaveBeenCalledTimes(2);
+    });
+
+    it('issues a request even when enabled is false', async () => {
+      const impl = vi.fn().mockResolvedValue({ n: 1 });
+      const client = fakeRestClient(impl);
+      const { result } = renderHook(() => useRequest('/x', { enabled: false }), {
+        wrapper: makeWrapper(client),
+      });
+      await act(async () => {
+        await result.current.refetch();
+      });
+      expect(impl).toHaveBeenCalledTimes(1);
     });
   });
 
