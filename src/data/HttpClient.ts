@@ -2,18 +2,23 @@ export class HttpError extends Error {
   constructor(
     public readonly status: number,
     public readonly statusText: string,
-    public readonly body?: unknown
+    public readonly body?: unknown,
+    message?: string
   ) {
-    super(`HTTP ${status} ${statusText}`);
+    super(message ?? `HTTP ${status} ${statusText}`);
     this.name = 'HttpError';
   }
 }
 
 export class HttpAuthError extends HttpError {
   constructor(status: number, statusText: string, body?: unknown) {
-    super(status, statusText, body);
+    super(
+      status,
+      statusText,
+      body,
+      `HTTP ${status} ${statusText} — token expired or invalid. Run: npx @workday/everywhere auth login`
+    );
     this.name = 'HttpAuthError';
-    this.message = `${this.message} — token expired or invalid. Run: npx @workday/everywhere auth login`;
   }
 }
 

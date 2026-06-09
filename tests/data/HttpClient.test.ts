@@ -8,9 +8,19 @@ afterEach(() => {
 });
 
 describe('HttpError', () => {
-  it('carries status, statusText, and body', () => {
+  it('carries status', () => {
     const err = new HttpError(500, 'Server Error', { detail: 'boom' });
     expect(err.status).toBe(500);
+  });
+
+  it('carries statusText', () => {
+    const err = new HttpError(500, 'Server Error', { detail: 'boom' });
+    expect(err.statusText).toBe('Server Error');
+  });
+
+  it('carries body', () => {
+    const err = new HttpError(500, 'Server Error', { detail: 'boom' });
+    expect(err.body).toEqual({ detail: 'boom' });
   });
 });
 
