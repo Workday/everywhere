@@ -11,12 +11,13 @@ export class HttpError extends Error {
 }
 
 export class HttpAuthError extends HttpError {
-  constructor(status: number, statusText: string, body?: unknown) {
+  constructor(status: number, statusText: string, body?: unknown, message?: string) {
     super(
       status,
       statusText,
       body,
-      `HTTP ${status} ${statusText} — token expired or invalid. Run: npx @workday/everywhere auth login`
+      message ??
+        `HTTP ${status} ${statusText} — token expired or invalid. Run: npx @workday/everywhere auth login`
     );
     this.name = 'HttpAuthError';
   }

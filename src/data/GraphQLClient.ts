@@ -29,7 +29,14 @@ export class GraphQLClient {
     if (response.errors?.length) {
       const isAuth = response.errors.some((e) => AUTH_CODES.has(e.extensions?.code ?? ''));
       const joined = response.errors.map((e) => e.message).join('; ');
-      if (isAuth) throw new HttpAuthError(401, 'Unauthorized', { errors: response.errors });
+      if (isAuth) {
+        throw new HttpAuthError(
+          401,
+          'Unauthorized',
+          { errors: response.errors },
+          `${joined} — token expired or invalid. Run: npx @workday/everywhere auth login`
+        );
+      }
       throw new Error(joined);
     }
 
