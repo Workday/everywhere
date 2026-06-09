@@ -18,6 +18,9 @@ export function useQuery<T>(model: string, options: QueryOptions & { id: string 
 export function useQuery<T>(model: string, options?: QueryOptions): QueryResult<T[]>;
 export function useQuery<T>(model: string, options?: QueryOptions): QueryResult<T | T[]> {
   const { resolver, invalidationKey } = useDataContext();
+  if (!resolver) {
+    throw new Error('useQuery requires a `resolver` on DataProvider');
+  }
   const [data, setData] = useState<T | T[] | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
