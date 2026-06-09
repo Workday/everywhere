@@ -1,3 +1,4 @@
+import { GraphQLClient } from './GraphQLClient.js';
 import type { DataResolver } from './resolver.js';
 import type { ModelSchema } from './types.js';
 
@@ -42,14 +43,16 @@ function toGQLLiteral(value: unknown): string {
 const SCALAR_TYPES = new Set(['TEXT', 'BOOLEAN', 'DATE', 'CURRENCY', 'DECIMAL', 'NUMERIC']);
 
 export class GraphQLResolver implements DataResolver {
-  private readonly endpoint: string;
+  private readonly graphql: GraphQLClient;
   private readonly referenceId: string;
   private readonly graphPrefix: string;
   private readonly schemaMap: Map<string, ModelSchema>;
   private readonly workdayIdTypes = new Map<string, string>();
 
   constructor(referenceId: string, schemas: Record<string, ModelSchema>, endpoint?: string) {
-    this.endpoint = endpoint ?? `${globalThis.window?.location.origin ?? ''}/api/v1/data/graphql`;
+    const resolvedEndpoint =
+      endpoint ?? `${globalThis.window?.location.origin ?? ''}/api/v1/proxy/graphql/v5`;
+    this.graphql = new GraphQLClient('', resolvedEndpoint);
     this.referenceId = referenceId;
     this.graphPrefix = referenceIdToGraphPrefix(referenceId);
     this.schemaMap = new Map(Object.entries(schemas));
@@ -151,49 +154,8 @@ export class GraphQLResolver implements DataResolver {
     );
   }
 
-  private async execute<T>(query: string, variables?: Record<string, unknown>): Promise<T> {
-    const headers: Record<string, string> = {
-      accept: 'application/json',
-      'content-type': 'application/json',
-    };
-
-    const appId = (globalThis as { __WE_APP_ID__?: string }).__WE_APP_ID__;
-    if (typeof appId === 'string') headers['x-app-id'] = appId;
-
-    const response = await fetch(this.endpoint, {
-      method: 'POST',
-      headers,
-      body: JSON.stringify(variables ? { query, variables } : { query }),
-    });
-
-    if (response.status === 401 || response.status === 403) {
-      throw new Error(
-        `GraphQL auth failed (${response.status}): token is expired or invalid. Run: npx @workday/everywhere auth login`
-      );
-    }
-
-    if (!response.ok) {
-      throw new Error(`GraphQL request failed ${response.status}: ${response.statusText}`);
-    }
-
-    const body = (await response.json()) as {
-      data?: Record<string, unknown>;
-      errors?: { message: string; extensions?: { code?: string } }[];
-    };
-
-    if (body.errors?.length) {
-      const isAuthError = body.errors.some((e) =>
-        ['UNAUTHENTICATED', 'FORBIDDEN', 'UNAUTHORIZED'].includes(e.extensions?.code ?? '')
-      );
-      if (isAuthError) {
-        throw new Error(
-          'GraphQL auth error: token is expired or invalid. Run: npx @workday/everywhere auth login'
-        );
-      }
-      throw new Error(body.errors.map((e) => e.message).join('; '));
-    }
-
-    return body.data as T;
+  private execute<T>(query: string, variables?: Record<string, unknown>): Promise<T> {
+    return this.graphql.execute<T>(query, variables);
   }
 
   async find<T>(model: string, filter?: Record<string, unknown>): Promise<T[]> {
