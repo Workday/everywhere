@@ -1,6 +1,13 @@
-import { describe, it, expect, vi, afterEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { GraphQLResolver } from '../../src/data/GraphQLResolver.js';
+import { GraphQLClient } from '../../src/data/GraphQLClient.js';
 import type { ModelSchema } from '../../src/data/types.js';
+
+vi.mock('../../src/data/GraphQLClient.js', () => ({
+  GraphQLClient: vi.fn(function (this: { execute: ReturnType<typeof vi.fn> } | undefined) {
+    if (this) this.execute = vi.fn();
+  }),
+}));
 
 const SCHEMA: ModelSchema = {
   name: 'Thing',
@@ -19,7 +26,7 @@ const SCHEMA_WITH_REFS: ModelSchema = {
     { name: 'category', type: 'SINGLE_INSTANCE', target: 'WidgetCategory' },
   ],
 };
-const ENDPOINT = 'https://tenant.workday.com/api/v1/data/graphql';
+const ENDPOINT = 'https://tenant.example.com/api/v1/tenant/graphql/v5';
 const REFERENCE_ID = 'examplePlugin_test9999';
 
 const SCHEMA_WITH_GRAPH: ModelSchema = {
@@ -35,99 +42,33 @@ const SCHEMA_WITH_GRAPH: ModelSchema = {
   },
 };
 
-function mockFetch(data: unknown[] = []) {
-  return vi.fn().mockResolvedValue({
-    ok: true,
-    status: 200,
-    json: () => Promise.resolve({ data: { app_ns1_Thing: { data } } }),
-  });
+function installExecute(execute: ReturnType<typeof vi.fn>): void {
+  vi.mocked(GraphQLClient).mockImplementation(function (this: { execute: typeof execute }) {
+    this.execute = execute;
+  } as never);
 }
 
+beforeEach(() => {
+  vi.mocked(GraphQLClient).mockClear();
+});
+
 describe('GraphQLResolver', () => {
-  describe('when constructed with an explicit endpoint', () => {
-    it('sends requests to that endpoint', async () => {
-      globalThis.fetch = mockFetch();
-
-      await new GraphQLResolver('app_ns1', { Thing: SCHEMA }, ENDPOINT).find('Thing');
-
-      expect((globalThis.fetch as ReturnType<typeof vi.fn>).mock.calls[0][0]).toBe(ENDPOINT);
-    });
-  });
-
-  describe('when constructed without an endpoint', () => {
-    it('sends requests to the graphql endpoint on the current origin', async () => {
-      vi.stubGlobal('window', { location: { origin: 'https://tenant.workday.com' } });
-      globalThis.fetch = mockFetch();
-
-      await new GraphQLResolver('app_ns1', { Thing: SCHEMA }).find('Thing');
-
-      expect((globalThis.fetch as ReturnType<typeof vi.fn>).mock.calls[0][0]).toBe(ENDPOINT);
-
-      vi.unstubAllGlobals();
-    });
-  });
-
-  describe('when sending a request', () => {
-    it('does not send an Authorization header', async () => {
-      globalThis.fetch = mockFetch();
-
-      await new GraphQLResolver('app_ns1', { Thing: SCHEMA }, ENDPOINT).find('Thing');
-
-      const headers = (globalThis.fetch as ReturnType<typeof vi.fn>).mock.calls[0][1]
-        .headers as Record<string, string>;
-      expect(headers['authorization']).toBeUndefined();
-    });
-  });
-
-  describe('when __WE_APP_ID__ global is set', () => {
-    afterEach(() => {
-      vi.unstubAllGlobals();
-    });
-
-    it('sends the x-app-id header with the app id value', async () => {
-      vi.stubGlobal('__WE_APP_ID__', '@acme/my-plugin');
-      globalThis.fetch = mockFetch();
-
-      await new GraphQLResolver('app_ns1', { Thing: SCHEMA }, ENDPOINT).find('Thing');
-
-      const headers = (globalThis.fetch as ReturnType<typeof vi.fn>).mock.calls[0][1]
-        .headers as Record<string, string>;
-      expect(headers['x-app-id']).toBe('@acme/my-plugin');
-    });
-  });
-
   describe('update()', () => {
-    it('uses the collection id argument with IdentifierInput', async () => {
-      const findResponse = {
-        ok: true,
-        status: 200,
-        json: () =>
-          Promise.resolve({
-            data: {
-              [`${REFERENCE_ID}_Widget`]: {
-                data: [{ workdayID: { id: 'widget-001', type: 'WID' }, name: 'Before' }],
-              },
-            },
-          }),
-      };
-      const updateResponse = {
-        ok: true,
-        status: 200,
-        json: () =>
-          Promise.resolve({
-            data: {
-              [`${REFERENCE_ID}_updateWidget`]: {
-                workdayID: { id: 'widget-001', type: 'WID' },
-                name: 'Updated',
-              },
-            },
-          }),
-      };
-      const mockFetch = vi
+    it('uses the collection id argument with IdentifierInput in the query', async () => {
+      const execute = vi
         .fn()
-        .mockResolvedValueOnce(findResponse)
-        .mockResolvedValueOnce(updateResponse);
-      globalThis.fetch = mockFetch;
+        .mockResolvedValueOnce({
+          [`${REFERENCE_ID}_Widget`]: {
+            data: [{ workdayID: { id: 'widget-001', type: 'WID' }, name: 'Before' }],
+          },
+        })
+        .mockResolvedValueOnce({
+          [`${REFERENCE_ID}_updateWidget`]: {
+            workdayID: { id: 'widget-001', type: 'WID' },
+            name: 'Updated',
+          },
+        });
+      installExecute(execute);
 
       await new GraphQLResolver(REFERENCE_ID, { Widget: SCHEMA_WITH_REFS }, ENDPOINT).update(
         'Widget',
@@ -135,13 +76,57 @@ describe('GraphQLResolver', () => {
         { name: 'Updated' }
       );
 
-      const body = JSON.parse((mockFetch.mock.calls[1] as [string, { body: string }])[1].body) as {
-        query: string;
-        variables: Record<string, unknown>;
-      };
-      expect(body.query).toContain('widgetsId: $widgetsId');
-      expect(body.query).not.toContain('id: $id');
-      expect(body.variables).toEqual({
+      expect(execute.mock.calls[1][0]).toContain('widgetsId: $widgetsId');
+    });
+
+    it('does not use a generic id argument in the query', async () => {
+      const execute = vi
+        .fn()
+        .mockResolvedValueOnce({
+          [`${REFERENCE_ID}_Widget`]: {
+            data: [{ workdayID: { id: 'widget-001', type: 'WID' }, name: 'Before' }],
+          },
+        })
+        .mockResolvedValueOnce({
+          [`${REFERENCE_ID}_updateWidget`]: {
+            workdayID: { id: 'widget-001', type: 'WID' },
+            name: 'Updated',
+          },
+        });
+      installExecute(execute);
+
+      await new GraphQLResolver(REFERENCE_ID, { Widget: SCHEMA_WITH_REFS }, ENDPOINT).update(
+        'Widget',
+        'widget-001',
+        { name: 'Updated' }
+      );
+
+      expect(execute.mock.calls[1][0]).not.toContain('id: $id');
+    });
+
+    it('passes the IdentifierInput variables to the mutation', async () => {
+      const execute = vi
+        .fn()
+        .mockResolvedValueOnce({
+          [`${REFERENCE_ID}_Widget`]: {
+            data: [{ workdayID: { id: 'widget-001', type: 'WID' }, name: 'Before' }],
+          },
+        })
+        .mockResolvedValueOnce({
+          [`${REFERENCE_ID}_updateWidget`]: {
+            workdayID: { id: 'widget-001', type: 'WID' },
+            name: 'Updated',
+          },
+        });
+      installExecute(execute);
+
+      await new GraphQLResolver(REFERENCE_ID, { Widget: SCHEMA_WITH_REFS }, ENDPOINT).update(
+        'Widget',
+        'widget-001',
+        { name: 'Updated' }
+      );
+
+      expect(execute.mock.calls[1][1]).toEqual({
         widgetsId: { id: 'widget-001', type: 'WID' },
         input: { name: 'Updated' },
       });
@@ -164,35 +149,19 @@ describe('GraphQLResolver', () => {
           },
         ],
       };
-      const findResponse = {
-        ok: true,
-        status: 200,
-        json: () =>
-          Promise.resolve({
-            data: {
-              [`${REFERENCE_ID}_Widget`]: {
-                data: [{ workdayID: { id: 'widget-001', type: 'WID' } }],
-              },
-            },
-          }),
-      };
-      const updateResponse = {
-        ok: true,
-        status: 200,
-        json: () =>
-          Promise.resolve({
-            data: {
-              [`${REFERENCE_ID}_updateWidget`]: {
-                workdayID: { id: 'widget-001', type: 'WID' },
-              },
-            },
-          }),
-      };
-      const mockFetch = vi
+      const execute = vi
         .fn()
-        .mockResolvedValueOnce(findResponse)
-        .mockResolvedValueOnce(updateResponse);
-      globalThis.fetch = mockFetch;
+        .mockResolvedValueOnce({
+          [`${REFERENCE_ID}_Widget`]: {
+            data: [{ workdayID: { id: 'widget-001', type: 'WID' } }],
+          },
+        })
+        .mockResolvedValueOnce({
+          [`${REFERENCE_ID}_updateWidget`]: {
+            workdayID: { id: 'widget-001', type: 'WID' },
+          },
+        });
+      installExecute(execute);
 
       await new GraphQLResolver(REFERENCE_ID, { Widget: schema }, ENDPOINT).update(
         'Widget',
@@ -200,10 +169,7 @@ describe('GraphQLResolver', () => {
         { attachment: 'file-id-abc' }
       );
 
-      const body = JSON.parse((mockFetch.mock.calls[1] as [string, { body: string }])[1].body) as {
-        variables: Record<string, unknown>;
-      };
-      expect(body.variables).toEqual({
+      expect(execute.mock.calls[1][1]).toEqual({
         widgetsId: { id: 'widget-001', type: 'WID' },
         input: { attachment: { id: { id: 'file-id-abc', type: 'WID' } } },
       });
@@ -211,224 +177,168 @@ describe('GraphQLResolver', () => {
   });
 
   describe('remove()', () => {
-    it('uses the collection id argument with IdentifierInput', async () => {
-      const findResponse = {
-        ok: true,
-        status: 200,
-        json: () =>
-          Promise.resolve({
-            data: {
-              [`${REFERENCE_ID}_Widget`]: {
-                data: [{ workdayID: { id: 'widget-001', type: 'WID' }, name: 'Before' }],
-              },
-            },
-          }),
-      };
-      const deleteResponse = {
-        ok: true,
-        status: 200,
-        json: () =>
-          Promise.resolve({
-            data: { [`${REFERENCE_ID}_deleteWidget`]: { workdayID: { id: 'widget-001' } } },
-          }),
-      };
-      const mockFetch = vi
+    it('uses the collection id argument with IdentifierInput in the query', async () => {
+      const execute = vi
         .fn()
-        .mockResolvedValueOnce(findResponse)
-        .mockResolvedValueOnce(deleteResponse);
-      globalThis.fetch = mockFetch;
+        .mockResolvedValueOnce({
+          [`${REFERENCE_ID}_Widget`]: {
+            data: [{ workdayID: { id: 'widget-001', type: 'WID' }, name: 'Before' }],
+          },
+        })
+        .mockResolvedValueOnce({
+          [`${REFERENCE_ID}_deleteWidget`]: { workdayID: { id: 'widget-001' } },
+        });
+      installExecute(execute);
 
       await new GraphQLResolver(REFERENCE_ID, { Widget: SCHEMA_WITH_REFS }, ENDPOINT).remove(
         'Widget',
         'widget-001'
       );
 
-      const body = JSON.parse((mockFetch.mock.calls[1] as [string, { body: string }])[1].body) as {
-        query: string;
-        variables: Record<string, unknown>;
-      };
-      expect(body.query).toContain('widgetsId: $widgetsId');
-      expect(body.query).not.toContain('id: $id');
-      expect(body.variables).toEqual({ widgetsId: { id: 'widget-001', type: 'WID' } });
+      expect(execute.mock.calls[1][0]).toContain('widgetsId: $widgetsId');
+    });
+
+    it('does not use a generic id argument in the query', async () => {
+      const execute = vi
+        .fn()
+        .mockResolvedValueOnce({
+          [`${REFERENCE_ID}_Widget`]: {
+            data: [{ workdayID: { id: 'widget-001', type: 'WID' }, name: 'Before' }],
+          },
+        })
+        .mockResolvedValueOnce({
+          [`${REFERENCE_ID}_deleteWidget`]: { workdayID: { id: 'widget-001' } },
+        });
+      installExecute(execute);
+
+      await new GraphQLResolver(REFERENCE_ID, { Widget: SCHEMA_WITH_REFS }, ENDPOINT).remove(
+        'Widget',
+        'widget-001'
+      );
+
+      expect(execute.mock.calls[1][0]).not.toContain('id: $id');
+    });
+
+    it('passes the IdentifierInput as variables to the mutation', async () => {
+      const execute = vi
+        .fn()
+        .mockResolvedValueOnce({
+          [`${REFERENCE_ID}_Widget`]: {
+            data: [{ workdayID: { id: 'widget-001', type: 'WID' }, name: 'Before' }],
+          },
+        })
+        .mockResolvedValueOnce({
+          [`${REFERENCE_ID}_deleteWidget`]: { workdayID: { id: 'widget-001' } },
+        });
+      installExecute(execute);
+
+      await new GraphQLResolver(REFERENCE_ID, { Widget: SCHEMA_WITH_REFS }, ENDPOINT).remove(
+        'Widget',
+        'widget-001'
+      );
+
+      expect(execute.mock.calls[1][1]).toEqual({
+        widgetsId: { id: 'widget-001', type: 'WID' },
+      });
     });
   });
 
   describe('find()', () => {
     it('requests SINGLE_INSTANCE reference fields in the selection set', async () => {
-      const mockFetch = vi.fn().mockResolvedValue({
-        ok: true,
-        status: 200,
-        json: () =>
-          Promise.resolve({
-            data: { [`${REFERENCE_ID}_Widget`]: { data: [] } },
-          }),
-      });
-      globalThis.fetch = mockFetch;
+      const execute = vi.fn().mockResolvedValue({ [`${REFERENCE_ID}_Widget`]: { data: [] } });
+      installExecute(execute);
 
       await new GraphQLResolver(REFERENCE_ID, { Widget: SCHEMA_WITH_REFS }, ENDPOINT).find(
         'Widget'
       );
 
-      const body = JSON.parse((mockFetch.mock.calls[0] as [string, { body: string }])[1].body) as {
-        query: string;
-      };
-      expect(body.query).toContain('category { workdayID { id type } }');
+      expect(execute.mock.calls[0][0]).toContain('category { workdayID { id type } }');
     });
   });
 
   describe('update() when workdayID type was returned from a prior find', () => {
     it('uses the cached workday id type in IdentifierInput', async () => {
       const widgetId = 'd5e6b709d87090011d1d6bf64ad10000';
-      const listFetch = vi.fn().mockResolvedValue({
-        ok: true,
-        status: 200,
-        json: () =>
-          Promise.resolve({
-            data: {
-              [`${REFERENCE_ID}_Widget`]: {
-                data: [
-                  {
-                    workdayID: { id: widgetId, type: 'Widget_ID' },
-                    name: 'Gadget',
-                  },
-                ],
-              },
-            },
-          }),
-      });
-      const updateFetch = vi.fn().mockResolvedValue({
-        ok: true,
-        status: 200,
-        json: () =>
-          Promise.resolve({
-            data: {
-              [`${REFERENCE_ID}_updateWidget`]: {
-                workdayID: { id: widgetId, type: 'Widget_ID' },
-                name: 'Updated',
-              },
-            },
-          }),
-      });
-      globalThis.fetch = vi
+      const execute = vi
         .fn()
-        .mockImplementationOnce(listFetch)
-        .mockImplementationOnce(updateFetch);
+        .mockResolvedValueOnce({
+          [`${REFERENCE_ID}_Widget`]: {
+            data: [
+              {
+                workdayID: { id: widgetId, type: 'Widget_ID' },
+                name: 'Gadget',
+              },
+            ],
+          },
+        })
+        .mockResolvedValueOnce({
+          [`${REFERENCE_ID}_updateWidget`]: {
+            workdayID: { id: widgetId, type: 'Widget_ID' },
+            name: 'Updated',
+          },
+        });
+      installExecute(execute);
 
       const resolver = new GraphQLResolver(REFERENCE_ID, { Widget: SCHEMA_WITH_REFS }, ENDPOINT);
       await resolver.update('Widget', widgetId, { name: 'Updated' });
 
-      const body = JSON.parse(
-        (updateFetch.mock.calls[0] as [string, { body: string }])[1].body
-      ) as { variables: Record<string, unknown> };
-      expect(body.variables).toEqual({
+      expect(execute.mock.calls[1][1]).toEqual({
         widgetsId: { id: widgetId, type: 'Widget_ID' },
         input: { name: 'Updated' },
       });
     });
   });
 
-  describe('when __WE_APP_ID__ global is not set', () => {
-    afterEach(() => {
-      vi.unstubAllGlobals();
-    });
-
-    it('does not send an x-app-id header', async () => {
-      globalThis.fetch = mockFetch();
-
-      await new GraphQLResolver('app_ns1', { Thing: SCHEMA }, ENDPOINT).find('Thing');
-
-      const headers = (globalThis.fetch as ReturnType<typeof vi.fn>).mock.calls[0][1]
-        .headers as Record<string, string>;
-      expect(headers['x-app-id']).toBeUndefined();
-    });
-  });
-
   describe('when schema has graph metadata', () => {
     describe('find()', () => {
       it('uses graph.dataSourceKey in the query instead of the convention-derived key', async () => {
-        const fetchMock = vi.fn().mockResolvedValue({
-          ok: true,
-          status: 200,
-          json: () => Promise.resolve({ data: { app_ns1_Thing: { data: [] } } }),
-        });
-        globalThis.fetch = fetchMock;
+        const execute = vi.fn().mockResolvedValue({ app_ns1_Thing: { data: [] } });
+        installExecute(execute);
 
         await new GraphQLResolver('app_ns1', { Thing: SCHEMA_WITH_GRAPH }, ENDPOINT).find('Thing');
 
-        const body = JSON.parse((fetchMock.mock.calls[0][1] as { body: string }).body) as {
-          query: string;
-        };
-        expect(body.query).toContain('custom_things_datasource');
+        expect(execute.mock.calls[0][0]).toContain('custom_things_datasource');
       });
 
       it('does not use the convention-derived key when graph.dataSourceKey is present', async () => {
-        const fetchMock = vi.fn().mockResolvedValue({
-          ok: true,
-          status: 200,
-          json: () => Promise.resolve({ data: { app_ns1_Thing: { data: [] } } }),
-        });
-        globalThis.fetch = fetchMock;
+        const execute = vi.fn().mockResolvedValue({ app_ns1_Thing: { data: [] } });
+        installExecute(execute);
 
         await new GraphQLResolver('app_ns1', { Thing: SCHEMA_WITH_GRAPH }, ENDPOINT).find('Thing');
 
-        const body = JSON.parse((fetchMock.mock.calls[0][1] as { body: string }).body) as {
-          query: string;
-        };
-        expect(body.query).not.toContain('app_ns1_things');
+        expect(execute.mock.calls[0][0]).not.toContain('app_ns1_things');
       });
     });
 
     describe('create()', () => {
       it('uses graph.createInputType instead of the convention-derived type', async () => {
-        const fetchMock = vi.fn().mockResolvedValue({
-          ok: true,
-          status: 200,
-          json: () =>
-            Promise.resolve({
-              data: { app_ns1_createThing: { workdayID: { id: '1' } } },
-            }),
-        });
-        globalThis.fetch = fetchMock;
+        const execute = vi
+          .fn()
+          .mockResolvedValue({ app_ns1_createThing: { workdayID: { id: '1' } } });
+        installExecute(execute);
 
         await new GraphQLResolver('app_ns1', { Thing: SCHEMA_WITH_GRAPH }, ENDPOINT).create(
           'Thing',
           {}
         );
 
-        const body = JSON.parse((fetchMock.mock.calls[0][1] as { body: string }).body) as {
-          query: string;
-        };
-        expect(body.query).toContain('Custom_ThingsSummary_Create_Input');
+        expect(execute.mock.calls[0][0]).toContain('Custom_ThingsSummary_Create_Input');
       });
     });
 
     describe('update()', () => {
       it('uses graph.updateInputType instead of the convention-derived type', async () => {
-        const findResponse = {
-          ok: true,
-          status: 200,
-          json: () =>
-            Promise.resolve({
-              data: {
-                app_ns1_Thing: {
-                  data: [{ workdayID: { id: '1', type: 'WID' } }],
-                },
-              },
-            }),
-        };
-        const updateResponse = {
-          ok: true,
-          status: 200,
-          json: () =>
-            Promise.resolve({
-              data: { app_ns1_updateThing: { workdayID: { id: '1', type: 'WID' } } },
-            }),
-        };
-        const fetchMock = vi
+        const execute = vi
           .fn()
-          .mockResolvedValueOnce(findResponse)
-          .mockResolvedValueOnce(updateResponse);
-        globalThis.fetch = fetchMock;
+          .mockResolvedValueOnce({
+            app_ns1_Thing: {
+              data: [{ workdayID: { id: '1', type: 'WID' } }],
+            },
+          })
+          .mockResolvedValueOnce({
+            app_ns1_updateThing: { workdayID: { id: '1', type: 'WID' } },
+          });
+        installExecute(execute);
 
         await new GraphQLResolver('app_ns1', { Thing: SCHEMA_WITH_GRAPH }, ENDPOINT).update(
           'Thing',
@@ -436,11 +346,32 @@ describe('GraphQLResolver', () => {
           {}
         );
 
-        const body = JSON.parse((fetchMock.mock.calls[1][1] as { body: string }).body) as {
-          query: string;
-        };
-        expect(body.query).toContain('Custom_ThingsSummary_Update_Input');
+        expect(execute.mock.calls[1][0]).toContain('Custom_ThingsSummary_Update_Input');
       });
+    });
+  });
+
+  describe('constructor', () => {
+    it('passes an explicit endpoint to GraphQLClient', () => {
+      installExecute(vi.fn());
+
+      new GraphQLResolver('app_ns1', { Thing: SCHEMA }, ENDPOINT);
+
+      expect(vi.mocked(GraphQLClient)).toHaveBeenCalledWith('', ENDPOINT);
+    });
+
+    it('defaults to the tenant graphql endpoint on the current origin', () => {
+      vi.stubGlobal('window', { location: { origin: 'https://tenant.example.com' } });
+      installExecute(vi.fn());
+
+      new GraphQLResolver('app_ns1', { Thing: SCHEMA });
+
+      expect(vi.mocked(GraphQLClient)).toHaveBeenCalledWith(
+        '',
+        'https://tenant.example.com/api/v1/tenant/graphql/v5'
+      );
+
+      vi.unstubAllGlobals();
     });
   });
 });

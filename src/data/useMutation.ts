@@ -11,6 +11,9 @@ export interface MutationResult<T> {
 
 export function useMutation<T>(model: string): MutationResult<T> {
   const { resolver, invalidate } = useDataContext();
+  if (!resolver) {
+    throw new Error('useMutation requires a `resolver` on DataProvider');
+  }
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<Error | null>(null);
 

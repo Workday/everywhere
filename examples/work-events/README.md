@@ -1,5 +1,11 @@
 # Create a Work Event - Workday Everywhere Plugin
 
+> ⚠️ **Currently non-functional.** This example was built against the SDK's in-memory mock data
+> layer (the legacy `HttpResolver` + the dev server's local JSON store), both of which were removed
+> when the SDK switched to the real `/api/v1/tenant/*` proxy. The source is retained as a reference
+> for the data shapes and UI structure; it will not run today. It will be restored or rewritten once
+> a real-data analog exists for the underlying models.
+
 This example demonstrates how to build a feature-rich Workday Everywhere plugin using the Workday
 Everywhere SDK. The **Create a Work Event** plugin enables employees to discover, register for,
 create, and manage company work events directly within their Workday experience.

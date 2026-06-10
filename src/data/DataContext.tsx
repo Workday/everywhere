@@ -1,8 +1,10 @@
 import { createContext, useContext, useCallback, useState, type ReactNode } from 'react';
 import type { DataResolver } from './resolver.js';
+import type { RestClient } from './RestClient.js';
 
 interface DataContextValue {
-  resolver: DataResolver;
+  resolver: DataResolver | null;
+  client: RestClient | null;
   invalidationKey: number;
   invalidate: (model: string) => void;
 }
@@ -10,11 +12,12 @@ interface DataContextValue {
 const DataContext = createContext<DataContextValue | null>(null);
 
 export interface DataProviderProps {
-  resolver: DataResolver;
+  resolver?: DataResolver;
+  client?: RestClient;
   children: ReactNode;
 }
 
-export function DataProvider({ resolver, children }: DataProviderProps) {
+export function DataProvider({ resolver, client, children }: DataProviderProps) {
   const [invalidationKey, setInvalidationKey] = useState(0);
 
   const invalidate = useCallback((_model: string) => {
@@ -22,7 +25,14 @@ export function DataProvider({ resolver, children }: DataProviderProps) {
   }, []);
 
   return (
-    <DataContext.Provider value={{ resolver, invalidationKey, invalidate }}>
+    <DataContext.Provider
+      value={{
+        resolver: resolver ?? null,
+        client: client ?? null,
+        invalidationKey,
+        invalidate,
+      }}
+    >
       {children}
     </DataContext.Provider>
   );

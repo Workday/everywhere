@@ -4,7 +4,6 @@ import * as path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import * as vite from 'vite';
 
-import { dataServicePlugin } from '../../data/vite-data-plugin.js';
 import { isUnauthenticated } from '../../data/proxy-auth.js';
 import { appConfig } from '../../config.js';
 import { DEFAULT_GATEWAY } from '../../auth/defaults.js';
@@ -26,12 +25,6 @@ export default class ViewCommand extends EverywhereBaseCommand {
       default: true,
       allowNo: true,
     }),
-    'mock-data': Flags.boolean({
-      description:
-        'Use local mock data instead of forwarding requests to the real GraphQL API. Defaults to false — real API is used when auth login credentials are present.',
-      default: false,
-      allowNo: true,
-    }),
   };
 
   async run(): Promise<void> {
@@ -51,48 +44,42 @@ export default class ViewCommand extends EverywhereBaseCommand {
     this.log(`Plugin: ${pluginEntry}`);
     this.log(`Starting viewer on port ${flags.port}...`);
 
-    const plugins: UserConfig['plugins'] = flags['mock-data'] ? [dataServicePlugin(pluginDir)] : [];
-    const overrides: UserConfig['server'] = flags['mock-data']
-      ? {}
-      : {
-          proxy: {
-            '/api/v1/data/graphql': {
-              target: apiServer,
-              changeOrigin: true,
-              configure: (proxy, _options) => {
-                proxy.on('proxyReq', (proxyReq, req, _res) => {
-                  if (isUnauthenticated(req.headers) && token) {
-                    proxyReq.setHeader('Authorization', `Bearer ${token}`);
-                  }
-                });
-              },
-            },
-            '/apps': {
-              target: apiServer,
-              changeOrigin: true,
-              configure: (proxy, _options) => {
-                proxy.on('proxyReq', (proxyReq, req, _res) => {
-                  if (isUnauthenticated(req.headers) && token) {
-                    proxyReq.setHeader('Authorization', `Bearer ${token}`);
-                  }
-                });
-              },
-            },
+    const serverConfig: UserConfig['server'] = {
+      port: flags.port,
+      open: flags.open,
+      fs: {
+        allow: [pluginDir, sdkRoot],
+      },
+      proxy: {
+        '/api/v1/tenant': {
+          target: apiServer,
+          changeOrigin: true,
+          configure: (proxy, _options) => {
+            proxy.on('proxyReq', (proxyReq, req, _res) => {
+              if (isUnauthenticated(req.headers) && token) {
+                proxyReq.setHeader('Authorization', `Bearer ${token}`);
+              }
+            });
           },
-        };
+        },
+        '/apps': {
+          target: apiServer,
+          changeOrigin: true,
+          configure: (proxy, _options) => {
+            proxy.on('proxyReq', (proxyReq, req, _res) => {
+              if (isUnauthenticated(req.headers) && token) {
+                proxyReq.setHeader('Authorization', `Bearer ${token}`);
+              }
+            });
+          },
+        },
+      },
+    };
 
     const server = await vite.createServer({
       root: viewerDir,
       configFile: false,
-      plugins,
-      server: {
-        port: flags.port,
-        open: flags.open,
-        fs: {
-          allow: [pluginDir, sdkRoot],
-        },
-        ...overrides,
-      },
+      server: serverConfig,
       resolve: {
         alias: {
           'virtual:plugin-entry': pluginEntry,
