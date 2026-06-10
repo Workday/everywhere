@@ -1,7 +1,7 @@
 import { type ReactNode } from 'react';
 import { plugin, DataProvider, RestClient } from '@workday/everywhere';
 import { CanvasProvider } from '@workday/canvas-kit-react';
-import { home } from './routes.js';
+import { home, worker } from './routes.js';
 
 const client = new RestClient('/api/v1/tenant');
 
@@ -16,5 +16,5 @@ function DirectoryProvider({ children }: { children: ReactNode }) {
 export default plugin({
   provider: DirectoryProvider,
   defaultRoute: home,
-  routes: [home],
+  routes: [home, worker],
 });
