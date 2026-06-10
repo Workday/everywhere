@@ -1,42 +1,6 @@
 import type { IncomingMessage, ServerResponse } from 'node:http';
 import { describe, it, expect, vi, afterEach } from 'vitest';
-import { composeUpstreamPath, createTenantForwarder } from '../../src/data/proxy-forwarder.js';
-
-describe('composeUpstreamPath', () => {
-  describe('REST path', () => {
-    it('injects tenant after the version', () => {
-      const out = composeUpstreamPath('/common/v1/workers/me', 'acmeco');
-      expect(out).toBe('/ccx/api/common/v1/acmeco/workers/me');
-    });
-
-    it('preserves the query string', () => {
-      const out = composeUpstreamPath('/common/v1/workers?limit=10', 'acmeco');
-      expect(out).toBe('/ccx/api/common/v1/acmeco/workers?limit=10');
-    });
-
-    it('preserves the query string when the path ends at the version', () => {
-      const out = composeUpstreamPath('/graphql/v5?op=foo', 'acmeco');
-      expect(out).toBe('/ccx/api/graphql/v5/acmeco?op=foo');
-    });
-  });
-
-  describe('GraphQL path', () => {
-    it('appends tenant when the path ends at the version', () => {
-      const out = composeUpstreamPath('/graphql/v5', 'acmeco');
-      expect(out).toBe('/ccx/api/graphql/v5/acmeco');
-    });
-  });
-
-  describe('too few segments', () => {
-    it('returns null for a single-segment path', () => {
-      expect(composeUpstreamPath('/onlyone', 'acmeco')).toBeNull();
-    });
-
-    it('returns null for an empty path', () => {
-      expect(composeUpstreamPath('/', 'acmeco')).toBeNull();
-    });
-  });
-});
+import { createTenantForwarder } from '../../src/data/proxy-forwarder.js';
 
 interface FakeRes {
   res: ServerResponse;
@@ -112,36 +76,40 @@ describe('createTenantForwarder', () => {
       const fetchMock = mockFetch(async () => okResponse());
       const forwarder = createTenantForwarder({
         gateway: 'https://impl.example',
-        tenant: 'acmeco',
         getToken: async () => 'tok',
       });
       const { res } = fakeResponse();
       // The mount strips /api/v1/tenant; req.url is what's left.
       await forwarder(fakeRequest({ method: 'GET', url: '/common/v1/workers/me' }), res);
-      expect(fetchMock.mock.calls[0]?.[0]).toBe(
-        'https://impl.example/ccx/api/common/v1/acmeco/workers/me'
-      );
+      expect(fetchMock.mock.calls[0]?.[0]).toBe('https://impl.example/common/v1/workers/me');
     });
 
-    it('rewrites the path before calling upstream', async () => {
+    it('forwards the path verbatim to upstream', async () => {
       const fetchMock = mockFetch(async () => okResponse());
       const forwarder = createTenantForwarder({
         gateway: 'https://impl.example',
-        tenant: 'acmeco',
         getToken: async () => 'tok',
       });
       const { res } = fakeResponse();
       await forwarder(fakeRequest({ method: 'GET', url: '/common/v1/workers/me' }), res);
-      expect(fetchMock.mock.calls[0]?.[0]).toBe(
-        'https://impl.example/ccx/api/common/v1/acmeco/workers/me'
-      );
+      expect(fetchMock.mock.calls[0]?.[0]).toBe('https://impl.example/common/v1/workers/me');
+    });
+
+    it('forwards a GraphQL path verbatim to upstream', async () => {
+      const fetchMock = mockFetch(async () => okResponse());
+      const forwarder = createTenantForwarder({
+        gateway: 'https://impl.example',
+        getToken: async () => 'tok',
+      });
+      const { res } = fakeResponse();
+      await forwarder(fakeRequest({ method: 'GET', url: '/graphql/v5' }), res);
+      expect(fetchMock.mock.calls[0]?.[0]).toBe('https://impl.example/graphql/v5');
     });
 
     it('forwards the HTTP method', async () => {
       const fetchMock = mockFetch(async () => okResponse());
       const forwarder = createTenantForwarder({
         gateway: 'https://impl.example',
-        tenant: 'acmeco',
         getToken: async () => 'tok',
       });
       const { res } = fakeResponse();
@@ -157,7 +125,6 @@ describe('createTenantForwarder', () => {
       mockFetch(async () => new Response('{"err":true}', { status: 418 }));
       const forwarder = createTenantForwarder({
         gateway: 'https://impl.example',
-        tenant: 'acmeco',
         getToken: async () => 'tok',
       });
       const { res, status } = fakeResponse();
@@ -171,7 +138,6 @@ describe('createTenantForwarder', () => {
       const fetchMock = mockFetch(async () => okResponse());
       const forwarder = createTenantForwarder({
         gateway: 'https://impl.example',
-        tenant: 'acmeco',
         getToken: async () => 'my-token',
       });
       const { res } = fakeResponse();
@@ -186,7 +152,6 @@ describe('createTenantForwarder', () => {
       mockFetch(async () => okResponse());
       const forwarder = createTenantForwarder({
         gateway: 'https://impl.example',
-        tenant: 'acmeco',
         getToken: async () => null,
       });
       const { res, status } = fakeResponse();
@@ -198,7 +163,6 @@ describe('createTenantForwarder', () => {
       const fetchMock = mockFetch(async () => okResponse());
       const forwarder = createTenantForwarder({
         gateway: 'https://impl.example',
-        tenant: 'acmeco',
         getToken: async () => null,
       });
       const { res } = fakeResponse();
@@ -212,7 +176,6 @@ describe('createTenantForwarder', () => {
       mockFetch(async () => okResponse());
       const forwarder = createTenantForwarder({
         gateway: 'https://impl.example',
-        tenant: 'acmeco',
         getToken: async () => 'tok',
       });
       const { res, status } = fakeResponse();
@@ -242,7 +205,6 @@ describe('createTenantForwarder', () => {
       });
       const forwarder = createTenantForwarder({
         gateway: 'https://impl.example',
-        tenant: 'acmeco',
         getToken: async () => 'tok',
       });
       const { res, status } = fakeResponse();

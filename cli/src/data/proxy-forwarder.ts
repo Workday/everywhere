@@ -1,41 +1,16 @@
 import type { IncomingMessage, ServerResponse } from 'node:http';
 
-/**
- * Composes the canonical upstream Workday path from the portion of a request URL
- * that follows the `/api/v1/tenant` mount prefix.
- *
- * Input    /<service>/<version>[/<rest>][?<query>]
- * Output   /ccx/api/<service>/<version>/<tenant>[/<rest>][?<query>]
- *
- * Returns null if the input has fewer than two leading segments
- * (i.e. doesn't carry both a service and a version).
- */
-export function composeUpstreamPath(strippedPath: string, tenant: string): string | null {
-  const queryIndex = strippedPath.indexOf('?');
-  const pathPart = queryIndex === -1 ? strippedPath : strippedPath.slice(0, queryIndex);
-  const queryPart = queryIndex === -1 ? '' : strippedPath.slice(queryIndex);
-  const rest = pathPart.startsWith('/') ? pathPart.slice(1) : pathPart;
-  const segments = rest.split('/');
-  if (segments.length < 2) return null;
-  const [service, version, ...remainder] = segments;
-  if (!service || !version) return null;
-  const tail = remainder.length > 0 ? `/${remainder.join('/')}` : '';
-  return `/ccx/api/${service}/${version}/${tenant}${tail}${queryPart}`;
-}
-
 export interface ForwarderConfig {
   gateway: string;
-  tenant: string;
   getToken: () => Promise<string | null>;
 }
 
 export function createTenantForwarder(config: ForwarderConfig) {
   return async function forward(req: IncomingMessage, res: ServerResponse): Promise<void> {
-    const incomingPath = req.url ?? '/';
-    const rewritten = composeUpstreamPath(incomingPath, config.tenant);
-    if (!rewritten) {
+    const incomingPath = req.url ?? '';
+    if (!incomingPath || incomingPath === '/') {
       res.writeHead(404, { 'content-type': 'application/json' });
-      res.end(JSON.stringify({ error: `unrecognised tenant path: ${incomingPath}` }));
+      res.end(JSON.stringify({ error: `no path to forward: ${incomingPath}` }));
       return;
     }
 
@@ -58,7 +33,7 @@ export function createTenantForwarder(config: ForwarderConfig) {
       res.end(JSON.stringify({ error: `failed to read request body: ${(err as Error).message}` }));
       return;
     }
-    const upstreamUrl = `${config.gateway}${rewritten}`;
+    const upstreamUrl = `${config.gateway}${incomingPath}`;
 
     const headers: Record<string, string> = {
       authorization: `Bearer ${token}`,
