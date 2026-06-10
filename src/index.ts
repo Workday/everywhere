@@ -20,8 +20,12 @@ export type {
   CurrencyValue,
 } from './data/index.js';
 export type { DataResolver } from './data/index.js';
-export { HttpResolver, GraphQLResolver } from './data/index.js';
+export { HttpClient, HttpError, HttpAuthError } from './data/index.js';
+export type { HttpRequestOptions } from './data/index.js';
 export { RestClient } from './data/index.js';
+export type { RestRequestOptions } from './data/index.js';
+export { GraphQLClient } from './data/index.js';
+export { GraphQLResolver } from './data/index.js';
 export { DataProvider } from './data/index.js';
 export type { DataProviderProps } from './data/index.js';
 export { useQuery } from './data/index.js';
@@ -29,3 +33,4 @@ export type { QueryOptions, QueryResult } from './data/index.js';
 export { useMutation } from './data/index.js';
 export type { MutationResult } from './data/index.js';
 export { useRequest } from './data/index.js';
+export type { RequestResult, UseRequestOptions } from './data/index.js';
