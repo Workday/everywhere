@@ -1,23 +1,22 @@
 # REST Data Provider — Design
 
-**Date:** 2026-06-09
-**Branch:** `feat/rest-data-provider`
-**Status:** Approved for implementation planning
+**Date:** 2026-06-09 **Branch:** `feat/rest-data-provider` **Status:** Approved for implementation
+planning
 
 ## Summary
 
-Add a REST data primitive to the SDK alongside the existing GraphQL resolver, share a single
-HTTP transport layer between both protocols, and replace the dev server's local GraphQL mock
-with a transparent proxy to Workday. The directory example is reworked to a single card backed
-by the real `/workers/me` REST endpoint.
+Add a REST data primitive to the SDK alongside the existing GraphQL resolver, share a single HTTP
+transport layer between both protocols, and replace the dev server's local GraphQL mock with a
+transparent proxy to Workday. The directory example is reworked to a single card backed by the real
+`/workers/me` REST endpoint.
 
 ## Goals
 
 - Plugin authors can call Workday REST endpoints with the same ergonomics as GraphQL.
 - One shared transport layer (headers, auth-error mapping, JSON handling) underneath both REST and
   GraphQL clients — no duplicated fetch code.
-- Dev server proxies real Workday traffic, removing the offline JSON-file mock that masked the
-  real network shape.
+- Dev server proxies real Workday traffic, removing the offline JSON-file mock that masked the real
+  network shape.
 - First consumer: the directory example, reduced to a single card showing data from
   `/common/v1/workers/me`.
 
@@ -25,8 +24,8 @@ by the real `/workers/me` REST endpoint.
 
 - No "bind"-style codegen or model/CRUD abstraction for REST. REST stays path-based.
 - No retry, caching, or interceptor framework in the shared HTTP layer.
-- No production platform proxy work — that's parallel work owned elsewhere. This change covers
-  the SDK clients and the local dev-server proxy only.
+- No production platform proxy work — that's parallel work owned elsewhere. This change covers the
+  SDK clients and the local dev-server proxy only.
 - No new outbound network calls from runtime code beyond the request the plugin author makes.
 
 ## Architecture
@@ -77,8 +76,8 @@ Owns:
 - Header injection: `Content-Type`, `accept`, and the `x-app-id` global header
   (`globalThis.__WE_APP_ID__`) lifted from both existing resolvers.
 - JSON parse with safe fallback when the body isn't JSON.
-- Non-2xx → `HttpError`; 401/403 → `HttpAuthError` carrying the "Run `npx @workday/everywhere auth
-  login`" guidance.
+- Non-2xx → `HttpError`; 401/403 → `HttpAuthError` carrying the "Run
+  `npx @workday/everywhere auth login`" guidance.
 - Abort-signal pass-through.
 
 Explicitly out of scope: retries, caching, interceptors, protocol knowledge.
@@ -92,7 +91,7 @@ export interface RestRequestOptions {
 }
 
 export class RestClient {
-  constructor(client?: HttpClient | string);  // string = baseUrl shorthand
+  constructor(client?: HttpClient | string); // string = baseUrl shorthand
   get<T>(path: string, opts?: RestRequestOptions): Promise<T>;
   post<T>(path: string, body?: unknown, opts?: RestRequestOptions): Promise<T>;
   put<T>(path: string, body?: unknown, opts?: RestRequestOptions): Promise<T>;
@@ -114,14 +113,15 @@ export class GraphQLClient {
 ```
 
 Internally: builds the `{ query, variables }` request envelope, POSTs via `HttpClient`, parses the
-`{ data, errors }` response envelope. Maps GraphQL extension codes `UNAUTHENTICATED` /
-`FORBIDDEN` → `HttpAuthError`. Joins remaining `errors[]` messages with `; ` and throws a regular
-`Error`.
+`{ data, errors }` response envelope. Maps GraphQL extension codes `UNAUTHENTICATED` / `FORBIDDEN` →
+`HttpAuthError`. Joins remaining `errors[]` messages with `; ` and throws a regular `Error`.
 
 ### `useRequest` hook (`src/data/useRequest.ts`)
 
 ```ts
-export interface UseRequestOptions { skip?: boolean }
+export interface UseRequestOptions {
+  skip?: boolean;
+}
 export interface RequestResult<T> {
   data: T | null;
   loading: boolean;
@@ -132,15 +132,14 @@ export function useRequest<T>(path: string, opts?: UseRequestOptions): RequestRe
 ```
 
 GET-only. Mirrors `useQuery` shape. Pulls its `RestClient` from `DataProvider` context. For
-mutations, callers use `RestClient` directly — matches how `useMutation` already works for
-GraphQL.
+mutations, callers use `RestClient` directly — matches how `useMutation` already works for GraphQL.
 
 ### `GraphQLResolver` refactor
 
 - External constructor signature unchanged.
 - Internal `execute()` deleted; resolver delegates to `GraphQLClient.execute`.
-- Default endpoint moves from `${origin}/api/v1/data/graphql` to
-  `${origin}/api/v1/proxy/graphql/v5` (matches platform proxy migration).
+- Default endpoint moves from `${origin}/api/v1/data/graphql` to `${origin}/api/v1/proxy/graphql/v5`
+  (matches platform proxy migration).
 - Header/auth logic deleted from the resolver — lives in `HttpClient` and `GraphQLClient` now.
 - Workday-specific logic stays: `workdayID` mapping, mutation input shaping, operation naming,
   schema-driven selection sets, dynamic CurrencyValue introspection.
@@ -151,8 +150,8 @@ Extended to accept a REST client alongside the existing resolver:
 
 ```ts
 interface DataProviderProps {
-  resolver?: DataResolver;     // for useQuery / useMutation
-  client?: RestClient;         // for useRequest
+  resolver?: DataResolver; // for useQuery / useMutation
+  client?: RestClient; // for useRequest
   children: ReactNode;
 }
 ```
@@ -182,15 +181,15 @@ Replace the existing mock route in `cli/src/data/vite-data-plugin.ts` with a tra
 The proxy is a direct API pass-through to Workday. It strips the `/api/v1/proxy/` prefix, prepends
 `/ccx/api/`, and injects the tenant path segment:
 
-| Plugin calls                                  | Proxy forwards to                                                |
-| --------------------------------------------- | ---------------------------------------------------------------- |
-| `/api/v1/proxy/common/v1/workers/me`          | `https://<host>/ccx/api/common/v1/<tenant>/workers/me`           |
-| `/api/v1/proxy/graphql/v5`                    | `https://<host>/ccx/api/graphql/v5/<tenant>`                     |
+| Plugin calls                         | Proxy forwards to                                      |
+| ------------------------------------ | ------------------------------------------------------ |
+| `/api/v1/proxy/common/v1/workers/me` | `https://<host>/ccx/api/common/v1/<tenant>/workers/me` |
+| `/api/v1/proxy/graphql/v5`           | `https://<host>/ccx/api/graphql/v5/<tenant>`           |
 
 ### Behavior
 
-- Reads host, tenant, and bearer token from the CLI's stored auth/gateway state (already
-  established by `auth login`).
+- Reads host, tenant, and bearer token from the CLI's stored auth/gateway state (already established
+  by `auth login`).
 - Injects `Authorization: Bearer <token>` on the upstream request. Existing `proxy-auth.ts`
   scaffolding is the starting point.
 - Forwards method, body, and content-type from the incoming request unchanged.
@@ -250,7 +249,11 @@ export default function Home() {
   const { data, loading, error } = useRequest<Worker>('/common/v1/workers/me');
   if (loading) return <Card>Loading…</Card>;
   if (error) return <Card>Error: {error.message}</Card>;
-  return <Card><h2>{data?.descriptor}</h2></Card>;
+  return (
+    <Card>
+      <h2>{data?.descriptor}</h2>
+    </Card>
+  );
 }
 ```
 
@@ -298,26 +301,25 @@ Untouched.
 
 ## Testing
 
-Follows project TDD rules (CLAUDE.md): failing test first, one expectation per `it`, one branch
-per `describe`.
+Follows project TDD rules (CLAUDE.md): failing test first, one expectation per `it`, one branch per
+`describe`.
 
 ### Unit (Vitest, alongside source)
 
-- `HttpClient`: header injection, `x-app-id`, base-URL composition, JSON parse, 2xx/4xx/5xx
-  mapping, 401/403 → `HttpAuthError`, abort signal pass-through. Mock `fetch`.
+- `HttpClient`: header injection, `x-app-id`, base-URL composition, JSON parse, 2xx/4xx/5xx mapping,
+  401/403 → `HttpAuthError`, abort signal pass-through. Mock `fetch`.
 - `RestClient`: each method calls `HttpClient` with the right method/body. Mock `HttpClient`.
 - `GraphQLClient`: envelope shape, `errors[]` → throw, auth-extension-code mapping. Mock
   `HttpClient`.
-- `GraphQLResolver`: existing tests retained, refactored to mock `GraphQLClient` instead of
-  `fetch`.
-- `useRequest`: loading / data / error transitions, `skip`, `refetch`. React Testing Library
-  with mocked `RestClient`.
+- `GraphQLResolver`: existing tests retained, refactored to mock `GraphQLClient` instead of `fetch`.
+- `useRequest`: loading / data / error transitions, `skip`, `refetch`. React Testing Library with
+  mocked `RestClient`.
 
 ### Integration (`cli/tests/`)
 
 - Dev-server proxy: `/api/v1/proxy/*` forwarding — tenant injection, token injection, prefix
-  stripping, 401 on missing token, upstream status/body pass-through. Upstream mocked with `msw/
-  node` or a small `http.createServer`.
+  stripping, 401 on missing token, upstream status/body pass-through. Upstream mocked with
+  `msw/ node` or a small `http.createServer`.
 
 ### Manual smoke
 
@@ -328,16 +330,16 @@ per `describe`.
 
 - **Added** to `@workday/everywhere`: `HttpClient`, `HttpError`, `HttpAuthError`, `RestClient`,
   `GraphQLClient`, `useRequest`, `RequestResult`, `UseRequestOptions`.
-- **Removed** from `@workday/everywhere`: `HttpResolver`. Per maintainer direction, removed
-  outright rather than deprecated — the mock-shaped resolver was never a useful contract.
-- **Changed**: `DataProviderProps` gains an optional `client` field. Existing usage with
-  `resolver` continues to work unchanged.
+- **Removed** from `@workday/everywhere`: `HttpResolver`. Per maintainer direction, removed outright
+  rather than deprecated — the mock-shaped resolver was never a useful contract.
+- **Changed**: `DataProviderProps` gains an optional `client` field. Existing usage with `resolver`
+  continues to work unchanged.
 - **Changed**: `GraphQLResolver` default endpoint shifts from `${origin}/api/v1/data/graphql` to
   `${origin}/api/v1/proxy/graphql/v5`. Callers passing an explicit endpoint are unaffected.
 
 ## Open questions
 
-- Final per-example disposition (`charitable-donations`, `work-events`, `create-work-event`)
-  decided during implementation as each is touched.
-- Exact shape of the `Worker` response body displayed in the directory card — settle once the
-  proxy round-trips against a real tenant.
+- Final per-example disposition (`charitable-donations`, `work-events`, `create-work-event`) decided
+  during implementation as each is touched.
+- Exact shape of the `Worker` response body displayed in the directory card — settle once the proxy
+  round-trips against a real tenant.

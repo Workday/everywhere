@@ -1,12 +1,21 @@
 # REST Data Provider Implementation Plan
 
-> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
+> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development
+> (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use
+> checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Add a REST data primitive to the SDK alongside the existing GraphQL resolver, share one HTTP transport layer between both, and replace the dev server's local GraphQL mock with a transparent proxy to Workday. The directory example becomes a single card driven by `/workers/me`.
+**Goal:** Add a REST data primitive to the SDK alongside the existing GraphQL resolver, share one
+HTTP transport layer between both, and replace the dev server's local GraphQL mock with a
+transparent proxy to Workday. The directory example becomes a single card driven by `/workers/me`.
 
-**Architecture:** Three-layer client stack in `src/data/`: an `HttpClient` transport at the bottom, with `RestClient` and `GraphQLClient` primitives above it; `GraphQLResolver` (the existing model-CRUD layer) sits over `GraphQLClient`. A `useRequest` React hook mirrors `useQuery`'s shape. The dev server's `vite-data-plugin` is repointed from the local JSON mock to a transparent `/api/v1/proxy/*` → `https://<host>/ccx/api/<service>/<version>/<tenant>/...` forwarder.
+**Architecture:** Three-layer client stack in `src/data/`: an `HttpClient` transport at the bottom,
+with `RestClient` and `GraphQLClient` primitives above it; `GraphQLResolver` (the existing
+model-CRUD layer) sits over `GraphQLClient`. A `useRequest` React hook mirrors `useQuery`'s shape.
+The dev server's `vite-data-plugin` is repointed from the local JSON mock to a transparent
+`/api/v1/proxy/*` → `https://<host>/ccx/api/<service>/<version>/<tenant>/...` forwarder.
 
-**Tech Stack:** TypeScript (strict), Vitest, React 19, React Testing Library, Vite dev server middleware, Node 22+ `fetch`.
+**Tech Stack:** TypeScript (strict), Vitest, React 19, React Testing Library, Vite dev server
+middleware, Node 22+ `fetch`.
 
 **Spec:** `docs/superpowers/specs/2026-06-09-rest-data-provider-design.md`
 
@@ -27,18 +36,21 @@
 ## File Structure
 
 **New source files:**
+
 - `src/data/HttpClient.ts` — transport layer, error classes
 - `src/data/RestClient.ts` — REST primitive
 - `src/data/GraphQLClient.ts` — GraphQL primitive
 - `src/data/useRequest.ts` — REST React hook
 
 **Modified source files:**
+
 - `src/data/GraphQLResolver.ts` — refactor to use `GraphQLClient`; new default endpoint
 - `src/data/DataContext.tsx` — add optional `client` prop
 - `src/data/index.ts` — add new exports, remove `HttpResolver`
 - `cli/src/data/vite-data-plugin.ts` — replace mock route with `/api/v1/proxy/*` forwarder
 
 **Deleted:**
+
 - `src/data/HttpResolver.ts`
 - `cli/src/data/graphql-handler.ts`
 - `cli/src/data/local-store.ts`
@@ -46,6 +58,7 @@
 - `cli/tests/data/graphql-handler.test.ts`
 
 **New test files:**
+
 - `tests/data/HttpClient.test.ts`
 - `tests/data/RestClient.test.ts`
 - `tests/data/GraphQLClient.test.ts`
@@ -53,8 +66,10 @@
 - `cli/tests/data/proxy-forwarder.test.ts`
 
 **Examples:**
+
 - `examples/directory/` — rewritten end-to-end
-- `examples/charitable-donations/`, `examples/work-events/`, `examples/create-work-event/` — audited and removed (mock-bound, no clean real-data analog)
+- `examples/charitable-donations/`, `examples/work-events/`, `examples/create-work-event/` — audited
+  and removed (mock-bound, no clean real-data analog)
 - `examples/hello/` — untouched
 
 ---
@@ -62,6 +77,7 @@
 ### Task 1: `HttpClient` transport + error classes
 
 **Files:**
+
 - Create: `src/data/HttpClient.ts`
 - Create: `tests/data/HttpClient.test.ts`
 
@@ -349,6 +365,7 @@ git commit -m "feat(data): add HttpClient transport with typed error mapping"
 ### Task 2: `RestClient`
 
 **Files:**
+
 - Create: `src/data/RestClient.ts`
 - Create: `tests/data/RestClient.test.ts`
 
@@ -386,7 +403,11 @@ describe('RestClient', () => {
     it('issues a GET request to the path', async () => {
       const http = fakeHttpClient();
       await new RestClient(http).get('/me');
-      expect(http.request).toHaveBeenCalledWith('/me', { method: 'GET', headers: undefined, signal: undefined });
+      expect(http.request).toHaveBeenCalledWith('/me', {
+        method: 'GET',
+        headers: undefined,
+        signal: undefined,
+      });
     });
   });
 
@@ -394,7 +415,12 @@ describe('RestClient', () => {
     it('issues a POST with a JSON body', async () => {
       const http = fakeHttpClient();
       await new RestClient(http).post('/x', { a: 1 });
-      expect(http.request).toHaveBeenCalledWith('/x', { method: 'POST', body: { a: 1 }, headers: undefined, signal: undefined });
+      expect(http.request).toHaveBeenCalledWith('/x', {
+        method: 'POST',
+        body: { a: 1 },
+        headers: undefined,
+        signal: undefined,
+      });
     });
   });
 
@@ -402,7 +428,12 @@ describe('RestClient', () => {
     it('issues a PUT with a JSON body', async () => {
       const http = fakeHttpClient();
       await new RestClient(http).put('/x', { a: 1 });
-      expect(http.request).toHaveBeenCalledWith('/x', { method: 'PUT', body: { a: 1 }, headers: undefined, signal: undefined });
+      expect(http.request).toHaveBeenCalledWith('/x', {
+        method: 'PUT',
+        body: { a: 1 },
+        headers: undefined,
+        signal: undefined,
+      });
     });
   });
 
@@ -410,7 +441,12 @@ describe('RestClient', () => {
     it('issues a PATCH with a JSON body', async () => {
       const http = fakeHttpClient();
       await new RestClient(http).patch('/x', { a: 1 });
-      expect(http.request).toHaveBeenCalledWith('/x', { method: 'PATCH', body: { a: 1 }, headers: undefined, signal: undefined });
+      expect(http.request).toHaveBeenCalledWith('/x', {
+        method: 'PATCH',
+        body: { a: 1 },
+        headers: undefined,
+        signal: undefined,
+      });
     });
   });
 
@@ -418,7 +454,11 @@ describe('RestClient', () => {
     it('issues a DELETE request', async () => {
       const http = fakeHttpClient();
       await new RestClient(http).delete('/x/1');
-      expect(http.request).toHaveBeenCalledWith('/x/1', { method: 'DELETE', headers: undefined, signal: undefined });
+      expect(http.request).toHaveBeenCalledWith('/x/1', {
+        method: 'DELETE',
+        headers: undefined,
+        signal: undefined,
+      });
     });
   });
 
@@ -426,7 +466,10 @@ describe('RestClient', () => {
     it('forwards headers to the underlying HttpClient', async () => {
       const http = fakeHttpClient();
       await new RestClient(http).get('/x', { headers: { 'x-custom': 'v' } });
-      expect(http.request).toHaveBeenCalledWith('/x', expect.objectContaining({ headers: { 'x-custom': 'v' } }));
+      expect(http.request).toHaveBeenCalledWith(
+        '/x',
+        expect.objectContaining({ headers: { 'x-custom': 'v' } })
+      );
     });
 
     it('forwards abort signal to the underlying HttpClient', async () => {
@@ -467,23 +510,46 @@ export class RestClient {
   }
 
   get<T>(path: string, opts: RestRequestOptions = {}): Promise<T> {
-    return this.http.request<T>(path, { method: 'GET', headers: opts.headers, signal: opts.signal });
+    return this.http.request<T>(path, {
+      method: 'GET',
+      headers: opts.headers,
+      signal: opts.signal,
+    });
   }
 
   post<T>(path: string, body?: unknown, opts: RestRequestOptions = {}): Promise<T> {
-    return this.http.request<T>(path, { method: 'POST', body, headers: opts.headers, signal: opts.signal });
+    return this.http.request<T>(path, {
+      method: 'POST',
+      body,
+      headers: opts.headers,
+      signal: opts.signal,
+    });
   }
 
   put<T>(path: string, body?: unknown, opts: RestRequestOptions = {}): Promise<T> {
-    return this.http.request<T>(path, { method: 'PUT', body, headers: opts.headers, signal: opts.signal });
+    return this.http.request<T>(path, {
+      method: 'PUT',
+      body,
+      headers: opts.headers,
+      signal: opts.signal,
+    });
   }
 
   patch<T>(path: string, body?: unknown, opts: RestRequestOptions = {}): Promise<T> {
-    return this.http.request<T>(path, { method: 'PATCH', body, headers: opts.headers, signal: opts.signal });
+    return this.http.request<T>(path, {
+      method: 'PATCH',
+      body,
+      headers: opts.headers,
+      signal: opts.signal,
+    });
   }
 
   delete<T>(path: string, opts: RestRequestOptions = {}): Promise<T> {
-    return this.http.request<T>(path, { method: 'DELETE', headers: opts.headers, signal: opts.signal });
+    return this.http.request<T>(path, {
+      method: 'DELETE',
+      headers: opts.headers,
+      signal: opts.signal,
+    });
   }
 }
 ```
@@ -508,6 +574,7 @@ git commit -m "feat(data): add RestClient primitive over HttpClient"
 ### Task 3: `GraphQLClient`
 
 **Files:**
+
 - Create: `src/data/GraphQLClient.ts`
 - Create: `tests/data/GraphQLClient.test.ts`
 
@@ -553,7 +620,10 @@ describe('GraphQLClient', () => {
     it('omits variables when not provided', async () => {
       const http = fakeHttpClient({ data: {} });
       await new GraphQLClient(http).execute('{ q }');
-      const sent = (http.request.mock.calls[0]?.[1] as { body: unknown }).body as Record<string, unknown>;
+      const sent = (http.request.mock.calls[0]?.[1] as { body: unknown }).body as Record<
+        string,
+        unknown
+      >;
       expect('variables' in sent).toBe(false);
     });
   });
@@ -573,12 +643,16 @@ describe('GraphQLClient', () => {
     });
 
     it('throws HttpAuthError when an error has extension code UNAUTHENTICATED', async () => {
-      const http = fakeHttpClient({ errors: [{ message: 'nope', extensions: { code: 'UNAUTHENTICATED' } }] });
+      const http = fakeHttpClient({
+        errors: [{ message: 'nope', extensions: { code: 'UNAUTHENTICATED' } }],
+      });
       await expect(new GraphQLClient(http).execute('{ q }')).rejects.toBeInstanceOf(HttpAuthError);
     });
 
     it('throws HttpAuthError when an error has extension code FORBIDDEN', async () => {
-      const http = fakeHttpClient({ errors: [{ message: 'nope', extensions: { code: 'FORBIDDEN' } }] });
+      const http = fakeHttpClient({
+        errors: [{ message: 'nope', extensions: { code: 'FORBIDDEN' } }],
+      });
       await expect(new GraphQLClient(http).execute('{ q }')).rejects.toBeInstanceOf(HttpAuthError);
     });
   });
@@ -658,17 +732,22 @@ git commit -m "feat(data): add GraphQLClient primitive over HttpClient"
 ### Task 4: Refactor `GraphQLResolver` to use `GraphQLClient`
 
 **Files:**
+
 - Modify: `src/data/GraphQLResolver.ts`
 - Modify: `tests/data/GraphQLResolver.test.ts`
 
 - [ ] **Step 4.1: Inspect the existing test file**
 
-Run `npx vitest run tests/data/GraphQLResolver.test.ts` and read the file with `Read`. Note that existing tests mock `globalThis.fetch` and assert against a graph endpoint URL plus envelope shape. The behavior we must preserve:
+Run `npx vitest run tests/data/GraphQLResolver.test.ts` and read the file with `Read`. Note that
+existing tests mock `globalThis.fetch` and assert against a graph endpoint URL plus envelope shape.
+The behavior we must preserve:
+
 - Model/CRUD methods still work end-to-end.
 - Default endpoint moves to `/api/v1/proxy/graphql/v5`.
 - 401/403 still produce an auth-flavored error.
 
-- [ ] **Step 4.2: Update `GraphQLResolver` constructor and `execute()` to delegate to `GraphQLClient`**
+- [ ] **Step 4.2: Update `GraphQLResolver` constructor and `execute()` to delegate to
+      `GraphQLClient`**
 
 Edit `src/data/GraphQLResolver.ts`. Replace the existing constructor and `execute` method with:
 
@@ -695,11 +774,14 @@ import { GraphQLClient } from './GraphQLClient.js';
   }
 ```
 
-Remove all header construction, fetch call, and response parsing from the resolver — those now live in `GraphQLClient`/`HttpClient`.
+Remove all header construction, fetch call, and response parsing from the resolver — those now live
+in `GraphQLClient`/`HttpClient`.
 
 - [ ] **Step 4.3: Update existing resolver tests to mock `GraphQLClient` rather than `fetch`**
 
-This is a refactor of existing tests, not new tests. Read `tests/data/GraphQLResolver.test.ts` and replace the `globalThis.fetch` mock pattern with a `vi.mock('../../src/data/GraphQLClient.js', ...)` or a direct injection — whichever requires fewer line changes. Recommended pattern:
+This is a refactor of existing tests, not new tests. Read `tests/data/GraphQLResolver.test.ts` and
+replace the `globalThis.fetch` mock pattern with a `vi.mock('../../src/data/GraphQLClient.js', ...)`
+or a direct injection — whichever requires fewer line changes. Recommended pattern:
 
 ```ts
 import { vi } from 'vitest';
@@ -710,11 +792,15 @@ vi.mock('../../src/data/GraphQLClient.js', () => ({
 }));
 
 // per test:
-const executeMock = vi.fn().mockResolvedValue({ /* expected GraphQL data envelope */ });
+const executeMock = vi.fn().mockResolvedValue({
+  /* expected GraphQL data envelope */
+});
 vi.mocked(GraphQLClient).mockImplementation(() => ({ execute: executeMock }) as never);
 ```
 
-Each existing assertion that previously matched the URL passed to fetch should now match the **query string** passed to `executeMock`. URL-level assertions can be removed (the URL lives in `GraphQLClient`'s tests now).
+Each existing assertion that previously matched the URL passed to fetch should now match the **query
+string** passed to `executeMock`. URL-level assertions can be removed (the URL lives in
+`GraphQLClient`'s tests now).
 
 - [ ] **Step 4.4: Run resolver tests; confirm green**
 
@@ -744,12 +830,15 @@ git commit -m "refactor(data): GraphQLResolver delegates transport to GraphQLCli
 ### Task 5: Extend `DataProvider` + add `useRequest`
 
 **Files:**
+
 - Modify: `src/data/DataContext.tsx`
-- Modify: `tests/data/useQuery.test.tsx` (only if updated context value type breaks existing tests; otherwise no change)
+- Modify: `tests/data/useQuery.test.tsx` (only if updated context value type breaks existing tests;
+  otherwise no change)
 - Create: `src/data/useRequest.ts`
 - Create: `tests/data/useRequest.test.tsx`
 
-- [ ] **Step 5.1: Update `DataContext.tsx` to accept an optional `client` and an optional `resolver`**
+- [ ] **Step 5.1: Update `DataContext.tsx` to accept an optional `client` and an optional
+      `resolver`**
 
 Replace `src/data/DataContext.tsx`:
 
@@ -805,7 +894,8 @@ export function useDataContext(): DataContextValue {
 
 - [ ] **Step 5.2: Update `useQuery.ts` to throw if `resolver` is null**
 
-Edit `src/data/useQuery.ts`. After the `const { resolver, invalidationKey } = useDataContext();` line, add:
+Edit `src/data/useQuery.ts`. After the `const { resolver, invalidationKey } = useDataContext();`
+line, add:
 
 ```ts
 if (!resolver) {
@@ -829,7 +919,8 @@ if (!resolver) {
 npx vitest run tests/data
 ```
 
-Expected: existing `useQuery`/`useMutation` tests still pass (they pass `resolver` to `DataProvider`).
+Expected: existing `useQuery`/`useMutation` tests still pass (they pass `resolver` to
+`DataProvider`).
 
 - [ ] **Step 5.5: Write failing tests for `useRequest`**
 
@@ -993,14 +1084,18 @@ git commit -m "feat(data): add useRequest hook and optional client on DataProvid
 ### Task 6: Dev-server transparent proxy at `/api/v1/proxy/*`
 
 **Files:**
+
 - Modify: `cli/src/data/vite-data-plugin.ts`
 - Create: `cli/src/data/proxy-forwarder.ts`
 - Create: `cli/tests/data/proxy-forwarder.test.ts`
-- Delete: `cli/src/data/graphql-handler.ts`, `cli/src/data/local-store.ts`, `cli/tests/data/graphql-handler.test.ts`
+- Delete: `cli/src/data/graphql-handler.ts`, `cli/src/data/local-store.ts`,
+  `cli/tests/data/graphql-handler.test.ts`
 
 - [ ] **Step 6.1: Read existing dev-server auth/token plumbing**
 
-Read `cli/src/data/proxy-auth.ts`, `cli/src/commands/everywhere/auth/login.ts`, and any token-storage helper they reference. Identify:
+Read `cli/src/data/proxy-auth.ts`, `cli/src/commands/everywhere/auth/login.ts`, and any
+token-storage helper they reference. Identify:
+
 - How to read the stored bearer token at request time (sync or async).
 - How to read host (`gateway`) and tenant from the same store.
 
@@ -1076,7 +1171,7 @@ export function rewriteProxyPath(path: string, tenant: string): string | null {
 }
 
 interface ForwarderConfig {
-  gateway: string;          // e.g. https://impl.workday.com
+  gateway: string; // e.g. https://impl.workday.com
   tenant: string;
   getToken: () => Promise<string | null>;
 }
@@ -1151,8 +1246,8 @@ Expected: 4 passes.
 
 - [ ] **Step 6.6: Add forwarder behavior tests (using a mocked global `fetch`)**
 
-The forwarder uses `globalThis.fetch` to call upstream Workday. Tests mock that
-instead of standing up a local server — simpler, deterministic, no race conditions.
+The forwarder uses `globalThis.fetch` to call upstream Workday. Tests mock that instead of standing
+up a local server — simpler, deterministic, no race conditions.
 
 Append to `cli/tests/data/proxy-forwarder.test.ts`:
 
@@ -1216,7 +1311,9 @@ afterEach(() => {
   globalThis.fetch = originalFetch;
 });
 
-function mockFetch(impl: (url: string, init: RequestInit) => Promise<Response>): ReturnType<typeof vi.fn> {
+function mockFetch(
+  impl: (url: string, init: RequestInit) => Promise<Response>
+): ReturnType<typeof vi.fn> {
   const mock = vi.fn().mockImplementation(impl);
   globalThis.fetch = mock as unknown as typeof fetch;
   return mock;
@@ -1356,7 +1453,11 @@ npx vitest run cli/tests/data/proxy-forwarder.test.ts
 
 - [ ] **Step 6.8: Repoint `vite-data-plugin.ts` to mount the new forwarder; delete mock files**
 
-Read `cli/src/data/proxy-auth.ts`, `cli/src/commands/everywhere/auth/login.ts` (and any token-store/config module) to find the actual helpers for reading the stored token, gateway URL, and tenant. Then replace the contents of `cli/src/data/vite-data-plugin.ts` with a middleware that delegates `/api/v1/proxy` traffic to `createProxyForwarder`. Approximate shape (adapt to actual storage helpers found in this step):
+Read `cli/src/data/proxy-auth.ts`, `cli/src/commands/everywhere/auth/login.ts` (and any
+token-store/config module) to find the actual helpers for reading the stored token, gateway URL, and
+tenant. Then replace the contents of `cli/src/data/vite-data-plugin.ts` with a middleware that
+delegates `/api/v1/proxy` traffic to `createProxyForwarder`. Approximate shape (adapt to actual
+storage helpers found in this step):
 
 ```ts
 import type { IncomingMessage, ServerResponse } from 'node:http';
@@ -1370,18 +1471,15 @@ export function dataServicePlugin(_pluginDir: string): VitePlugin {
   return {
     name: 'workday-everywhere-data',
     configureServer(server: { middlewares: { use: (...args: unknown[]) => void } }) {
-      server.middlewares.use(
-        '/api/v1/proxy',
-        async (req: IncomingMessage, res: ServerResponse) => {
-          const auth = await readStoredAuth();    // shape: { gateway, tenant, token }
-          const forwarder = createProxyForwarder({
-            gateway: auth.gateway,
-            tenant: auth.tenant,
-            getToken: async () => auth.token,
-          });
-          await forwarder(req, res);
-        }
-      );
+      server.middlewares.use('/api/v1/proxy', async (req: IncomingMessage, res: ServerResponse) => {
+        const auth = await readStoredAuth(); // shape: { gateway, tenant, token }
+        const forwarder = createProxyForwarder({
+          gateway: auth.gateway,
+          tenant: auth.tenant,
+          getToken: async () => auth.token,
+        });
+        await forwarder(req, res);
+      });
     },
   };
 }
@@ -1399,7 +1497,8 @@ rm cli/src/data/graphql-handler.ts cli/src/data/local-store.ts cli/tests/data/gr
 npx vitest run cli/tests
 ```
 
-Expected: green. If any test imports `graphql-handler` or `local-store`, delete or update that test as part of this same task.
+Expected: green. If any test imports `graphql-handler` or `local-store`, delete or update that test
+as part of this same task.
 
 - [ ] **Step 6.10: Commit**
 
@@ -1414,10 +1513,12 @@ git commit -m "feat(cli): replace local GraphQL mock with /api/v1/proxy/* forwar
 ### Task 7: Rewrite the `directory` example
 
 **Files:**
+
 - Rewrite: `examples/directory/plugin.tsx`
 - Rewrite: `examples/directory/routes.ts`
 - Rewrite: `examples/directory/pages/Home.tsx`
-- Delete: `examples/directory/pages/EmployeeList.tsx`, `EmployeeDetail.tsx`, `Spotlight.tsx`, `examples/directory/model/`
+- Delete: `examples/directory/pages/EmployeeList.tsx`, `EmployeeDetail.tsx`, `Spotlight.tsx`,
+  `examples/directory/model/`
 
 - [ ] **Step 7.1: Replace `plugin.tsx`**
 
@@ -1472,8 +1573,18 @@ interface Worker {
 export default function Home() {
   const { data, loading, error } = useRequest<Worker>('/common/v1/workers/me');
 
-  if (loading) return <Card><Card.Body>Loading…</Card.Body></Card>;
-  if (error) return <Card><Card.Body>Error: {error.message}</Card.Body></Card>;
+  if (loading)
+    return (
+      <Card>
+        <Card.Body>Loading…</Card.Body>
+      </Card>
+    );
+  if (error)
+    return (
+      <Card>
+        <Card.Body>Error: {error.message}</Card.Body>
+      </Card>
+    );
   return (
     <Card>
       <Card.Heading>Me</Card.Heading>
@@ -1496,7 +1607,9 @@ rm -rf examples/directory/model
 cd examples && npx tsc --noEmit -p tsconfig.json
 ```
 
-Expected: no errors. If Canvas Kit's `Card` API differs from what's shown above, adjust the imports/JSX to match the version pinned in this repo — the surface compositional API of canvas-kit `Card` is what matters, not the exact prop names.
+Expected: no errors. If Canvas Kit's `Card` API differs from what's shown above, adjust the
+imports/JSX to match the version pinned in this repo — the surface compositional API of canvas-kit
+`Card` is what matters, not the exact prop names.
 
 - [ ] **Step 7.6: Commit**
 
@@ -1510,9 +1623,11 @@ git commit -m "refactor(examples): directory example becomes a single /workers/m
 ### Task 8: Remove `HttpResolver`, update public exports, audit remaining examples
 
 **Files:**
+
 - Delete: `src/data/HttpResolver.ts`, `tests/data/resolver.test.ts`
 - Modify: `src/data/index.ts`
-- Delete and/or rewrite: `examples/charitable-donations/`, `examples/work-events/`, `examples/create-work-event/`
+- Delete and/or rewrite: `examples/charitable-donations/`, `examples/work-events/`,
+  `examples/create-work-event/`
 
 - [ ] **Step 8.1: Replace `src/data/index.ts`**
 
@@ -1561,14 +1676,19 @@ rm src/data/HttpResolver.ts tests/data/resolver.test.ts
 - [ ] **Step 8.3: Audit remaining examples**
 
 For each of `examples/charitable-donations`, `examples/work-events`, `examples/create-work-event`:
-- Inspect imports. If the example uses `HttpResolver` and depends on the now-removed local mock, **delete the example directory** outright. (Per design: "remove or convert to real proxy calls where a clean real-data analog exists; otherwise remove.") None of these have a clean real-data analog without significant per-example design work.
+
+- Inspect imports. If the example uses `HttpResolver` and depends on the now-removed local mock,
+  **delete the example directory** outright. (Per design: "remove or convert to real proxy calls
+  where a clean real-data analog exists; otherwise remove.") None of these have a clean real-data
+  analog without significant per-example design work.
 - `examples/hello` has no data calls; leave untouched.
 
 ```bash
 rm -rf examples/charitable-donations examples/work-events examples/create-work-event
 ```
 
-If any example references these directories from a top-level config (e.g., `examples/tsconfig.json` `references`, or a `pnpm-workspace.yaml`), update it accordingly.
+If any example references these directories from a top-level config (e.g., `examples/tsconfig.json`
+`references`, or a `pnpm-workspace.yaml`), update it accordingly.
 
 - [ ] **Step 8.4: Run full repo check**
 
@@ -1579,7 +1699,8 @@ npx vitest run --exclude ".worktrees/**"
 cd examples && npx tsc --noEmit -p tsconfig.json
 ```
 
-Expected: all green. If `examples/tsconfig.json` lists references to removed examples, remove those entries.
+Expected: all green. If `examples/tsconfig.json` lists references to removed examples, remove those
+entries.
 
 - [ ] **Step 8.5: Commit**
 
@@ -1589,7 +1710,8 @@ git add -u src/data/HttpResolver.ts tests/data/resolver.test.ts examples/charita
 git commit -m "feat(data)!: remove HttpResolver and mock-bound examples"
 ```
 
-> Note the `!` in the commit type — this commit contains the only intentional public-API removal in the change.
+> Note the `!` in the commit type — this commit contains the only intentional public-API removal in
+> the change.
 
 ---
 
@@ -1620,21 +1742,25 @@ just tidy
 just check
 ```
 
-Expected: no diff after `tidy`, all checks pass. If `tidy` produces changes, commit them with `style: prettier`.
+Expected: no diff after `tidy`, all checks pass. If `tidy` produces changes, commit them with
+`style: prettier`.
 
 - [ ] **Step 9.4: Confirm the directory example loads through the dev server with a real token**
 
 Manual smoke test — record the result in the PR description, not a commit:
 
 1. Run `npx @workday/everywhere auth login` against a real Workday tenant (if not already done).
-2. Start the directory example dev server (per `cli/src/commands/everywhere/view.ts` — typically `npx @workday/everywhere view examples/directory` or whatever the documented command is).
+2. Start the directory example dev server (per `cli/src/commands/everywhere/view.ts` — typically
+   `npx @workday/everywhere view examples/directory` or whatever the documented command is).
 3. Open the app in a browser; confirm the `/me` card renders the worker descriptor.
 
-If the response shape needs a different field than `descriptor`, update `pages/Home.tsx` and the `Worker` interface in a follow-up commit on this same branch.
+If the response shape needs a different field than `descriptor`, update `pages/Home.tsx` and the
+`Worker` interface in a follow-up commit on this same branch.
 
 - [ ] **Step 9.5: Open PR**
 
 Push the branch and open a PR to `main` with a summary that highlights:
+
 - The shared `HttpClient` transport and the `RestClient` / `GraphQLClient` primitives.
 - The `/api/v1/proxy/*` dev-server forwarder replacing the local mock.
 - The removal of `HttpResolver` (only intentional public-API break).
@@ -1645,6 +1771,7 @@ Push the branch and open a PR to `main` with a summary that highlights:
 ## Self-Review
 
 **Spec coverage:** every section of the spec maps to a task:
+
 - HttpClient → Task 1
 - RestClient → Task 2
 - GraphQLClient → Task 3
@@ -1655,18 +1782,17 @@ Push the branch and open a PR to `main` with a summary that highlights:
 - HttpResolver removal + exports + other example audit → Task 8
 - Final verification → Task 9
 
-**Open questions from the spec** are explicitly deferred to implementation time and handled in
-Task 9.4 (worker response shape) and Task 8.3 (per-example disposition).
+**Open questions from the spec** are explicitly deferred to implementation time and handled in Task
+9.4 (worker response shape) and Task 8.3 (per-example disposition).
 
-**Placeholder scan:** No "TBD", "implement later", or empty steps. The forwarder middleware in
-Step 6.8 says "adapt to actual storage helpers found in this step" — that's an instruction to
-read concrete code, not a placeholder. Step 9.4's `view examples/directory` command is qualified
-with "per `cli/src/commands/everywhere/view.ts`" so the implementor verifies it.
+**Placeholder scan:** No "TBD", "implement later", or empty steps. The forwarder middleware in Step
+6.8 says "adapt to actual storage helpers found in this step" — that's an instruction to read
+concrete code, not a placeholder. Step 9.4's `view examples/directory` command is qualified with
+"per `cli/src/commands/everywhere/view.ts`" so the implementor verifies it.
 
 **Type consistency:** `RestClient` constructor accepts `HttpClient | string` consistently across
 Task 2 and Task 5. `GraphQLClient` constructor signature is identical in Task 3 and Task 4.
 `DataProviderProps` field name (`client`) consistent in Tasks 5, 7, and the spec.
 
-**Note:** Step 6.6 mocks global `fetch` rather than standing up a local upstream server.
-This keeps tests deterministic, removes timing races, and matches the pattern used by
-`HttpClient.test.ts`.
+**Note:** Step 6.6 mocks global `fetch` rather than standing up a local upstream server. This keeps
+tests deterministic, removes timing races, and matches the pattern used by `HttpClient.test.ts`.

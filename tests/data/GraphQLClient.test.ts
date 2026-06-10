@@ -54,7 +54,10 @@ describe('GraphQLClient', () => {
     it('omits variables when not provided', async () => {
       const http = fakeHttpClient({ data: {} });
       await new GraphQLClient(http).execute('{ q }');
-      const sent = (http.request.mock.calls[0]?.[1] as { body: unknown }).body as Record<string, unknown>;
+      const sent = (http.request.mock.calls[0]?.[1] as { body: unknown }).body as Record<
+        string,
+        unknown
+      >;
       expect('variables' in sent).toBe(false);
     });
   });
@@ -74,17 +77,23 @@ describe('GraphQLClient', () => {
     });
 
     it('throws HttpAuthError when an error has extension code UNAUTHENTICATED', async () => {
-      const http = fakeHttpClient({ errors: [{ message: 'nope', extensions: { code: 'UNAUTHENTICATED' } }] });
+      const http = fakeHttpClient({
+        errors: [{ message: 'nope', extensions: { code: 'UNAUTHENTICATED' } }],
+      });
       await expect(new GraphQLClient(http).execute('{ q }')).rejects.toBeInstanceOf(HttpAuthError);
     });
 
     it('throws HttpAuthError when an error has extension code FORBIDDEN', async () => {
-      const http = fakeHttpClient({ errors: [{ message: 'nope', extensions: { code: 'FORBIDDEN' } }] });
+      const http = fakeHttpClient({
+        errors: [{ message: 'nope', extensions: { code: 'FORBIDDEN' } }],
+      });
       await expect(new GraphQLClient(http).execute('{ q }')).rejects.toBeInstanceOf(HttpAuthError);
     });
 
     it('throws HttpAuthError when an error has extension code UNAUTHORIZED', async () => {
-      const http = fakeHttpClient({ errors: [{ message: 'nope', extensions: { code: 'UNAUTHORIZED' } }] });
+      const http = fakeHttpClient({
+        errors: [{ message: 'nope', extensions: { code: 'UNAUTHORIZED' } }],
+      });
       await expect(new GraphQLClient(http).execute('{ q }')).rejects.toBeInstanceOf(HttpAuthError);
     });
   });
