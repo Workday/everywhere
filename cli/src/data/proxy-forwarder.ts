@@ -56,16 +56,15 @@ export function createProxyForwarder(config: ForwarderConfig) {
       body = await readBody(req);
     } catch (err) {
       res.writeHead(400, { 'content-type': 'application/json' });
-      res.end(
-        JSON.stringify({ error: `failed to read request body: ${(err as Error).message}` })
-      );
+      res.end(JSON.stringify({ error: `failed to read request body: ${(err as Error).message}` }));
       return;
     }
     const upstreamUrl = `${config.gateway}${rewritten}`;
 
     const headers: Record<string, string> = {
       authorization: `Bearer ${token}`,
-      accept: typeof req.headers['accept'] === 'string' ? req.headers['accept'] : 'application/json',
+      accept:
+        typeof req.headers['accept'] === 'string' ? req.headers['accept'] : 'application/json',
     };
     const contentType = req.headers['content-type'];
     if (typeof contentType === 'string') headers['content-type'] = contentType;
@@ -75,7 +74,7 @@ export function createProxyForwarder(config: ForwarderConfig) {
       upstream = await fetch(upstreamUrl, {
         method: req.method ?? 'GET',
         headers,
-        body: body.length > 0 ? body : undefined,
+        body: body.length > 0 ? new Uint8Array(body) : undefined,
       });
     } catch (err) {
       res.writeHead(502, { 'content-type': 'application/json' });
