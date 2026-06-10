@@ -1,25 +1,24 @@
 import type { IncomingMessage, ServerResponse } from 'node:http';
 
-const TENANT_PREFIX = '/api/v1/tenant/';
-
 /**
- * Transforms a plugin-facing tenant path into the canonical upstream Workday path.
+ * Composes the canonical upstream Workday path from the portion of a request URL
+ * that follows the `/api/v1/tenant` mount prefix.
  *
- * Plugin calls    /api/v1/tenant/<service>/<version>[/<rest>]
- * Forwarded to    /ccx/api/<service>/<version>/<tenant>[/<rest>]
+ * Input    /<service>/<version>[/<rest>][?<query>]
+ * Output   /ccx/api/<service>/<version>/<tenant>[/<rest>][?<query>]
  *
- * Returns null for paths that don't match the tenant prefix or are too short to
- * carry a service + version pair.
+ * Returns null if the input has fewer than two leading segments
+ * (i.e. doesn't carry both a service and a version).
  */
-export function rewriteTenantPath(path: string, tenant: string): string | null {
-  if (!path.startsWith(TENANT_PREFIX)) return null;
-  const queryIndex = path.indexOf('?');
-  const pathPart = queryIndex === -1 ? path : path.slice(0, queryIndex);
-  const queryPart = queryIndex === -1 ? '' : path.slice(queryIndex);
-  const rest = pathPart.slice(TENANT_PREFIX.length);
+export function composeUpstreamPath(strippedPath: string, tenant: string): string | null {
+  const queryIndex = strippedPath.indexOf('?');
+  const pathPart = queryIndex === -1 ? strippedPath : strippedPath.slice(0, queryIndex);
+  const queryPart = queryIndex === -1 ? '' : strippedPath.slice(queryIndex);
+  const rest = pathPart.startsWith('/') ? pathPart.slice(1) : pathPart;
   const segments = rest.split('/');
   if (segments.length < 2) return null;
   const [service, version, ...remainder] = segments;
+  if (!service || !version) return null;
   const tail = remainder.length > 0 ? `/${remainder.join('/')}` : '';
   return `/ccx/api/${service}/${version}/${tenant}${tail}${queryPart}`;
 }
@@ -33,7 +32,7 @@ export interface ForwarderConfig {
 export function createTenantForwarder(config: ForwarderConfig) {
   return async function forward(req: IncomingMessage, res: ServerResponse): Promise<void> {
     const incomingPath = req.url ?? '/';
-    const rewritten = rewriteTenantPath(incomingPath, config.tenant);
+    const rewritten = composeUpstreamPath(incomingPath, config.tenant);
     if (!rewritten) {
       res.writeHead(404, { 'content-type': 'application/json' });
       res.end(JSON.stringify({ error: `unrecognised tenant path: ${incomingPath}` }));

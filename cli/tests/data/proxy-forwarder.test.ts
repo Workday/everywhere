@@ -1,39 +1,39 @@
 import type { IncomingMessage, ServerResponse } from 'node:http';
 import { describe, it, expect, vi, afterEach } from 'vitest';
-import { rewriteTenantPath, createTenantForwarder } from '../../src/data/proxy-forwarder.js';
+import { composeUpstreamPath, createTenantForwarder } from '../../src/data/proxy-forwarder.js';
 
-describe('rewriteTenantPath', () => {
+describe('composeUpstreamPath', () => {
   describe('REST path', () => {
-    it('strips /api/v1/tenant/ and injects tenant after the version', () => {
-      const out = rewriteTenantPath('/api/v1/tenant/common/v1/workers/me', 'acmeco');
+    it('injects tenant after the version', () => {
+      const out = composeUpstreamPath('/common/v1/workers/me', 'acmeco');
       expect(out).toBe('/ccx/api/common/v1/acmeco/workers/me');
     });
 
     it('preserves the query string', () => {
-      const out = rewriteTenantPath('/api/v1/tenant/common/v1/workers?limit=10', 'acmeco');
+      const out = composeUpstreamPath('/common/v1/workers?limit=10', 'acmeco');
       expect(out).toBe('/ccx/api/common/v1/acmeco/workers?limit=10');
     });
 
     it('preserves the query string when the path ends at the version', () => {
-      const out = rewriteTenantPath('/api/v1/tenant/graphql/v5?op=foo', 'acmeco');
+      const out = composeUpstreamPath('/graphql/v5?op=foo', 'acmeco');
       expect(out).toBe('/ccx/api/graphql/v5/acmeco?op=foo');
     });
   });
 
   describe('GraphQL path', () => {
     it('appends tenant when the path ends at the version', () => {
-      const out = rewriteTenantPath('/api/v1/tenant/graphql/v5', 'acmeco');
+      const out = composeUpstreamPath('/graphql/v5', 'acmeco');
       expect(out).toBe('/ccx/api/graphql/v5/acmeco');
     });
   });
 
-  describe('rejection', () => {
-    it('returns null for paths outside the proxy prefix', () => {
-      expect(rewriteTenantPath('/other/path', 'acmeco')).toBeNull();
+  describe('too few segments', () => {
+    it('returns null for a single-segment path', () => {
+      expect(composeUpstreamPath('/onlyone', 'acmeco')).toBeNull();
     });
 
-    it('returns null when there are fewer than two segments after the prefix', () => {
-      expect(rewriteTenantPath('/api/v1/tenant/onlyone', 'acmeco')).toBeNull();
+    it('returns null for an empty path', () => {
+      expect(composeUpstreamPath('/', 'acmeco')).toBeNull();
     });
   });
 });
@@ -108,6 +108,21 @@ function okResponse(body = '{}'): Response {
 
 describe('createTenantForwarder', () => {
   describe('upstream forwarding', () => {
+    it('treats req.url as the path after the /api/v1/tenant mount prefix', async () => {
+      const fetchMock = mockFetch(async () => okResponse());
+      const forwarder = createTenantForwarder({
+        gateway: 'https://impl.example',
+        tenant: 'acmeco',
+        getToken: async () => 'tok',
+      });
+      const { res } = fakeResponse();
+      // The mount strips /api/v1/tenant; req.url is what's left.
+      await forwarder(fakeRequest({ method: 'GET', url: '/common/v1/workers/me' }), res);
+      expect(fetchMock.mock.calls[0]?.[0]).toBe(
+        'https://impl.example/ccx/api/common/v1/acmeco/workers/me'
+      );
+    });
+
     it('rewrites the path before calling upstream', async () => {
       const fetchMock = mockFetch(async () => okResponse());
       const forwarder = createTenantForwarder({
@@ -116,10 +131,7 @@ describe('createTenantForwarder', () => {
         getToken: async () => 'tok',
       });
       const { res } = fakeResponse();
-      await forwarder(
-        fakeRequest({ method: 'GET', url: '/api/v1/tenant/common/v1/workers/me' }),
-        res
-      );
+      await forwarder(fakeRequest({ method: 'GET', url: '/common/v1/workers/me' }), res);
       expect(fetchMock.mock.calls[0]?.[0]).toBe(
         'https://impl.example/ccx/api/common/v1/acmeco/workers/me'
       );
@@ -134,7 +146,7 @@ describe('createTenantForwarder', () => {
       });
       const { res } = fakeResponse();
       await forwarder(
-        fakeRequest({ method: 'POST', url: '/api/v1/tenant/common/v1/workers/me', body: '{}' }),
+        fakeRequest({ method: 'POST', url: '/common/v1/workers/me', body: '{}' }),
         res
       );
       const init = fetchMock.mock.calls[0]?.[1] as RequestInit;
@@ -149,10 +161,7 @@ describe('createTenantForwarder', () => {
         getToken: async () => 'tok',
       });
       const { res, status } = fakeResponse();
-      await forwarder(
-        fakeRequest({ method: 'GET', url: '/api/v1/tenant/common/v1/workers/me' }),
-        res
-      );
+      await forwarder(fakeRequest({ method: 'GET', url: '/common/v1/workers/me' }), res);
       expect(status()).toBe(418);
     });
   });
@@ -166,10 +175,7 @@ describe('createTenantForwarder', () => {
         getToken: async () => 'my-token',
       });
       const { res } = fakeResponse();
-      await forwarder(
-        fakeRequest({ method: 'GET', url: '/api/v1/tenant/common/v1/workers/me' }),
-        res
-      );
+      await forwarder(fakeRequest({ method: 'GET', url: '/common/v1/workers/me' }), res);
       const init = fetchMock.mock.calls[0]?.[1] as RequestInit;
       expect((init.headers as Record<string, string>)['authorization']).toBe('Bearer my-token');
     });
@@ -184,10 +190,7 @@ describe('createTenantForwarder', () => {
         getToken: async () => null,
       });
       const { res, status } = fakeResponse();
-      await forwarder(
-        fakeRequest({ method: 'GET', url: '/api/v1/tenant/common/v1/workers/me' }),
-        res
-      );
+      await forwarder(fakeRequest({ method: 'GET', url: '/common/v1/workers/me' }), res);
       expect(status()).toBe(401);
     });
 
@@ -199,10 +202,7 @@ describe('createTenantForwarder', () => {
         getToken: async () => null,
       });
       const { res } = fakeResponse();
-      await forwarder(
-        fakeRequest({ method: 'GET', url: '/api/v1/tenant/common/v1/workers/me' }),
-        res
-      );
+      await forwarder(fakeRequest({ method: 'GET', url: '/common/v1/workers/me' }), res);
       expect(fetchMock).not.toHaveBeenCalled();
     });
   });
@@ -219,7 +219,7 @@ describe('createTenantForwarder', () => {
       const listeners: Record<string, ((arg: unknown) => void)[]> = {};
       const req = {
         method: 'POST',
-        url: '/api/v1/tenant/common/v1/workers',
+        url: '/common/v1/workers',
         headers: {},
         on(event: string, cb: (arg: unknown) => void) {
           listeners[event] = listeners[event] ?? [];
@@ -246,10 +246,7 @@ describe('createTenantForwarder', () => {
         getToken: async () => 'tok',
       });
       const { res, status } = fakeResponse();
-      await forwarder(
-        fakeRequest({ method: 'GET', url: '/api/v1/tenant/common/v1/workers/me' }),
-        res
-      );
+      await forwarder(fakeRequest({ method: 'GET', url: '/common/v1/workers/me' }), res);
       expect(status()).toBe(502);
     });
   });
