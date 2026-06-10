@@ -1,39 +1,39 @@
 import type { IncomingMessage, ServerResponse } from 'node:http';
 import { describe, it, expect, vi, afterEach } from 'vitest';
-import { rewriteProxyPath, createProxyForwarder } from '../../src/data/proxy-forwarder.js';
+import { rewriteTenantPath, createTenantForwarder } from '../../src/data/proxy-forwarder.js';
 
-describe('rewriteProxyPath', () => {
+describe('rewriteTenantPath', () => {
   describe('REST path', () => {
-    it('strips /api/v1/proxy/ and injects tenant after the version', () => {
-      const out = rewriteProxyPath('/api/v1/proxy/common/v1/workers/me', 'acmeco');
+    it('strips /api/v1/tenant/ and injects tenant after the version', () => {
+      const out = rewriteTenantPath('/api/v1/tenant/common/v1/workers/me', 'acmeco');
       expect(out).toBe('/ccx/api/common/v1/acmeco/workers/me');
     });
 
     it('preserves the query string', () => {
-      const out = rewriteProxyPath('/api/v1/proxy/common/v1/workers?limit=10', 'acmeco');
+      const out = rewriteTenantPath('/api/v1/tenant/common/v1/workers?limit=10', 'acmeco');
       expect(out).toBe('/ccx/api/common/v1/acmeco/workers?limit=10');
     });
 
     it('preserves the query string when the path ends at the version', () => {
-      const out = rewriteProxyPath('/api/v1/proxy/graphql/v5?op=foo', 'acmeco');
+      const out = rewriteTenantPath('/api/v1/tenant/graphql/v5?op=foo', 'acmeco');
       expect(out).toBe('/ccx/api/graphql/v5/acmeco?op=foo');
     });
   });
 
   describe('GraphQL path', () => {
     it('appends tenant when the path ends at the version', () => {
-      const out = rewriteProxyPath('/api/v1/proxy/graphql/v5', 'acmeco');
+      const out = rewriteTenantPath('/api/v1/tenant/graphql/v5', 'acmeco');
       expect(out).toBe('/ccx/api/graphql/v5/acmeco');
     });
   });
 
   describe('rejection', () => {
     it('returns null for paths outside the proxy prefix', () => {
-      expect(rewriteProxyPath('/other/path', 'acmeco')).toBeNull();
+      expect(rewriteTenantPath('/other/path', 'acmeco')).toBeNull();
     });
 
     it('returns null when there are fewer than two segments after the prefix', () => {
-      expect(rewriteProxyPath('/api/v1/proxy/onlyone', 'acmeco')).toBeNull();
+      expect(rewriteTenantPath('/api/v1/tenant/onlyone', 'acmeco')).toBeNull();
     });
   });
 });
@@ -106,18 +106,18 @@ function okResponse(body = '{}'): Response {
   return new Response(body, { status: 200, headers: { 'content-type': 'application/json' } });
 }
 
-describe('createProxyForwarder', () => {
+describe('createTenantForwarder', () => {
   describe('upstream forwarding', () => {
     it('rewrites the path before calling upstream', async () => {
       const fetchMock = mockFetch(async () => okResponse());
-      const forwarder = createProxyForwarder({
+      const forwarder = createTenantForwarder({
         gateway: 'https://impl.example',
         tenant: 'acmeco',
         getToken: async () => 'tok',
       });
       const { res } = fakeResponse();
       await forwarder(
-        fakeRequest({ method: 'GET', url: '/api/v1/proxy/common/v1/workers/me' }),
+        fakeRequest({ method: 'GET', url: '/api/v1/tenant/common/v1/workers/me' }),
         res
       );
       expect(fetchMock.mock.calls[0]?.[0]).toBe(
@@ -127,14 +127,14 @@ describe('createProxyForwarder', () => {
 
     it('forwards the HTTP method', async () => {
       const fetchMock = mockFetch(async () => okResponse());
-      const forwarder = createProxyForwarder({
+      const forwarder = createTenantForwarder({
         gateway: 'https://impl.example',
         tenant: 'acmeco',
         getToken: async () => 'tok',
       });
       const { res } = fakeResponse();
       await forwarder(
-        fakeRequest({ method: 'POST', url: '/api/v1/proxy/common/v1/workers/me', body: '{}' }),
+        fakeRequest({ method: 'POST', url: '/api/v1/tenant/common/v1/workers/me', body: '{}' }),
         res
       );
       const init = fetchMock.mock.calls[0]?.[1] as RequestInit;
@@ -143,14 +143,14 @@ describe('createProxyForwarder', () => {
 
     it('passes upstream status through to the response', async () => {
       mockFetch(async () => new Response('{"err":true}', { status: 418 }));
-      const forwarder = createProxyForwarder({
+      const forwarder = createTenantForwarder({
         gateway: 'https://impl.example',
         tenant: 'acmeco',
         getToken: async () => 'tok',
       });
       const { res, status } = fakeResponse();
       await forwarder(
-        fakeRequest({ method: 'GET', url: '/api/v1/proxy/common/v1/workers/me' }),
+        fakeRequest({ method: 'GET', url: '/api/v1/tenant/common/v1/workers/me' }),
         res
       );
       expect(status()).toBe(418);
@@ -160,14 +160,14 @@ describe('createProxyForwarder', () => {
   describe('auth header', () => {
     it('injects Authorization: Bearer <token>', async () => {
       const fetchMock = mockFetch(async () => okResponse());
-      const forwarder = createProxyForwarder({
+      const forwarder = createTenantForwarder({
         gateway: 'https://impl.example',
         tenant: 'acmeco',
         getToken: async () => 'my-token',
       });
       const { res } = fakeResponse();
       await forwarder(
-        fakeRequest({ method: 'GET', url: '/api/v1/proxy/common/v1/workers/me' }),
+        fakeRequest({ method: 'GET', url: '/api/v1/tenant/common/v1/workers/me' }),
         res
       );
       const init = fetchMock.mock.calls[0]?.[1] as RequestInit;
@@ -178,14 +178,14 @@ describe('createProxyForwarder', () => {
   describe('missing token', () => {
     it('responds 401 without contacting upstream', async () => {
       mockFetch(async () => okResponse());
-      const forwarder = createProxyForwarder({
+      const forwarder = createTenantForwarder({
         gateway: 'https://impl.example',
         tenant: 'acmeco',
         getToken: async () => null,
       });
       const { res, status } = fakeResponse();
       await forwarder(
-        fakeRequest({ method: 'GET', url: '/api/v1/proxy/common/v1/workers/me' }),
+        fakeRequest({ method: 'GET', url: '/api/v1/tenant/common/v1/workers/me' }),
         res
       );
       expect(status()).toBe(401);
@@ -193,14 +193,14 @@ describe('createProxyForwarder', () => {
 
     it('does not call fetch when token is missing', async () => {
       const fetchMock = mockFetch(async () => okResponse());
-      const forwarder = createProxyForwarder({
+      const forwarder = createTenantForwarder({
         gateway: 'https://impl.example',
         tenant: 'acmeco',
         getToken: async () => null,
       });
       const { res } = fakeResponse();
       await forwarder(
-        fakeRequest({ method: 'GET', url: '/api/v1/proxy/common/v1/workers/me' }),
+        fakeRequest({ method: 'GET', url: '/api/v1/tenant/common/v1/workers/me' }),
         res
       );
       expect(fetchMock).not.toHaveBeenCalled();
@@ -210,7 +210,7 @@ describe('createProxyForwarder', () => {
   describe('request body error', () => {
     it('responds 400 when the request body cannot be read', async () => {
       mockFetch(async () => okResponse());
-      const forwarder = createProxyForwarder({
+      const forwarder = createTenantForwarder({
         gateway: 'https://impl.example',
         tenant: 'acmeco',
         getToken: async () => 'tok',
@@ -219,7 +219,7 @@ describe('createProxyForwarder', () => {
       const listeners: Record<string, ((arg: unknown) => void)[]> = {};
       const req = {
         method: 'POST',
-        url: '/api/v1/proxy/common/v1/workers',
+        url: '/api/v1/tenant/common/v1/workers',
         headers: {},
         on(event: string, cb: (arg: unknown) => void) {
           listeners[event] = listeners[event] ?? [];
@@ -240,14 +240,14 @@ describe('createProxyForwarder', () => {
       mockFetch(async () => {
         throw new Error('connection refused');
       });
-      const forwarder = createProxyForwarder({
+      const forwarder = createTenantForwarder({
         gateway: 'https://impl.example',
         tenant: 'acmeco',
         getToken: async () => 'tok',
       });
       const { res, status } = fakeResponse();
       await forwarder(
-        fakeRequest({ method: 'GET', url: '/api/v1/proxy/common/v1/workers/me' }),
+        fakeRequest({ method: 'GET', url: '/api/v1/tenant/common/v1/workers/me' }),
         res
       );
       expect(status()).toBe(502);

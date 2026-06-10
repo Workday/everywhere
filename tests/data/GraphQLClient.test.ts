@@ -23,15 +23,15 @@ describe('GraphQLClient', () => {
       });
       globalThis.fetch = fetchMock as unknown as typeof fetch;
       await new GraphQLClient('https://api.example').execute('{ q }');
-      expect(fetchMock.mock.calls[0]?.[0]).toBe('https://api.example/api/v1/proxy/graphql/v5');
+      expect(fetchMock.mock.calls[0]?.[0]).toBe('https://api.example/api/v1/tenant/graphql/v5');
     });
   });
 
   describe('endpoint', () => {
-    it('defaults to /api/v1/proxy/graphql/v5', async () => {
+    it('defaults to /api/v1/tenant/graphql/v5', async () => {
       const http = fakeHttpClient({ data: {} });
       await new GraphQLClient(http).execute('{ q }');
-      expect(http.request).toHaveBeenCalledWith('/api/v1/proxy/graphql/v5', expect.any(Object));
+      expect(http.request).toHaveBeenCalledWith('/api/v1/tenant/graphql/v5', expect.any(Object));
     });
 
     it('uses a custom endpoint when provided', async () => {
@@ -45,7 +45,7 @@ describe('GraphQLClient', () => {
     it('POSTs a body of { query, variables }', async () => {
       const http = fakeHttpClient({ data: {} });
       await new GraphQLClient(http).execute('{ q }', { id: '1' });
-      expect(http.request).toHaveBeenCalledWith('/api/v1/proxy/graphql/v5', {
+      expect(http.request).toHaveBeenCalledWith('/api/v1/tenant/graphql/v5', {
         method: 'POST',
         body: { query: '{ q }', variables: { id: '1' } },
       });

@@ -26,7 +26,7 @@ const SCHEMA_WITH_REFS: ModelSchema = {
     { name: 'category', type: 'SINGLE_INSTANCE', target: 'WidgetCategory' },
   ],
 };
-const ENDPOINT = 'https://tenant.example.com/api/v1/proxy/graphql/v5';
+const ENDPOINT = 'https://tenant.example.com/api/v1/tenant/graphql/v5';
 const REFERENCE_ID = 'examplePlugin_test9999';
 
 const SCHEMA_WITH_GRAPH: ModelSchema = {
@@ -360,7 +360,7 @@ describe('GraphQLResolver', () => {
       expect(vi.mocked(GraphQLClient)).toHaveBeenCalledWith('', ENDPOINT);
     });
 
-    it('defaults to the proxy graphql endpoint on the current origin', () => {
+    it('defaults to the tenant graphql endpoint on the current origin', () => {
       vi.stubGlobal('window', { location: { origin: 'https://tenant.example.com' } });
       installExecute(vi.fn());
 
@@ -368,7 +368,7 @@ describe('GraphQLResolver', () => {
 
       expect(vi.mocked(GraphQLClient)).toHaveBeenCalledWith(
         '',
-        'https://tenant.example.com/api/v1/proxy/graphql/v5'
+        'https://tenant.example.com/api/v1/tenant/graphql/v5'
       );
 
       vi.unstubAllGlobals();

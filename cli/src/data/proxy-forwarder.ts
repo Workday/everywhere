@@ -1,22 +1,22 @@
 import type { IncomingMessage, ServerResponse } from 'node:http';
 
-const PROXY_PREFIX = '/api/v1/proxy/';
+const TENANT_PREFIX = '/api/v1/tenant/';
 
 /**
- * Transforms a plugin-facing proxy path into the canonical upstream Workday path.
+ * Transforms a plugin-facing tenant path into the canonical upstream Workday path.
  *
- * Plugin calls    /api/v1/proxy/<service>/<version>[/<rest>]
+ * Plugin calls    /api/v1/tenant/<service>/<version>[/<rest>]
  * Forwarded to    /ccx/api/<service>/<version>/<tenant>[/<rest>]
  *
- * Returns null for paths that don't match the proxy prefix or are too short to
+ * Returns null for paths that don't match the tenant prefix or are too short to
  * carry a service + version pair.
  */
-export function rewriteProxyPath(path: string, tenant: string): string | null {
-  if (!path.startsWith(PROXY_PREFIX)) return null;
+export function rewriteTenantPath(path: string, tenant: string): string | null {
+  if (!path.startsWith(TENANT_PREFIX)) return null;
   const queryIndex = path.indexOf('?');
   const pathPart = queryIndex === -1 ? path : path.slice(0, queryIndex);
   const queryPart = queryIndex === -1 ? '' : path.slice(queryIndex);
-  const rest = pathPart.slice(PROXY_PREFIX.length);
+  const rest = pathPart.slice(TENANT_PREFIX.length);
   const segments = rest.split('/');
   if (segments.length < 2) return null;
   const [service, version, ...remainder] = segments;
@@ -30,13 +30,13 @@ export interface ForwarderConfig {
   getToken: () => Promise<string | null>;
 }
 
-export function createProxyForwarder(config: ForwarderConfig) {
+export function createTenantForwarder(config: ForwarderConfig) {
   return async function forward(req: IncomingMessage, res: ServerResponse): Promise<void> {
     const incomingPath = req.url ?? '/';
-    const rewritten = rewriteProxyPath(incomingPath, config.tenant);
+    const rewritten = rewriteTenantPath(incomingPath, config.tenant);
     if (!rewritten) {
       res.writeHead(404, { 'content-type': 'application/json' });
-      res.end(JSON.stringify({ error: `unrecognised proxy path: ${incomingPath}` }));
+      res.end(JSON.stringify({ error: `unrecognised tenant path: ${incomingPath}` }));
       return;
     }
 

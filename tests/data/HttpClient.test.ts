@@ -53,8 +53,8 @@ describe('HttpClient.request', () => {
   describe('URL composition', () => {
     it('uses the path verbatim when baseUrl is empty', async () => {
       const fetchMock = mockFetch({ json: () => Promise.resolve({}) });
-      await new HttpClient().request('/api/v1/proxy/x');
-      expect(fetchMock.mock.calls[0]?.[0]).toBe('/api/v1/proxy/x');
+      await new HttpClient().request('/api/v1/tenant/x');
+      expect(fetchMock.mock.calls[0]?.[0]).toBe('/api/v1/tenant/x');
     });
 
     it('prepends baseUrl when set', async () => {

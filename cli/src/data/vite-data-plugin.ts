@@ -2,7 +2,7 @@ import type { IncomingMessage, ServerResponse } from 'node:http';
 import { appConfig } from '../config.js';
 import { DEFAULT_GATEWAY } from '../auth/defaults.js';
 import { GatewayClient, GatewayRequestError } from '../gateway/client.js';
-import { createProxyForwarder } from './proxy-forwarder.js';
+import { createTenantForwarder } from './proxy-forwarder.js';
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type VitePlugin = any;
@@ -39,49 +39,52 @@ export function dataServicePlugin(_pluginDir: string): VitePlugin {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       middlewares: { use: (...args: any[]) => void };
     }) {
-      server.middlewares.use('/api/v1/proxy', async (req: IncomingMessage, res: ServerResponse) => {
-        let resolved: ResolvedAuth | null;
-        try {
-          resolved = await getResolved();
-        } catch (err) {
-          // Reset cache so a subsequent request can retry after the user re-authenticates.
-          cached = undefined;
-          const status = err instanceof GatewayRequestError ? err.status : undefined;
-          if (status === 401 || status === 403) {
-            res.writeHead(401, { 'content-type': 'application/json' });
+      server.middlewares.use(
+        '/api/v1/tenant',
+        async (req: IncomingMessage, res: ServerResponse) => {
+          let resolved: ResolvedAuth | null;
+          try {
+            resolved = await getResolved();
+          } catch (err) {
+            // Reset cache so a subsequent request can retry after the user re-authenticates.
+            cached = undefined;
+            const status = err instanceof GatewayRequestError ? err.status : undefined;
+            if (status === 401 || status === 403) {
+              res.writeHead(401, { 'content-type': 'application/json' });
+              res.end(
+                JSON.stringify({
+                  error: 'auth token rejected — run: npx @workday/everywhere auth login',
+                })
+              );
+              return;
+            }
+            res.writeHead(500, { 'content-type': 'application/json' });
             res.end(
               JSON.stringify({
-                error: 'auth token rejected — run: npx @workday/everywhere auth login',
+                error: `failed to resolve auth state: ${(err as Error).message}`,
               })
             );
             return;
           }
-          res.writeHead(500, { 'content-type': 'application/json' });
-          res.end(
-            JSON.stringify({
-              error: `failed to resolve auth state: ${(err as Error).message}`,
-            })
-          );
-          return;
-        }
 
-        if (!resolved) {
-          res.writeHead(401, { 'content-type': 'application/json' });
-          res.end(
-            JSON.stringify({
-              error: 'no stored auth token — run: npx @workday/everywhere auth login',
-            })
-          );
-          return;
-        }
+          if (!resolved) {
+            res.writeHead(401, { 'content-type': 'application/json' });
+            res.end(
+              JSON.stringify({
+                error: 'no stored auth token — run: npx @workday/everywhere auth login',
+              })
+            );
+            return;
+          }
 
-        const forwarder = createProxyForwarder({
-          gateway: resolved.gateway,
-          tenant: resolved.tenant,
-          getToken: async () => resolved.token,
-        });
-        await forwarder(req, res);
-      });
+          const forwarder = createTenantForwarder({
+            gateway: resolved.gateway,
+            tenant: resolved.tenant,
+            getToken: async () => resolved.token,
+          });
+          await forwarder(req, res);
+        }
+      );
     },
   };
 }

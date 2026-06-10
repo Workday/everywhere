@@ -106,7 +106,7 @@ Returns parsed JSON. No CRUD/model framing.
 
 ```ts
 export class GraphQLClient {
-  // endpoint defaults to '/api/v1/proxy/graphql/v5'
+  // endpoint defaults to '/api/v1/tenant/graphql/v5'
   constructor(client?: HttpClient | string, endpoint?: string);
   execute<T>(query: string, variables?: Record<string, unknown>): Promise<T>;
 }
@@ -138,8 +138,8 @@ mutations, callers use `RestClient` directly — matches how `useMutation` alrea
 
 - External constructor signature unchanged.
 - Internal `execute()` deleted; resolver delegates to `GraphQLClient.execute`.
-- Default endpoint moves from `${origin}/api/v1/data/graphql` to `${origin}/api/v1/proxy/graphql/v5`
-  (matches platform proxy migration).
+- Default endpoint moves from `${origin}/api/v1/data/graphql` to
+  `${origin}/api/v1/tenant/graphql/v5` (matches platform proxy migration).
 - Header/auth logic deleted from the resolver — lives in `HttpClient` and `GraphQLClient` now.
 - Workday-specific logic stays: `workdayID` mapping, mutation input shaping, operation naming,
   schema-driven selection sets, dynamic CurrencyValue introspection.
@@ -178,13 +178,13 @@ Replace the existing mock route in `cli/src/data/vite-data-plugin.ts` with a tra
 
 ### URL mapping
 
-The proxy is a direct API pass-through to Workday. It strips the `/api/v1/proxy/` prefix, prepends
+The proxy is a direct API pass-through to Workday. It strips the `/api/v1/tenant/` prefix, prepends
 `/ccx/api/`, and injects the tenant path segment:
 
-| Plugin calls                         | Proxy forwards to                                      |
-| ------------------------------------ | ------------------------------------------------------ |
-| `/api/v1/proxy/common/v1/workers/me` | `https://<host>/ccx/api/common/v1/<tenant>/workers/me` |
-| `/api/v1/proxy/graphql/v5`           | `https://<host>/ccx/api/graphql/v5/<tenant>`           |
+| Plugin calls                          | Proxy forwards to                                      |
+| ------------------------------------- | ------------------------------------------------------ |
+| `/api/v1/tenant/common/v1/workers/me` | `https://<host>/ccx/api/common/v1/<tenant>/workers/me` |
+| `/api/v1/tenant/graphql/v5`           | `https://<host>/ccx/api/graphql/v5/<tenant>`           |
 
 ### Behavior
 
@@ -218,7 +218,7 @@ import { plugin, DataProvider, RestClient } from '@workday/everywhere';
 import { CanvasProvider } from '@workday/canvas-kit-react';
 import { home } from './routes.js';
 
-const client = new RestClient('/api/v1/proxy');
+const client = new RestClient('/api/v1/tenant');
 
 function DirectoryProvider({ children }: { children: ReactNode }) {
   return (
@@ -317,7 +317,7 @@ Follows project TDD rules (CLAUDE.md): failing test first, one expectation per `
 
 ### Integration (`cli/tests/`)
 
-- Dev-server proxy: `/api/v1/proxy/*` forwarding — tenant injection, token injection, prefix
+- Dev-server proxy: `/api/v1/tenant/*` forwarding — tenant injection, token injection, prefix
   stripping, 401 on missing token, upstream status/body pass-through. Upstream mocked with
   `msw/ node` or a small `http.createServer`.
 
@@ -335,7 +335,7 @@ Follows project TDD rules (CLAUDE.md): failing test first, one expectation per `
 - **Changed**: `DataProviderProps` gains an optional `client` field. Existing usage with `resolver`
   continues to work unchanged.
 - **Changed**: `GraphQLResolver` default endpoint shifts from `${origin}/api/v1/data/graphql` to
-  `${origin}/api/v1/proxy/graphql/v5`. Callers passing an explicit endpoint are unaffected.
+  `${origin}/api/v1/tenant/graphql/v5`. Callers passing an explicit endpoint are unaffected.
 
 ## Open questions
 

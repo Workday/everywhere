@@ -1,6 +1,6 @@
 import { HttpClient, HttpAuthError } from './HttpClient.js';
 
-const DEFAULT_ENDPOINT = '/api/v1/proxy/graphql/v5';
+const DEFAULT_ENDPOINT = '/api/v1/tenant/graphql/v5';
 const AUTH_CODES = new Set(['UNAUTHENTICATED', 'FORBIDDEN', 'UNAUTHORIZED']);
 
 interface GraphQLResponseShape {

@@ -51,7 +51,7 @@ export class GraphQLResolver implements DataResolver {
 
   constructor(referenceId: string, schemas: Record<string, ModelSchema>, endpoint?: string) {
     const resolvedEndpoint =
-      endpoint ?? `${globalThis.window?.location.origin ?? ''}/api/v1/proxy/graphql/v5`;
+      endpoint ?? `${globalThis.window?.location.origin ?? ''}/api/v1/tenant/graphql/v5`;
     this.graphql = new GraphQLClient('', resolvedEndpoint);
     this.referenceId = referenceId;
     this.graphPrefix = referenceIdToGraphPrefix(referenceId);

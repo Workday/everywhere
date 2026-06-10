@@ -12,7 +12,7 @@ transparent proxy to Workday. The directory example becomes a single card driven
 with `RestClient` and `GraphQLClient` primitives above it; `GraphQLResolver` (the existing
 model-CRUD layer) sits over `GraphQLClient`. A `useRequest` React hook mirrors `useQuery`'s shape.
 The dev server's `vite-data-plugin` is repointed from the local JSON mock to a transparent
-`/api/v1/proxy/*` → `https://<host>/ccx/api/<service>/<version>/<tenant>/...` forwarder.
+`/api/v1/tenant/*` → `https://<host>/ccx/api/<service>/<version>/<tenant>/...` forwarder.
 
 **Tech Stack:** TypeScript (strict), Vitest, React 19, React Testing Library, Vite dev server
 middleware, Node 22+ `fetch`.
@@ -47,7 +47,7 @@ middleware, Node 22+ `fetch`.
 - `src/data/GraphQLResolver.ts` — refactor to use `GraphQLClient`; new default endpoint
 - `src/data/DataContext.tsx` — add optional `client` prop
 - `src/data/index.ts` — add new exports, remove `HttpResolver`
-- `cli/src/data/vite-data-plugin.ts` — replace mock route with `/api/v1/proxy/*` forwarder
+- `cli/src/data/vite-data-plugin.ts` — replace mock route with `/api/v1/tenant/*` forwarder
 
 **Deleted:**
 
@@ -194,8 +194,8 @@ describe('HttpClient.request', () => {
   describe('URL composition', () => {
     it('uses the path verbatim when baseUrl is empty', async () => {
       const fetchMock = mockFetch({ json: () => Promise.resolve({}) });
-      await new HttpClient().request('/api/v1/proxy/x');
-      expect(fetchMock.mock.calls[0]?.[0]).toBe('/api/v1/proxy/x');
+      await new HttpClient().request('/api/v1/tenant/x');
+      expect(fetchMock.mock.calls[0]?.[0]).toBe('/api/v1/tenant/x');
     });
 
     it('prepends baseUrl when set', async () => {
@@ -594,10 +594,10 @@ function fakeHttpClient(response: unknown): HttpClient & { request: ReturnType<t
 
 describe('GraphQLClient', () => {
   describe('endpoint', () => {
-    it('defaults to /api/v1/proxy/graphql/v5', async () => {
+    it('defaults to /api/v1/tenant/graphql/v5', async () => {
       const http = fakeHttpClient({ data: {} });
       await new GraphQLClient(http).execute('{ q }');
-      expect(http.request).toHaveBeenCalledWith('/api/v1/proxy/graphql/v5', expect.any(Object));
+      expect(http.request).toHaveBeenCalledWith('/api/v1/tenant/graphql/v5', expect.any(Object));
     });
 
     it('uses a custom endpoint when provided', async () => {
@@ -611,7 +611,7 @@ describe('GraphQLClient', () => {
     it('POSTs a body of { query, variables }', async () => {
       const http = fakeHttpClient({ data: {} });
       await new GraphQLClient(http).execute('{ q }', { id: '1' });
-      expect(http.request).toHaveBeenCalledWith('/api/v1/proxy/graphql/v5', {
+      expect(http.request).toHaveBeenCalledWith('/api/v1/tenant/graphql/v5', {
         method: 'POST',
         body: { query: '{ q }', variables: { id: '1' } },
       });
@@ -674,7 +674,7 @@ Create `src/data/GraphQLClient.ts`:
 ```ts
 import { HttpClient, HttpAuthError } from './HttpClient.js';
 
-const DEFAULT_ENDPOINT = '/api/v1/proxy/graphql/v5';
+const DEFAULT_ENDPOINT = '/api/v1/tenant/graphql/v5';
 const AUTH_CODES = new Set(['UNAUTHENTICATED', 'FORBIDDEN', 'UNAUTHORIZED']);
 
 interface GraphQLResponseShape {
@@ -743,7 +743,7 @@ existing tests mock `globalThis.fetch` and assert against a graph endpoint URL p
 The behavior we must preserve:
 
 - Model/CRUD methods still work end-to-end.
-- Default endpoint moves to `/api/v1/proxy/graphql/v5`.
+- Default endpoint moves to `/api/v1/tenant/graphql/v5`.
 - 401/403 still produce an auth-flavored error.
 
 - [ ] **Step 4.2: Update `GraphQLResolver` constructor and `execute()` to delegate to
@@ -761,7 +761,7 @@ import { GraphQLClient } from './GraphQLClient.js';
 
 // replace constructor:
   constructor(referenceId: string, schemas: Record<string, ModelSchema>, endpoint?: string) {
-    const resolvedEndpoint = endpoint ?? `${globalThis.window?.location.origin ?? ''}/api/v1/proxy/graphql/v5`;
+    const resolvedEndpoint = endpoint ?? `${globalThis.window?.location.origin ?? ''}/api/v1/tenant/graphql/v5`;
     this.graphql = new GraphQLClient('', resolvedEndpoint);
     this.referenceId = referenceId;
     this.graphPrefix = referenceIdToGraphPrefix(referenceId);
@@ -1081,7 +1081,7 @@ git commit -m "feat(data): add useRequest hook and optional client on DataProvid
 
 ---
 
-### Task 6: Dev-server transparent proxy at `/api/v1/proxy/*`
+### Task 6: Dev-server transparent proxy at `/api/v1/tenant/*`
 
 **Files:**
 
@@ -1107,30 +1107,30 @@ Create `cli/tests/data/proxy-forwarder.test.ts`:
 
 ```ts
 import { describe, it, expect } from 'vitest';
-import { rewriteProxyPath } from '../../src/data/proxy-forwarder.js';
+import { rewriteTenantPath } from '../../src/data/proxy-forwarder.js';
 
-describe('rewriteProxyPath', () => {
+describe('rewriteTenantPath', () => {
   describe('REST path', () => {
-    it('strips /api/v1/proxy/ and injects tenant after the version', () => {
-      const out = rewriteProxyPath('/api/v1/proxy/common/v1/workers/me', 'acmeco');
+    it('strips /api/v1/tenant/ and injects tenant after the version', () => {
+      const out = rewriteTenantPath('/api/v1/tenant/common/v1/workers/me', 'acmeco');
       expect(out).toBe('/ccx/api/common/v1/acmeco/workers/me');
     });
   });
 
   describe('GraphQL path', () => {
     it('appends tenant when the path ends at the version', () => {
-      const out = rewriteProxyPath('/api/v1/proxy/graphql/v5', 'acmeco');
+      const out = rewriteTenantPath('/api/v1/tenant/graphql/v5', 'acmeco');
       expect(out).toBe('/ccx/api/graphql/v5/acmeco');
     });
   });
 
   describe('rejection', () => {
     it('returns null for paths outside the proxy prefix', () => {
-      expect(rewriteProxyPath('/other/path', 'acmeco')).toBeNull();
+      expect(rewriteTenantPath('/other/path', 'acmeco')).toBeNull();
     });
 
     it('returns null when there are fewer than two segments after the prefix', () => {
-      expect(rewriteProxyPath('/api/v1/proxy/onlyone', 'acmeco')).toBeNull();
+      expect(rewriteTenantPath('/api/v1/tenant/onlyone', 'acmeco')).toBeNull();
     });
   });
 });
@@ -1149,20 +1149,20 @@ Create `cli/src/data/proxy-forwarder.ts`:
 ```ts
 import type { IncomingMessage, ServerResponse } from 'node:http';
 
-const PROXY_PREFIX = '/api/v1/proxy/';
+const TENANT_PREFIX = '/api/v1/tenant/';
 
 /**
  * Transforms a plugin-facing proxy path into the canonical upstream Workday path.
  *
- * Plugin calls    /api/v1/proxy/<service>/<version>[/<rest>]
+ * Plugin calls    /api/v1/tenant/<service>/<version>[/<rest>]
  * Forwarded to    /ccx/api/<service>/<version>/<tenant>[/<rest>]
  *
  * Returns null for paths that don't match the proxy prefix or are too short to
  * carry a service + version pair.
  */
-export function rewriteProxyPath(path: string, tenant: string): string | null {
-  if (!path.startsWith(PROXY_PREFIX)) return null;
-  const rest = path.slice(PROXY_PREFIX.length);
+export function rewriteTenantPath(path: string, tenant: string): string | null {
+  if (!path.startsWith(TENANT_PREFIX)) return null;
+  const rest = path.slice(TENANT_PREFIX.length);
   const segments = rest.split('/');
   if (segments.length < 2) return null;
   const [service, version, ...remainder] = segments;
@@ -1176,10 +1176,10 @@ interface ForwarderConfig {
   getToken: () => Promise<string | null>;
 }
 
-export function createProxyForwarder(config: ForwarderConfig) {
+export function createTenantForwarder(config: ForwarderConfig) {
   return async function forward(req: IncomingMessage, res: ServerResponse): Promise<void> {
     const incomingPath = req.url ?? '/';
-    const rewritten = rewriteProxyPath(incomingPath, config.tenant);
+    const rewritten = rewriteTenantPath(incomingPath, config.tenant);
     if (!rewritten) {
       res.writeHead(404, { 'content-type': 'application/json' });
       res.end(JSON.stringify({ error: `unrecognised proxy path: ${incomingPath}` }));
@@ -1254,7 +1254,7 @@ Append to `cli/tests/data/proxy-forwarder.test.ts`:
 ```ts
 import type { IncomingMessage, ServerResponse } from 'node:http';
 import { vi, afterEach } from 'vitest';
-import { createProxyForwarder } from '../../src/data/proxy-forwarder.js';
+import { createTenantForwarder } from '../../src/data/proxy-forwarder.js';
 
 interface FakeRes {
   res: ServerResponse;
@@ -1323,18 +1323,18 @@ function okResponse(body = '{}'): Response {
   return new Response(body, { status: 200, headers: { 'content-type': 'application/json' } });
 }
 
-describe('createProxyForwarder', () => {
+describe('createTenantForwarder', () => {
   describe('upstream forwarding', () => {
     it('rewrites the path before calling upstream', async () => {
       const fetchMock = mockFetch(async () => okResponse());
-      const forwarder = createProxyForwarder({
+      const forwarder = createTenantForwarder({
         gateway: 'https://impl.example',
         tenant: 'acmeco',
         getToken: async () => 'tok',
       });
       const { res } = fakeResponse();
       await forwarder(
-        fakeRequest({ method: 'GET', url: '/api/v1/proxy/common/v1/workers/me' }),
+        fakeRequest({ method: 'GET', url: '/api/v1/tenant/common/v1/workers/me' }),
         res
       );
       expect(fetchMock.mock.calls[0]?.[0]).toBe(
@@ -1344,14 +1344,14 @@ describe('createProxyForwarder', () => {
 
     it('forwards the HTTP method', async () => {
       const fetchMock = mockFetch(async () => okResponse());
-      const forwarder = createProxyForwarder({
+      const forwarder = createTenantForwarder({
         gateway: 'https://impl.example',
         tenant: 'acmeco',
         getToken: async () => 'tok',
       });
       const { res } = fakeResponse();
       await forwarder(
-        fakeRequest({ method: 'POST', url: '/api/v1/proxy/common/v1/workers/me', body: '{}' }),
+        fakeRequest({ method: 'POST', url: '/api/v1/tenant/common/v1/workers/me', body: '{}' }),
         res
       );
       const init = fetchMock.mock.calls[0]?.[1] as RequestInit;
@@ -1360,14 +1360,14 @@ describe('createProxyForwarder', () => {
 
     it('passes upstream status through to the response', async () => {
       mockFetch(async () => new Response('{"err":true}', { status: 418 }));
-      const forwarder = createProxyForwarder({
+      const forwarder = createTenantForwarder({
         gateway: 'https://impl.example',
         tenant: 'acmeco',
         getToken: async () => 'tok',
       });
       const { res, status } = fakeResponse();
       await forwarder(
-        fakeRequest({ method: 'GET', url: '/api/v1/proxy/common/v1/workers/me' }),
+        fakeRequest({ method: 'GET', url: '/api/v1/tenant/common/v1/workers/me' }),
         res
       );
       expect(status()).toBe(418);
@@ -1377,14 +1377,14 @@ describe('createProxyForwarder', () => {
   describe('auth header', () => {
     it('injects Authorization: Bearer <token>', async () => {
       const fetchMock = mockFetch(async () => okResponse());
-      const forwarder = createProxyForwarder({
+      const forwarder = createTenantForwarder({
         gateway: 'https://impl.example',
         tenant: 'acmeco',
         getToken: async () => 'my-token',
       });
       const { res } = fakeResponse();
       await forwarder(
-        fakeRequest({ method: 'GET', url: '/api/v1/proxy/common/v1/workers/me' }),
+        fakeRequest({ method: 'GET', url: '/api/v1/tenant/common/v1/workers/me' }),
         res
       );
       const init = fetchMock.mock.calls[0]?.[1] as RequestInit;
@@ -1395,14 +1395,14 @@ describe('createProxyForwarder', () => {
   describe('missing token', () => {
     it('responds 401 without contacting upstream', async () => {
       const fetchMock = mockFetch(async () => okResponse());
-      const forwarder = createProxyForwarder({
+      const forwarder = createTenantForwarder({
         gateway: 'https://impl.example',
         tenant: 'acmeco',
         getToken: async () => null,
       });
       const { res, status } = fakeResponse();
       await forwarder(
-        fakeRequest({ method: 'GET', url: '/api/v1/proxy/common/v1/workers/me' }),
+        fakeRequest({ method: 'GET', url: '/api/v1/tenant/common/v1/workers/me' }),
         res
       );
       expect(status()).toBe(401);
@@ -1410,14 +1410,14 @@ describe('createProxyForwarder', () => {
 
     it('does not call fetch when token is missing', async () => {
       const fetchMock = mockFetch(async () => okResponse());
-      const forwarder = createProxyForwarder({
+      const forwarder = createTenantForwarder({
         gateway: 'https://impl.example',
         tenant: 'acmeco',
         getToken: async () => null,
       });
       const { res } = fakeResponse();
       await forwarder(
-        fakeRequest({ method: 'GET', url: '/api/v1/proxy/common/v1/workers/me' }),
+        fakeRequest({ method: 'GET', url: '/api/v1/tenant/common/v1/workers/me' }),
         res
       );
       expect(fetchMock).not.toHaveBeenCalled();
@@ -1429,14 +1429,14 @@ describe('createProxyForwarder', () => {
       mockFetch(async () => {
         throw new Error('connection refused');
       });
-      const forwarder = createProxyForwarder({
+      const forwarder = createTenantForwarder({
         gateway: 'https://impl.example',
         tenant: 'acmeco',
         getToken: async () => 'tok',
       });
       const { res, status } = fakeResponse();
       await forwarder(
-        fakeRequest({ method: 'GET', url: '/api/v1/proxy/common/v1/workers/me' }),
+        fakeRequest({ method: 'GET', url: '/api/v1/tenant/common/v1/workers/me' }),
         res
       );
       expect(status()).toBe(502);
@@ -1456,12 +1456,12 @@ npx vitest run cli/tests/data/proxy-forwarder.test.ts
 Read `cli/src/data/proxy-auth.ts`, `cli/src/commands/everywhere/auth/login.ts` (and any
 token-store/config module) to find the actual helpers for reading the stored token, gateway URL, and
 tenant. Then replace the contents of `cli/src/data/vite-data-plugin.ts` with a middleware that
-delegates `/api/v1/proxy` traffic to `createProxyForwarder`. Approximate shape (adapt to actual
+delegates `/api/v1/tenant` traffic to `createTenantForwarder`. Approximate shape (adapt to actual
 storage helpers found in this step):
 
 ```ts
 import type { IncomingMessage, ServerResponse } from 'node:http';
-import { createProxyForwarder } from './proxy-forwarder.js';
+import { createTenantForwarder } from './proxy-forwarder.js';
 // import { readStoredAuth } from '...';   // <-- the helper used by `auth login`
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -1471,15 +1471,18 @@ export function dataServicePlugin(_pluginDir: string): VitePlugin {
   return {
     name: 'workday-everywhere-data',
     configureServer(server: { middlewares: { use: (...args: unknown[]) => void } }) {
-      server.middlewares.use('/api/v1/proxy', async (req: IncomingMessage, res: ServerResponse) => {
-        const auth = await readStoredAuth(); // shape: { gateway, tenant, token }
-        const forwarder = createProxyForwarder({
-          gateway: auth.gateway,
-          tenant: auth.tenant,
-          getToken: async () => auth.token,
-        });
-        await forwarder(req, res);
-      });
+      server.middlewares.use(
+        '/api/v1/tenant',
+        async (req: IncomingMessage, res: ServerResponse) => {
+          const auth = await readStoredAuth(); // shape: { gateway, tenant, token }
+          const forwarder = createTenantForwarder({
+            gateway: auth.gateway,
+            tenant: auth.tenant,
+            getToken: async () => auth.token,
+          });
+          await forwarder(req, res);
+        }
+      );
     },
   };
 }
@@ -1505,7 +1508,7 @@ as part of this same task.
 ```bash
 git add cli/src/data/proxy-forwarder.ts cli/src/data/vite-data-plugin.ts cli/tests/data/proxy-forwarder.test.ts
 git add -u cli/src/data/graphql-handler.ts cli/src/data/local-store.ts cli/tests/data/graphql-handler.test.ts
-git commit -m "feat(cli): replace local GraphQL mock with /api/v1/proxy/* forwarder"
+git commit -m "feat(cli): replace local GraphQL mock with /api/v1/tenant/* forwarder"
 ```
 
 ---
@@ -1530,7 +1533,7 @@ import { plugin, DataProvider, RestClient } from '@workday/everywhere';
 import { CanvasProvider } from '@workday/canvas-kit-react';
 import { home } from './routes.js';
 
-const client = new RestClient('/api/v1/proxy');
+const client = new RestClient('/api/v1/tenant');
 
 function DirectoryProvider({ children }: { children: ReactNode }) {
   return (
@@ -1762,7 +1765,7 @@ If the response shape needs a different field than `descriptor`, update `pages/H
 Push the branch and open a PR to `main` with a summary that highlights:
 
 - The shared `HttpClient` transport and the `RestClient` / `GraphQLClient` primitives.
-- The `/api/v1/proxy/*` dev-server forwarder replacing the local mock.
+- The `/api/v1/tenant/*` dev-server forwarder replacing the local mock.
 - The removal of `HttpResolver` (only intentional public-API break).
 - The directory example showing real `/workers/me` data.
 
