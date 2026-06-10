@@ -9,6 +9,7 @@
     "clean": "rm -rf node_modules"
   },
   "dependencies": {
+    "@fontsource/roboto": "^5.2.10",
     "@workday/canvas-kit-react": "^15.0.6",
     "@workday/everywhere": "file:../..",
     "react": "^18.3.1",
