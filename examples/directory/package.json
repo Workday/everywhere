@@ -2,7 +2,7 @@
   "name": "employee-directory",
   "title": "Directory",
   "version": "1.0.0",
-  "description": "Search and manage employee records.",
+  "description": "Demonstrates useRequest against the /workers/me REST endpoint.",
   "private": true,
   "scripts": {
     "preview": "everywhere view",
