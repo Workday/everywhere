@@ -6,5 +6,6 @@
       "@workday/everywhere": ["../src/index.ts"]
     }
   },
-  "include": ["."]
+  "include": ["."],
+  "exclude": ["charitable-donations", "work-events"]
 }

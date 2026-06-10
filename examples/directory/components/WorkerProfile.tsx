@@ -3,10 +3,7 @@ import { useRequest } from '@workday/everywhere';
 import { Card } from '@workday/canvas-kit-react/card';
 import { Avatar } from '@workday/canvas-kit-react/avatar';
 import { Flex } from '@workday/canvas-kit-react/layout';
-import {
-  StatusIndicator,
-  StatusIndicatorType,
-} from '@workday/canvas-kit-react/status-indicator';
+import { StatusIndicator, StatusIndicatorType } from '@workday/canvas-kit-react/status-indicator';
 import { Heading, Subtext, Text } from '@workday/canvas-kit-react/text';
 
 interface Reference {
@@ -46,13 +43,7 @@ function Field({ label, value }: { label: string; value: string | undefined }) {
   );
 }
 
-function WorkerRow({
-  worker,
-  onSelect,
-}: {
-  worker: Worker;
-  onSelect?: (id: string) => void;
-}) {
+function WorkerRow({ worker, onSelect }: { worker: Worker; onSelect?: (id: string) => void }) {
   const [hovered, setHovered] = useState(false);
   const interactive = !!onSelect;
   return (
@@ -160,9 +151,7 @@ function TeamCard({
   workerId: string;
   onSelectWorker?: (id: string) => void;
 }) {
-  const reports = useRequest<WorkerCollection>(
-    `/common/v1/workers/${workerId}/directReports`
-  );
+  const reports = useRequest<WorkerCollection>(`/common/v1/workers/${workerId}/directReports`);
 
   const reportList = reports.data?.data ?? [];
 
