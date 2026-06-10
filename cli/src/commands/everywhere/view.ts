@@ -4,7 +4,6 @@ import * as path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import * as vite from 'vite';
 
-import { dataServicePlugin } from '../../data/vite-data-plugin.js';
 import { isUnauthenticated } from '../../data/proxy-auth.js';
 import { appConfig } from '../../config.js';
 import { DEFAULT_GATEWAY } from '../../auth/defaults.js';
@@ -52,6 +51,17 @@ export default class ViewCommand extends EverywhereBaseCommand {
         allow: [pluginDir, sdkRoot],
       },
       proxy: {
+        '/api/v1/tenant': {
+          target: apiServer,
+          changeOrigin: true,
+          configure: (proxy, _options) => {
+            proxy.on('proxyReq', (proxyReq, req, _res) => {
+              if (isUnauthenticated(req.headers) && token) {
+                proxyReq.setHeader('Authorization', `Bearer ${token}`);
+              }
+            });
+          },
+        },
         '/apps': {
           target: apiServer,
           changeOrigin: true,
@@ -69,7 +79,6 @@ export default class ViewCommand extends EverywhereBaseCommand {
     const server = await vite.createServer({
       root: viewerDir,
       configFile: false,
-      plugins: [dataServicePlugin(pluginDir)],
       server: serverConfig,
       resolve: {
         alias: {
