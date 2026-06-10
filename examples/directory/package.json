@@ -1,5 +1,5 @@
 {
-  "name": "employee-directory",
+  "name": "directory",
   "title": "Directory",
   "version": "1.0.0",
   "description": "Demonstrates useRequest against the /workers/me REST endpoint.",
