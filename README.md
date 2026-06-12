@@ -75,6 +75,66 @@ npx everywhere build
 This produces a `dist/<name>-<version>.zip` containing `package.json`, the bundled `plugin.js`, and
 when present `plugin.css` plus any hashed static assets (images, fonts, etc.) at the archive root.
 
+## Plugin Capabilities
+
+> [!IMPORTANT] **Breaking change.** As of this release, every plugin must declare a `capabilities`
+> block in its `package.json`. Builds fail without it. **All existing plugins must be updated** —
+> add a `capabilities` field that lists only the permissions your plugin actually uses. See below
+> for the full list of available capabilities.
+
+Plugin capabilities declare the permissions your plugin requires at build time. The Workday
+Everywhere platform uses this manifest to enforce security boundaries at runtime: network requests
+to undeclared domains are blocked, storage access is denied unless opted in, and so on.
+
+The `everywhere init` command scaffolds an empty `capabilities: {}` block automatically. Populate it
+to match what your plugin actually needs.
+
+### Declaring capabilities
+
+Add a `capabilities` field to your plugin's `package.json`:
+
+```json
+{
+  "name": "my-plugin",
+  "version": "1.0.0",
+  "capabilities": {
+    "network": {
+      "allowedDomains": ["api.workday.com"]
+    },
+    "storage": true,
+    "console": true
+  }
+}
+```
+
+### Available capabilities
+
+| Capability               | Type       | Description                                                                                                                                                             |
+| ------------------------ | ---------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `network.allowedDomains` | `string[]` | Fully-qualified domain names your plugin may fetch from. Each entry must be an FQDN — no wildcards (`*.workday.com`), no bare hostnames (`localhost`), no IP addresses. |
+| `storage`                | `boolean`  | Opt in to read/write browser `localStorage` via the plugin bridge. Defaults to `false`.                                                                                 |
+| `console`                | `boolean`  | Opt in to emit `console.*` output that is visible outside the sandbox. Defaults to `false`.                                                                             |
+
+A plugin that makes no network calls and uses no storage can declare an empty object:
+
+```json
+"capabilities": {}
+```
+
+### Retrofitting existing plugins
+
+If your plugin was published before capabilities were required, add a `capabilities` block that
+reflects what your plugin actually does:
+
+1. **Network calls** — search your plugin source for `fetch(`, `useQuery(`, `useMutation(`, and
+   `useRequest(`. For each unique hostname contacted, add it to `network.allowedDomains`.
+2. **Storage** — search for `localStorage`. If found, add `"storage": true`.
+3. **Console** — search for `console.log`, `console.warn`, `console.error`. If found, add
+   `"console": true`.
+
+Run `everywhere build` after updating. The build will fail with a clear error message if any
+capability is declared incorrectly.
+
 ## Connecting to Workday Data
 
 Plugins can connect directly to Workday's GraphQL API to read and write data from Extend business
