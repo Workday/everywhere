@@ -1,9 +1,14 @@
 import * as fs from 'node:fs';
 import * as path from 'node:path';
-import type { PluginCapabilities } from '../../../src/types.js';
 
-// Re-export for backward compatibility
-export type { PluginCapabilities };
+// Intentionally duplicated from src/types.ts — keep in sync.
+// Cross-package TypeScript source imports are not supported by this CLI's tsconfig.
+// SDK consumers should import PluginCapabilities from '@workday/everywhere'.
+export interface PluginCapabilities {
+  network?: { allowedDomains: string[] };
+  storage?: boolean;
+  console?: boolean;
+}
 
 export interface PluginManifest {
   name: string;
