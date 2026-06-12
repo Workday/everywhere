@@ -264,6 +264,19 @@ describe('readPluginManifest', () => {
     });
   });
 
+  describe('when capabilities.network is present but allowedDomains is missing', () => {
+    it('throws about the missing allowedDomains field', () => {
+      fs.writeFileSync(
+        path.join(pluginDir, 'package.json'),
+        JSON.stringify({ name: 'my-plugin', version: '1.0.0', capabilities: { network: {} } }),
+        'utf-8'
+      );
+      expect(() => readPluginManifest(pluginDir)).toThrow(
+        'capabilities.network.allowedDomains must be an array'
+      );
+    });
+  });
+
   describe('when capabilities.storage is not a boolean', () => {
     it('throws about the invalid storage field', () => {
       fs.writeFileSync(

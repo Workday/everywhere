@@ -399,7 +399,7 @@ describe('addCapabilitiesIfAbsent', () => {
     });
   });
 
-  describe('when capabilities is absent', () => {
+  describe('when capabilities is absent (return value)', () => {
     it('returns true', () => {
       fs.writeFileSync(pkgPath, JSON.stringify({ name: 'my-plugin', version: '1.0.0' }), 'utf-8');
       expect(addCapabilitiesIfAbsent(pkgPath)).toBe(true);
@@ -423,7 +423,7 @@ describe('addCapabilitiesIfAbsent', () => {
     });
   });
 
-  describe('when capabilities is already present', () => {
+  describe('when capabilities is already present (return value)', () => {
     it('returns false', () => {
       fs.writeFileSync(
         pkgPath,

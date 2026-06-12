@@ -299,9 +299,7 @@ export default class InitCommand extends EverywhereBaseCommand {
 
     // Mutation 5: add capabilities block if not already present
     if (addCapabilitiesIfAbsent(pkgPath)) {
-      if (verbose) {
-        this.log('Added capabilities block to package.json');
-      }
+      this.log(chalk.green('Updated package.json'));
     }
 
     // Run npm install
