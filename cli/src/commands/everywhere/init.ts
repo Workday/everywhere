@@ -115,6 +115,16 @@ export function writeAgentsMdIfAbsent(pluginDir: string): boolean {
   return true;
 }
 
+export function addCapabilitiesIfAbsent(pkgPath: string): boolean {
+  const pkg = JSON.parse(fs.readFileSync(pkgPath, 'utf-8')) as Record<string, unknown>;
+  if ('capabilities' in pkg) {
+    return false;
+  }
+  pkg['capabilities'] = {};
+  fs.writeFileSync(pkgPath, JSON.stringify(pkg, null, 2) + '\n');
+  return true;
+}
+
 export function runNpmInstall(cwd: string): Promise<void> {
   return new Promise((resolve, reject) => {
     const child = spawn(NPM_BIN, ['install'], {
@@ -285,6 +295,13 @@ export default class InitCommand extends EverywhereBaseCommand {
       this.log(chalk.green('Created AGENTS.md'));
     } else if (verbose) {
       this.log(`AGENTS.md already exists, skipping (${chalk.cyan(agentsPath)})`);
+    }
+
+    // Mutation 5: add capabilities block if not already present
+    if (addCapabilitiesIfAbsent(pkgPath)) {
+      if (verbose) {
+        this.log('Added capabilities block to package.json');
+      }
     }
 
     // Run npm install

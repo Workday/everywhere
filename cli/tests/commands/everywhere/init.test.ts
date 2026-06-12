@@ -6,6 +6,7 @@ import InitCommand, {
   resolveTypeDevDependencies,
   writeTsConfigIfAbsent,
   writeAgentsMdIfAbsent,
+  addCapabilitiesIfAbsent,
 } from '../../../src/commands/everywhere/init.js';
 import EverywhereBaseCommand from '../../../src/lib/command.js';
 
@@ -372,6 +373,64 @@ describe('writeAgentsMdIfAbsent', () => {
 
     it('returns false', () => {
       expect(writeAgentsMdIfAbsent(tmpDir)).toBe(false);
+    });
+  });
+});
+
+describe('addCapabilitiesIfAbsent', () => {
+  let tmpDir: string;
+  let pkgPath: string;
+
+  beforeEach(() => {
+    tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'we-init-caps-test-'));
+    pkgPath = path.join(tmpDir, 'package.json');
+  });
+
+  afterEach(() => {
+    fs.rmSync(tmpDir, { recursive: true });
+  });
+
+  describe('when capabilities is absent', () => {
+    it('writes capabilities: {} to package.json', () => {
+      fs.writeFileSync(pkgPath, JSON.stringify({ name: 'my-plugin', version: '1.0.0' }), 'utf-8');
+      addCapabilitiesIfAbsent(pkgPath);
+      const pkg = JSON.parse(fs.readFileSync(pkgPath, 'utf-8')) as Record<string, unknown>;
+      expect(pkg['capabilities']).toEqual({});
+    });
+  });
+
+  describe('when capabilities is absent', () => {
+    it('returns true', () => {
+      fs.writeFileSync(pkgPath, JSON.stringify({ name: 'my-plugin', version: '1.0.0' }), 'utf-8');
+      expect(addCapabilitiesIfAbsent(pkgPath)).toBe(true);
+    });
+  });
+
+  describe('when capabilities is already present', () => {
+    it('does not overwrite existing capabilities', () => {
+      fs.writeFileSync(
+        pkgPath,
+        JSON.stringify({
+          name: 'my-plugin',
+          version: '1.0.0',
+          capabilities: { network: { allowedDomains: ['api.workday.com'] } },
+        }),
+        'utf-8'
+      );
+      addCapabilitiesIfAbsent(pkgPath);
+      const pkg = JSON.parse(fs.readFileSync(pkgPath, 'utf-8')) as Record<string, unknown>;
+      expect(pkg['capabilities']).toEqual({ network: { allowedDomains: ['api.workday.com'] } });
+    });
+  });
+
+  describe('when capabilities is already present', () => {
+    it('returns false', () => {
+      fs.writeFileSync(
+        pkgPath,
+        JSON.stringify({ name: 'my-plugin', version: '1.0.0', capabilities: {} }),
+        'utf-8'
+      );
+      expect(addCapabilitiesIfAbsent(pkgPath)).toBe(false);
     });
   });
 });
