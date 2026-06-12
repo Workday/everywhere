@@ -212,7 +212,7 @@ describe('everywhere publish', () => {
       beforeEach(() => {
         fs.writeFileSync(
           path.join(pluginDir, 'package.json'),
-          JSON.stringify({ name: '@acme/my-test-plugin', version: '2.3.4' }),
+          JSON.stringify({ name: '@acme/my-test-plugin', version: '2.3.4', capabilities: {} }),
           'utf-8'
         );
 
@@ -309,7 +309,7 @@ describe('everywhere publish', () => {
       it('errors with an upload failure message', async () => {
         fs.writeFileSync(
           path.join(pluginDir, 'package.json'),
-          JSON.stringify({ name: 'my-test-plugin', version: '1.0.0' }),
+          JSON.stringify({ name: 'my-test-plugin', version: '1.0.0', capabilities: {} }),
           'utf-8'
         );
 

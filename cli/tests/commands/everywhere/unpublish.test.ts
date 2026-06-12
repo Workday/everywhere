@@ -125,7 +125,7 @@ describe('everywhere unpublish', () => {
       beforeEach(() => {
         fs.writeFileSync(
           path.join(pluginDir, 'package.json'),
-          JSON.stringify({ name: 'my-test-plugin', version: '1.0.0' }),
+          JSON.stringify({ name: 'my-test-plugin', version: '1.0.0', capabilities: {} }),
           'utf-8'
         );
 
@@ -159,7 +159,7 @@ describe('everywhere unpublish', () => {
       it('errors with the failure message', async () => {
         fs.writeFileSync(
           path.join(pluginDir, 'package.json'),
-          JSON.stringify({ name: 'my-test-plugin', version: '1.0.0' }),
+          JSON.stringify({ name: 'my-test-plugin', version: '1.0.0', capabilities: {} }),
           'utf-8'
         );
         vi.mocked(appConfig).mockReturnValue(

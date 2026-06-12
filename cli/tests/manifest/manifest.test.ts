@@ -86,7 +86,7 @@ describe('readPluginManifest', () => {
     beforeEach(() => {
       fs.writeFileSync(
         path.join(pluginDir, 'package.json'),
-        JSON.stringify({ name: 'my-plugin', version: '1.2.3' }),
+        JSON.stringify({ name: 'my-plugin', version: '1.2.3', capabilities: {} }),
         'utf-8'
       );
     });
@@ -104,7 +104,7 @@ describe('readPluginManifest', () => {
     beforeEach(() => {
       fs.writeFileSync(
         path.join(pluginDir, 'package.json'),
-        JSON.stringify({ name: 'my-plugin', version: '1.2.3' }),
+        JSON.stringify({ name: 'my-plugin', version: '1.2.3', capabilities: {} }),
         'utf-8'
       );
     });
@@ -118,7 +118,7 @@ describe('readPluginManifest', () => {
     beforeEach(() => {
       fs.writeFileSync(
         path.join(pluginDir, 'package.json'),
-        JSON.stringify({ name: 'my-plugin', version: '1.2.3', title: 42 }),
+        JSON.stringify({ name: 'my-plugin', version: '1.2.3', title: 42, capabilities: {} }),
         'utf-8'
       );
     });
@@ -132,7 +132,7 @@ describe('readPluginManifest', () => {
     beforeEach(() => {
       fs.writeFileSync(
         path.join(pluginDir, 'package.json'),
-        JSON.stringify({ name: 'my-plugin', version: '1.2.3', title: '' }),
+        JSON.stringify({ name: 'my-plugin', version: '1.2.3', title: '', capabilities: {} }),
         'utf-8'
       );
     });
@@ -146,13 +146,165 @@ describe('readPluginManifest', () => {
     beforeEach(() => {
       fs.writeFileSync(
         path.join(pluginDir, 'package.json'),
-        JSON.stringify({ name: 'my-plugin', version: '1.2.3', title: 'My Plugin' }),
+        JSON.stringify({
+          name: 'my-plugin',
+          version: '1.2.3',
+          title: 'My Plugin',
+          capabilities: {},
+        }),
         'utf-8'
       );
     });
 
     it('returns the title from the manifest', () => {
       expect(readPluginManifest(pluginDir).title).toBe('My Plugin');
+    });
+  });
+
+  describe('when capabilities is missing', () => {
+    it('throws about the missing capabilities field', () => {
+      fs.writeFileSync(
+        path.join(pluginDir, 'package.json'),
+        JSON.stringify({ name: 'my-plugin', version: '1.0.0' }),
+        'utf-8'
+      );
+      expect(() => readPluginManifest(pluginDir)).toThrow(
+        'package.json is missing required field: capabilities'
+      );
+    });
+  });
+
+  describe('when capabilities is not an object', () => {
+    it('throws about the invalid capabilities field', () => {
+      fs.writeFileSync(
+        path.join(pluginDir, 'package.json'),
+        JSON.stringify({ name: 'my-plugin', version: '1.0.0', capabilities: 'yes' }),
+        'utf-8'
+      );
+      expect(() => readPluginManifest(pluginDir)).toThrow('capabilities must be a plain object');
+    });
+  });
+
+  describe('when capabilities is an empty object', () => {
+    it('returns capabilities as an empty object', () => {
+      fs.writeFileSync(
+        path.join(pluginDir, 'package.json'),
+        JSON.stringify({ name: 'my-plugin', version: '1.0.0', capabilities: {} }),
+        'utf-8'
+      );
+      expect(readPluginManifest(pluginDir).capabilities).toEqual({});
+    });
+  });
+
+  describe('when capabilities has a valid allowedDomains entry', () => {
+    it('returns capabilities with the network block', () => {
+      fs.writeFileSync(
+        path.join(pluginDir, 'package.json'),
+        JSON.stringify({
+          name: 'my-plugin',
+          version: '1.0.0',
+          capabilities: { network: { allowedDomains: ['api.workday.com'] } },
+        }),
+        'utf-8'
+      );
+      expect(readPluginManifest(pluginDir).capabilities).toEqual({
+        network: { allowedDomains: ['api.workday.com'] },
+      });
+    });
+  });
+
+  describe('when allowedDomains contains a wildcard', () => {
+    it('throws about the invalid domain', () => {
+      fs.writeFileSync(
+        path.join(pluginDir, 'package.json'),
+        JSON.stringify({
+          name: 'my-plugin',
+          version: '1.0.0',
+          capabilities: { network: { allowedDomains: ['*.workday.com'] } },
+        }),
+        'utf-8'
+      );
+      expect(() => readPluginManifest(pluginDir)).toThrow(
+        'is not a valid fully-qualified domain name'
+      );
+    });
+  });
+
+  describe('when allowedDomains contains localhost', () => {
+    it('throws about the invalid domain', () => {
+      fs.writeFileSync(
+        path.join(pluginDir, 'package.json'),
+        JSON.stringify({
+          name: 'my-plugin',
+          version: '1.0.0',
+          capabilities: { network: { allowedDomains: ['localhost'] } },
+        }),
+        'utf-8'
+      );
+      expect(() => readPluginManifest(pluginDir)).toThrow(
+        'is not a valid fully-qualified domain name'
+      );
+    });
+  });
+
+  describe('when allowedDomains contains an IP address', () => {
+    it('throws about the invalid domain', () => {
+      fs.writeFileSync(
+        path.join(pluginDir, 'package.json'),
+        JSON.stringify({
+          name: 'my-plugin',
+          version: '1.0.0',
+          capabilities: { network: { allowedDomains: ['192.168.1.1'] } },
+        }),
+        'utf-8'
+      );
+      expect(() => readPluginManifest(pluginDir)).toThrow(
+        'is not a valid fully-qualified domain name'
+      );
+    });
+  });
+
+  describe('when capabilities.storage is not a boolean', () => {
+    it('throws about the invalid storage field', () => {
+      fs.writeFileSync(
+        path.join(pluginDir, 'package.json'),
+        JSON.stringify({ name: 'my-plugin', version: '1.0.0', capabilities: { storage: 'yes' } }),
+        'utf-8'
+      );
+      expect(() => readPluginManifest(pluginDir)).toThrow('capabilities.storage must be a boolean');
+    });
+  });
+
+  describe('when capabilities.console is not a boolean', () => {
+    it('throws about the invalid console field', () => {
+      fs.writeFileSync(
+        path.join(pluginDir, 'package.json'),
+        JSON.stringify({ name: 'my-plugin', version: '1.0.0', capabilities: { console: 'yes' } }),
+        'utf-8'
+      );
+      expect(() => readPluginManifest(pluginDir)).toThrow('capabilities.console must be a boolean');
+    });
+  });
+
+  describe('when capabilities contains an unknown key', () => {
+    it('throws about the unknown capability key', () => {
+      fs.writeFileSync(
+        path.join(pluginDir, 'package.json'),
+        JSON.stringify({ name: 'my-plugin', version: '1.0.0', capabilities: { clipboard: true } }),
+        'utf-8'
+      );
+      expect(() => readPluginManifest(pluginDir)).toThrow('unknown capability key: clipboard');
+    });
+  });
+
+  describe('when capabilities has storage: true', () => {
+    it('returns capabilities with storage true', () => {
+      fs.writeFileSync(
+        path.join(pluginDir, 'package.json'),
+        JSON.stringify({ name: 'my-plugin', version: '1.0.0', capabilities: { storage: true } }),
+        'utf-8'
+      );
+      expect(readPluginManifest(pluginDir).capabilities).toEqual({ storage: true });
     });
   });
 });

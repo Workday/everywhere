@@ -76,7 +76,7 @@ describe('everywhere build', () => {
       beforeEach(() => {
         fs.writeFileSync(
           path.join(pluginDir, 'package.json'),
-          JSON.stringify({ name: '@acme/test-plugin', version: '2.3.4' }),
+          JSON.stringify({ name: '@acme/test-plugin', version: '2.3.4', capabilities: {} }),
           'utf-8'
         );
         vi.mocked(plugins.bundlePlugin).mockResolvedValue({
