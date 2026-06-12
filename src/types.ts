@@ -3,6 +3,12 @@ import type { RouteDefinition } from './route.js';
 
 export type { RouteConfig, RouteDefinition } from './route.js';
 
+export interface PluginCapabilities {
+  network?: { allowedDomains: string[] };
+  storage?: boolean;
+  console?: boolean;
+}
+
 export interface PluginConfig {
   routes?: RouteDefinition<Record<string, string>>[];
   defaultRoute?: RouteDefinition<Record<string, never>>;

@@ -1,4 +1,10 @@
-export type { RouteConfig, RouteDefinition, PluginConfig, PluginDefinition } from './types.js';
+export type {
+  RouteConfig,
+  RouteDefinition,
+  PluginConfig,
+  PluginDefinition,
+  PluginCapabilities,
+} from './types.js';
 export { route } from './route.js';
 export { plugin } from './plugin.js';
 
