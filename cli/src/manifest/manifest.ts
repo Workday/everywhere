@@ -1,7 +1,6 @@
 import * as fs from 'node:fs';
 import * as path from 'node:path';
-// @ts-expect-error - SDK not available to TypeScript during linting, but resolved at runtime
-import type { PluginCapabilities } from '@workday/everywhere';
+import type { PluginCapabilities } from '../../../src/types.js';
 
 // Re-export for backward compatibility
 export type { PluginCapabilities };

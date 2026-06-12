@@ -1,6 +1,6 @@
 {
   "compilerOptions": {
-    "rootDir": "./src",
+    "rootDir": "../",
     "outDir": "./dist",
     "target": "ES2022",
     "module": "node16",
@@ -15,7 +15,8 @@
     "noUnusedParameters": true,
     "sourceMap": true,
     "inlineSources": true,
-    "jsx": "react-jsx"
+    "jsx": "react-jsx",
+    "allowImportingTsExtensions": true
   },
   "include": ["src/**/*"]
 }
