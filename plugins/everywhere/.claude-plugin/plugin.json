@@ -1,0 +1,31 @@
+{
+  "name": "everywhere",
+  "displayName": "Workday Everywhere",
+  "version": "0.1.0",
+  "description": "Connect Claude to the Workday Agent Gateway over HTTP MCP. Tools are discovered from your gateway at runtime; this plugin ships no skills.",
+  "author": { "name": "Workday" },
+  "homepage": "https://github.com/Workday/everywhere",
+  "repository": "https://github.com/Workday/everywhere",
+  "license": "Apache-2.0",
+  "keywords": ["workday", "mcp", "agent-gateway", "connector"],
+  "userConfig": {
+    "gateway_url": {
+      "type": "string",
+      "title": "Agent Gateway MCP URL",
+      "description": "Full MCP endpoint for your tenant, e.g. https://<region>.agent.workday.com/<your-tenant>/mcp",
+      "required": true
+    },
+    "wd_tenant": {
+      "type": "string",
+      "title": "Workday tenant",
+      "description": "Sent as the WD-Tenant header, e.g. your-tenant-here.",
+      "required": true
+    },
+    "wd_agent_tenant_alias": {
+      "type": "string",
+      "title": "Workday agent tenant alias",
+      "description": "Sent as the WD-Agent-Tenant-Alias header, e.g. your-alias-here.",
+      "required": true
+    }
+  }
+}
