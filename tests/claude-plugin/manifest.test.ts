@@ -87,7 +87,13 @@ describe('the everywhere plugin manifest', () => {
 
 describe('the MCP connector', () => {
   const serverNames = Object.keys(mcpConfig.mcpServers);
-  const server = mcpConfig.mcpServers['workday'] ?? {};
+  const server = mcpConfig.mcpServers['workday'];
+
+  if (!server) {
+    throw new Error('.mcp.json declares no "workday" server');
+  }
+
+  const connectorValues = [server.url ?? '', ...Object.values(server.headers ?? {})];
 
   it('declares exactly one server', () => {
     expect(serverNames).toHaveLength(1);
@@ -130,8 +136,14 @@ describe('the MCP connector', () => {
       expect(server.oauth).toBeUndefined();
     });
 
-    it('hard-codes no gateway URL', () => {
-      expect(mcpText).not.toContain('https://');
+    it('hard-codes nothing but the fixed interaction channel', () => {
+      const hardCoded = connectorValues.filter((value) => !/^\$\{user_config\.\w+\}$/.test(value));
+
+      expect(hardCoded).toEqual(['claude-cowork-mcp']);
+    });
+
+    it('names no host anywhere in the file', () => {
+      expect(mcpText).not.toMatch(/\/\/[\w.-]+\./);
     });
   });
 });
