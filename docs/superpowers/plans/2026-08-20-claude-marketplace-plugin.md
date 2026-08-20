@@ -337,7 +337,7 @@ Create `plugins/everywhere/.mcp.json`:
 
 Run: `npx vitest run tests/claude-plugin/manifest.test.ts`
 
-Expected: PASS, 16 tests.
+Expected: PASS, 17 tests.
 
 - [ ] **Step 5: Format and commit**
 
@@ -451,7 +451,7 @@ Create `.claude-plugin/marketplace.json`:
 
 Run: `npx vitest run tests/claude-plugin/manifest.test.ts`
 
-Expected: PASS, 21 tests.
+Expected: PASS, 22 tests.
 
 - [ ] **Step 5: Format and commit**
 
@@ -638,7 +638,7 @@ files.
 
 Run: `just test`
 
-Expected: passes, including the 21 new assertions in `tests/claude-plugin/manifest.test.ts`.
+Expected: passes, including the 22 new assertions in `tests/claude-plugin/manifest.test.ts`.
 
 - [ ] **Step 5: Report results**
 
