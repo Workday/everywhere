@@ -174,7 +174,7 @@ expectation per test case, with a `describe` block per file:
 - declares exactly one plugin
 - the plugin entry is named `everywhere`
 - the entry's `source` resolves to an existing directory
-- the entry's license matches the `license` field in the repository's `package.json`
+- the entry's license matches the license declared by the plugin it advertises
 
 **Plugin manifest**
 
