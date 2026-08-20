@@ -1,0 +1,13 @@
+{
+  "mcpServers": {
+    "workday": {
+      "type": "http",
+      "url": "${user_config.gateway_url}",
+      "headers": {
+        "WD-Tenant": "${user_config.wd_tenant}",
+        "WD-Agent-Tenant-Alias": "${user_config.wd_agent_tenant_alias}",
+        "wd-agent-interaction-channel": "claude-cowork-mcp"
+      }
+    }
+  }
+}
