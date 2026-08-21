@@ -426,7 +426,7 @@ Create `.claude-plugin/marketplace.json`:
 
 ```json
 {
-  "$schema": "https://anthropic.com/claude-code/marketplace.schema.json",
+  "$schema": "https://json.schemastore.org/claude-code-marketplace.json",
   "name": "workday",
   "owner": {
     "name": "Workday",
