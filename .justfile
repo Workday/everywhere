@@ -53,3 +53,12 @@ clean:
 # Remove build artifacts and installed dependencies
 clobber: clean
     rm -rf node_modules/
+
+# Package the Claude plugin into a zip for Cowork's "Upload Plugin" flow
+bundle-plugin:
+    mkdir -p dist
+    version=$(jq -r .version plugins/everywhere/.claude-plugin/plugin.json) && \
+        out="$(pwd)/dist/everywhere-plugin-${version}.zip" && \
+        rm -f "$out" && \
+        cd plugins/everywhere && \
+        zip -rX "$out" . -x '.DS_Store'
