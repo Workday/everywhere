@@ -12,17 +12,15 @@ at runtime; this plugin ships no skills, commands, or agents of its own.
 
 ## Configure
 
-Enabling the plugin prompts for three values. None has a default — every deployment-specific value
-comes from you, and nothing about your gateway is stored in this repository.
+Enabling the plugin prompts for one value, the gateway's MCP endpoint. It has no default — the whole
+address comes from you, and nothing about your gateway is stored in this repository.
 
-| Option                     | Sent as                        | Example                                                |
-| -------------------------- | ------------------------------ | ------------------------------------------------------ |
-| Agent Gateway MCP URL      | the server URL                 | `https://<region>.agent.workday.com/<your-tenant>/mcp` |
-| Workday tenant             | `WD-Tenant` header             | `your-tenant-here`                                     |
-| Workday agent tenant alias | `WD-Agent-Tenant-Alias` header | `your-alias-here`                                      |
+| Option                | Sent as        | Example                                                |
+| --------------------- | -------------- | ------------------------------------------------------ |
+| Agent Gateway MCP URL | the server URL | `https://<region>.agent.workday.com/<your-tenant>/mcp` |
 
-The plugin also sends a fixed `wd-agent-interaction-channel` header, which the gateway uses to
-decide response formatting.
+The URL is tenant-scoped, so the tenant path segment is what routes your requests. The connector
+sends no custom headers.
 
 ## Connect
 
@@ -41,12 +39,12 @@ carry a deployment-specific prefix, so they will not look identical across tenan
 
 ## Troubleshooting
 
-| Symptom                                        | Fix                                                                          |
-| ---------------------------------------------- | ---------------------------------------------------------------------------- |
-| No tools, or `401 Unauthorized`                | `/mcp` → sign in to `workday`                                                |
-| Wrong tenant's data                            | Update the plugin's options in `~/.claude/settings.json`, then sign in again |
-| Duplicate Workday tools                        | Another Workday plugin is enabled alongside this one — disable one           |
-| `does not support dynamic client registration` | See below                                                                    |
+| Symptom                                        | Fix                                                                                           |
+| ---------------------------------------------- | --------------------------------------------------------------------------------------------- |
+| No tools, or `401 Unauthorized`                | `/mcp` → sign in to `workday`                                                                 |
+| Wrong tenant's data                            | Check the tenant segment of your gateway URL in `~/.claude/settings.json`, then sign in again |
+| Duplicate Workday tools                        | Another Workday plugin is enabled alongside this one — disable one                            |
+| `does not support dynamic client registration` | See below                                                                                     |
 
 Plugin options are read from your user settings (`~/.claude/settings.json`) and from managed
 settings — not from a project's `.claude/settings.json`, so putting them there has no effect.

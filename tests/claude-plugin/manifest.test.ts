@@ -73,11 +73,7 @@ describe('the everywhere plugin manifest', () => {
 
   describe('user configuration', () => {
     it('declares exactly the fields the connector needs, and no others', () => {
-      expect(Object.keys(pluginManifest.userConfig).sort()).toEqual([
-        'gateway_url',
-        'wd_agent_tenant_alias',
-        'wd_tenant',
-      ]);
+      expect(Object.keys(pluginManifest.userConfig).sort()).toEqual(['gateway_url']);
     });
 
     it('marks every field as required', () => {
@@ -108,6 +104,8 @@ describe('the MCP connector', () => {
 
   const connectorValues = [server.url ?? '', ...Object.values(server.headers ?? {})];
 
+  const isUserConfigTemplate = (value: string): boolean => /^\$\{user_config\.\w+\}$/.test(value);
+
   it('declares exactly one server', () => {
     expect(serverNames).toHaveLength(1);
   });
@@ -128,20 +126,8 @@ describe('the MCP connector', () => {
     expect(server.url).toBe('${user_config.gateway_url}');
   });
 
-  describe('headers', () => {
-    it('sends the tenant from user configuration', () => {
-      expect(server.headers?.['WD-Tenant']).toBe('${user_config.wd_tenant}');
-    });
-
-    it('sends the tenant alias from user configuration', () => {
-      expect(server.headers?.['WD-Agent-Tenant-Alias']).toBe(
-        '${user_config.wd_agent_tenant_alias}'
-      );
-    });
-
-    it('identifies the interaction channel to the gateway', () => {
-      expect(server.headers?.['wd-agent-interaction-channel']).toBe('claude-cowork-mcp');
-    });
+  it('sends no custom headers', () => {
+    expect(server.headers).toBeUndefined();
   });
 
   describe('public repository safety', () => {
@@ -149,10 +135,10 @@ describe('the MCP connector', () => {
       expect(server.oauth).toBeUndefined();
     });
 
-    it('hard-codes nothing but the fixed interaction channel', () => {
-      const hardCoded = connectorValues.filter((value) => !/^\$\{user_config\.\w+\}$/.test(value));
+    it('hard-codes nothing at all', () => {
+      const hardCoded = connectorValues.filter((value) => !isUserConfigTemplate(value));
 
-      expect(hardCoded).toEqual(['claude-cowork-mcp']);
+      expect(hardCoded).toEqual([]);
     });
 
     it('names no host anywhere in the file', () => {

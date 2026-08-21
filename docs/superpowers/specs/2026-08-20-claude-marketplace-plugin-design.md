@@ -9,7 +9,7 @@ Workday Agent Gateway MCP connector as an installable plugin. This is a proof of
 repositioning the repository toward agent integrations. It is deliberately connector-only: no
 skills, no commands, no agents, no hooks.
 
-Success means a user can run two commands, answer three prompts, sign in through the browser, and
+Success means a user can run two commands, supply a gateway URL, sign in through the browser, and
 call gateway tools from Claude Code — with no credential, hostname, or tenant value committed to the
 repository.
 
@@ -36,8 +36,9 @@ The second ships a marketplace named `workday` containing an `everywhere` plugin
 manifest, a plugin directory, an HTTP MCP server also named `workday`, and no OAuth block at all —
 sign-in relies on discovery and dynamic client registration.
 
-This design takes the marketplace shape and the credential-free sign-in from the second, and the
-tenant headers from the first.
+This design takes the marketplace shape and the credential-free sign-in from the second. It
+originally took the tenant headers from the first as well; see [Amendments](#amendments) for why
+those were later dropped, leaving a connector that is close to the second prototype's shape.
 
 ## Layout
 
@@ -75,19 +76,20 @@ The `owner` block names Workday and links the repository. It carries no personal
 ### Plugin manifest
 
 `plugins/everywhere/.claude-plugin/plugin.json` declares `name: everywhere`, a `displayName` of
-"Workday Everywhere", `version: 0.1.0`, author, homepage, repository, license, keywords, and three
-`userConfig` fields:
+"Workday Everywhere", `version: 0.1.0`, author, homepage, repository, license, keywords, and one
+`userConfig` field:
 
-| Key                     | Title                      | Required | Default | Used as                        |
-| ----------------------- | -------------------------- | -------- | ------- | ------------------------------ |
-| `gateway_url`           | Agent Gateway MCP URL      | yes      | none    | the server `url`               |
-| `wd_tenant`             | Workday tenant             | yes      | none    | `WD-Tenant` header             |
-| `wd_agent_tenant_alias` | Workday agent tenant alias | yes      | none    | `WD-Agent-Tenant-Alias` header |
+| Key           | Title                 | Required | Default | Used as          |
+| ------------- | --------------------- | -------- | ------- | ---------------- |
+| `gateway_url` | Agent Gateway MCP URL | yes      | none    | the server `url` |
 
-No field declares a `default`. That is the mechanism by which the design avoids hard-coding a
-gateway: every deployment-specific value is supplied by the installing user at enable time. Field
+The field declares no `default`. That is the mechanism by which the design avoids hard-coding a
+gateway: every deployment-specific value is supplied by the installing user at enable time. The
 `description` text carries an angle-bracketed example
 (`https://<region>.agent.workday.com/<your-tenant>/mcp`) that is unmistakably a template.
+
+The URL is tenant-scoped, so its path segment carries the tenant. See [Amendments](#amendments) for
+why no separate tenant fields exist.
 
 There is no `skills` key. The manifest declares no components other than the MCP server that
 `.mcp.json` provides by convention. Claude Code treats an MCP-only plugin as valid; only `name` is
@@ -102,12 +104,7 @@ required when a manifest is present.
   "mcpServers": {
     "workday": {
       "type": "http",
-      "url": "${user_config.gateway_url}",
-      "headers": {
-        "WD-Tenant": "${user_config.wd_tenant}",
-        "WD-Agent-Tenant-Alias": "${user_config.wd_agent_tenant_alias}",
-        "wd-agent-interaction-channel": "claude-cowork-mcp"
-      }
+      "url": "${user_config.gateway_url}"
     }
   }
 }
@@ -117,11 +114,7 @@ The server is named `workday`, matching both prior implementations. This is inte
 plugins are mutually exclusive by construction, so a user cannot silently end up with two transports
 to the same gateway.
 
-The interaction-channel value reuses the exact `claude-cowork-mcp` string an existing connector
-sends. The gateway is expected to key behavior off recognized channel values — this header is
-documented as what causes UI-only responses to be retained — so an invented value risks silent
-behavioral drift. The name reads oddly in a Claude Code plugin; correctness wins until the gateway
-is confirmed to accept arbitrary channels.
+The connector sends no custom headers. A URL and a transport are the whole configuration surface.
 
 Tools are not declared anywhere. They are federated by the gateway and discovered at runtime after
 sign-in, under a deployment-specific prefix.
@@ -178,7 +171,7 @@ expectation per test case, with a `describe` block per file:
 **Plugin manifest**
 
 - declares the plugin name `everywhere`
-- declares all three `userConfig` keys
+- declares `gateway_url` and no other `userConfig` key
 - marks every `userConfig` field required
 - declares no `default` on any `userConfig` field
 - declares no `skills` key
@@ -190,9 +183,9 @@ expectation per test case, with a `describe` block per file:
 - declares the server as `type: http`
 - declares no `command` key
 - takes its URL from user configuration
-- sends the tenant, the tenant alias, and the fixed interaction channel as headers
+- sends no custom headers
 - declares no `oauth` key
-- hard-codes nothing but the fixed interaction channel
+- hard-codes nothing at all
 - names no host anywhere in the file
 
 The last three are the load-bearing ones. Together they mechanically enforce the two properties this
@@ -203,10 +196,10 @@ The connector block resolves its server eagerly and throws if no `workday` serve
 rather than falling back to an empty object. A fallback would let the `oauth` and `command`
 assertions pass without ever inspecting a real server — the failure mode these tests exist to catch.
 
-"Hard-codes nothing but the fixed interaction channel" is an allow-list: every value in the
-connector must match `${user_config.*}`, with `claude-cowork-mcp` the single permitted literal. That
-catches any hard-coded hostname, tenant, or token, not just a recognisable URL scheme. The host-name
-check is a cheap textual backstop alongside it.
+"Hard-codes nothing at all" is an allow-list: every value in the connector must match
+`${user_config.*}`, with no permitted literals. That catches any hard-coded hostname, tenant, or
+token, not just a recognisable URL scheme. The host-name check is a cheap textual backstop alongside
+it.
 
 Tests live under `tests/claude-plugin/` rather than as a top-level `tests/plugin.test.ts`, which
 already exists and covers the SDK's `plugin()` function.
@@ -219,7 +212,7 @@ includes only `src`, so neither inspects these files. `just test` runs the new a
 Vitest, which picks them up by its default glob.
 
 Manual acceptance, which the automated tests cannot cover, is recorded in the plugin README: add the
-marketplace, install, supply the three values, sign in via `/mcp`, and confirm gateway tools appear.
+marketplace, install, supply the gateway URL, sign in via `/mcp`, and confirm gateway tools appear.
 
 ## Risks
 
@@ -229,8 +222,8 @@ the same host family. These claims conflict and the POC will settle it. If DCR f
 `claude mcp add` fallback applies and the plugin's value is reduced to configuration convenience — a
 documentation change, not a redesign.
 
-**The interaction-channel value is inherited on trust.** `claude-cowork-mcp` is reused because it is
-known to the gateway, not because it is accurate for this host.
+**Dropping the tenant headers is not confirmed.** See [Amendments](#amendments) — the change was
+made on a reviewer's recollection, not on a verified gateway contract.
 
 **A public repository becoming a marketplace is externally visible.** Adding
 `.claude-plugin/marketplace.json` at the root signals the repositioning before any decision about it
@@ -239,3 +232,23 @@ is final. The branch is not merged by this work.
 ## Open questions
 
 None blocking. The DCR question above is what the POC is for.
+
+## Amendments
+
+**2026-08-21 — removed all custom headers and the two tenant fields.** As originally designed, the
+connector sent `WD-Tenant`, `WD-Agent-Tenant-Alias`, and a fixed `wd-agent-interaction-channel`
+header, the first two fed by their own required `userConfig` fields.
+
+In review, a maintainer noted the gateway team had merged a change removing that requirement, so the
+headers were dropped and the connector reduced to a transport and a URL. Tenant routing now rests
+entirely on the tenant-scoped URL path — which is what one of the two prior prototypes has always
+done, so the shape is not unprecedented.
+
+Two consequences worth recording. The configuration surface fell from three prompts to one. And the
+allow-list safety test got strictly stronger: with no fixed channel value to permit, it now requires
+_every_ connector value to be a `${user_config.*}` template, with no literals allowed at all.
+
+The caveat is that this rests on a recollection rather than a verified contract; the reviewer
+suggested confirming with the gateway team. If the headers turn out to still be required, restoring
+them means re-adding the two `userConfig` fields, the `headers` block, and the permitted-literal
+exception in the allow-list test.
