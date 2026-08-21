@@ -1,0 +1,20 @@
+{
+  "$schema": "https://json.schemastore.org/claude-code-marketplace.json",
+  "name": "workday",
+  "owner": {
+    "name": "Workday",
+    "url": "https://github.com/Workday/everywhere"
+  },
+  "description": "Claude Code plugins for Workday integrations.",
+  "plugins": [
+    {
+      "name": "everywhere",
+      "source": "./plugins/everywhere",
+      "displayName": "Workday Everywhere",
+      "description": "Connect Claude to the Workday Agent Gateway over HTTP MCP.",
+      "category": "productivity",
+      "keywords": ["workday", "mcp", "agent-gateway"],
+      "license": "Apache-2.0"
+    }
+  ]
+}

@@ -1,0 +1,8 @@
+{
+  "mcpServers": {
+    "workday": {
+      "type": "http",
+      "url": "${user_config.gateway_url}"
+    }
+  }
+}
