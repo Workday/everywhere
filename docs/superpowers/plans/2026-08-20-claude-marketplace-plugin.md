@@ -405,7 +405,7 @@ describe('the marketplace manifest', () => {
   });
 
   it('points at a plugin directory that exists', () => {
-    expect(existsSync(resolve(repoRoot, entry?.source ?? ''))).toBe(true);
+    expect(entry?.source && existsSync(resolve(repoRoot, entry.source))).toBe(true);
   });
 
   it('declares the same license as the plugin it advertises', () => {

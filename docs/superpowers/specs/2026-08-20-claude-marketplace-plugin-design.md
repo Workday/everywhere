@@ -189,12 +189,24 @@ expectation per test case, with a `describe` block per file:
 - names that server `workday`
 - declares the server as `type: http`
 - declares no `command` key
+- takes its URL from user configuration
+- sends the tenant, the tenant alias, and the fixed interaction channel as headers
 - declares no `oauth` key
-- contains no literal `https://` URL
+- hard-codes nothing but the fixed interaction channel
+- names no host anywhere in the file
 
-The last two are the load-bearing ones. Together they mechanically enforce the two properties this
+The last three are the load-bearing ones. Together they mechanically enforce the two properties this
 design is built around: no committed credential material, and no hard-coded gateway. They will fail
 loudly if someone later reintroduces a convenience default.
+
+The connector block resolves its server eagerly and throws if no `workday` server is declared,
+rather than falling back to an empty object. A fallback would let the `oauth` and `command`
+assertions pass without ever inspecting a real server — the failure mode these tests exist to catch.
+
+"Hard-codes nothing but the fixed interaction channel" is an allow-list: every value in the
+connector must match `${user_config.*}`, with `claude-cowork-mcp` the single permitted literal. That
+catches any hard-coded hostname, tenant, or token, not just a recognisable URL scheme. The host-name
+check is a cheap textual backstop alongside it.
 
 Tests live under `tests/claude-plugin/` rather than as a top-level `tests/plugin.test.ts`, which
 already exists and covers the SDK's `plugin()` function.
