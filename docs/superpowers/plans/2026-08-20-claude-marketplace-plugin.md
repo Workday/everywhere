@@ -578,12 +578,19 @@ Append to `.justfile`, after the `clobber` recipe:
 ```
 # Package the Claude plugin into a zip for Cowork's "Upload Plugin" flow
 bundle-plugin:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    manifest=plugins/everywhere/.claude-plugin/plugin.json
+    version=$(jq -r '.version // empty' "$manifest")
+    if [ -z "$version" ]; then
+        echo "error: no version found in $manifest" >&2
+        exit 1
+    fi
     mkdir -p dist
-    version=$(jq -r .version plugins/everywhere/.claude-plugin/plugin.json) && \
-        out="$(pwd)/dist/everywhere-plugin-${version}.zip" && \
-        rm -f "$out" && \
-        cd plugins/everywhere && \
-        zip -rX "$out" . -x '.DS_Store'
+    out="$(pwd)/dist/everywhere-plugin-${version}.zip"
+    rm -f "$out"
+    cd plugins/everywhere
+    zip -rX "$out" . -x '*.DS_Store'
 ```
 
 - [ ] **Step 2: Run the recipe to verify it works**
