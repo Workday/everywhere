@@ -20,25 +20,24 @@ surface are untouched. The npm package is unaffected: `package.json` uses an exp
 allowlist (`dist`, `bin`, `cli/dist`, `cli/package.json`, `cli/oclif.manifest.json`), so none of the
 new files are published.
 
-Out of scope: skills of any kind, the Brahma stdio connector variant, changes to the root
-`README.md`, and any deprecation of the existing SDK surface.
+Out of scope: skills of any kind, a stdio connector variant, changes to the root `README.md`, and
+any deprecation of the existing SDK surface.
 
 ## Background
 
-Two existing implementations informed this design.
+Two earlier internal prototypes informed this design.
 
-The Brahma `loom-plugin` repository ships `workday-brahma`, an HTTP MCP plugin pointing at the Agent
-Gateway with host OAuth, tenant headers drawn from `userConfig`, and a fixed interaction-channel
-header. It also ships `workday-brahma-stdio`, which bundles a compiled connector that owns OAuth
-itself. The stdio variant is not a candidate here — it requires a build step and a binary that
-cannot be committed.
+The first ships an HTTP MCP plugin pointing at the Agent Gateway with host OAuth, tenant headers
+drawn from `userConfig`, and a fixed interaction-channel header. It also ships a stdio variant that
+bundles a compiled connector owning OAuth itself. The stdio approach is not a candidate here — it
+requires a build step and a binary that cannot be committed.
 
-The `we-claude` repository ships a marketplace named `workday` containing an `everywhere` plugin: a
-root marketplace manifest, a plugin directory, an HTTP MCP server also named `workday`, and no OAuth
-block at all — sign-in relies on discovery and dynamic client registration.
+The second ships a marketplace named `workday` containing an `everywhere` plugin: a root marketplace
+manifest, a plugin directory, an HTTP MCP server also named `workday`, and no OAuth block at all —
+sign-in relies on discovery and dynamic client registration.
 
-This design takes the marketplace shape and the credential-free sign-in from `we-claude`, and the
-tenant headers from `workday-brahma`.
+This design takes the marketplace shape and the credential-free sign-in from the second, and the
+tenant headers from the first.
 
 ## Layout
 
@@ -52,8 +51,8 @@ tests/claude-plugin/manifest.test.ts     manifest shape and safety assertions
 .justfile                                gains one `bundle-plugin` recipe
 ```
 
-The directory is `plugins/` rather than the `3ppa/claude/` used by `we-claude`, which is internal
-jargon with no meaning to a public reader.
+The directory is `plugins/` rather than the deeply nested path an earlier prototype used, which
+carried internal jargon with no meaning to a public reader.
 
 Install is:
 
@@ -68,8 +67,8 @@ Install is:
 
 `.claude-plugin/marketplace.json` declares a marketplace named `workday` owned by Workday, with a
 single plugin entry whose `source` is `./plugins/everywhere`. The entry carries `displayName`,
-`description`, `category: productivity`, keywords, and `license: Apache-2.0` — matching the
-repository's actual license, not the MIT that `we-claude` declares.
+`description`, `category: productivity`, keywords, and `license: Apache-2.0` — matching this
+repository's actual license rather than the one an earlier prototype declared.
 
 The `owner` block names Workday and links the repository. It carries no personal email address.
 
@@ -118,11 +117,11 @@ The server is named `workday`, matching both prior implementations. This is inte
 plugins are mutually exclusive by construction, so a user cannot silently end up with two transports
 to the same gateway.
 
-The interaction-channel value reuses Brahma's exact `claude-cowork-mcp` string. The gateway is
-expected to key behavior off recognized channel values — Brahma documents this header as what causes
-A2UI-only responses to be retained — so an invented value risks silent behavioral drift. The name
-reads oddly in a Claude Code plugin; correctness wins until the gateway is confirmed to accept
-arbitrary channels.
+The interaction-channel value reuses the exact `claude-cowork-mcp` string an existing connector
+sends. The gateway is expected to key behavior off recognized channel values — this header is
+documented as what causes UI-only responses to be retained — so an invented value risks silent
+behavioral drift. The name reads oddly in a Claude Code plugin; correctness wins until the gateway
+is confirmed to accept arbitrary channels.
 
 Tools are not declared anywhere. They are federated by the gateway and discovered at runtime after
 sign-in, under a deployment-specific prefix.
@@ -141,9 +140,9 @@ Neither applies inside `oauth`, so `oauth.clientId` can hold only a literal stri
 client ID is therefore not expressible, and any client ID in the manifest would be a committed
 constant. Omitting the block is the only option that satisfies the repository's security rules.
 
-A consequence worth recording: Brahma's `"clientId": "${WORKDAY_CLIENT_ID:-somekey}"` relies on
-expansion in a location the documentation does not list, so that override may not behave as intended
-there.
+A consequence worth recording: an existing connector configures `oauth.clientId` with an
+environment-variable template, relying on expansion in a location the documentation does not list,
+so that override may not behave as intended there.
 
 Client secrets were never at risk. Claude Code accepts a secret only via the `--client-secret` flag
 or `MCP_CLIENT_SECRET`, and stores it in the keychain; `.mcp.json` has no field for one.
@@ -212,9 +211,9 @@ marketplace, install, supply the three values, sign in via `/mcp`, and confirm g
 
 ## Risks
 
-**Dynamic client registration may not be supported.** Brahma states the gateway offers none, which
-is why their stdio connector exists; `we-claude` states sign-in works this way today against the
-same host family. These claims conflict and the POC will settle it. If DCR fails, the manual
+**Dynamic client registration may not be supported.** One prior prototype states the gateway offers
+none, which is why its stdio connector exists; the other states sign-in works this way today against
+the same host family. These claims conflict and the POC will settle it. If DCR fails, the manual
 `claude mcp add` fallback applies and the plugin's value is reduced to configuration convenience — a
 documentation change, not a redesign.
 
