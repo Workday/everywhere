@@ -5,7 +5,7 @@ at runtime; this plugin ships no skills, commands, or agents of its own.
 
 ## Install
 
-```
+```text
 /plugin marketplace add Workday/everywhere
 /plugin install everywhere@workday
 ```
@@ -29,8 +29,10 @@ decide response formatting.
 Run `/mcp`, pick `workday`, and complete sign-in in the browser. From a shell, the equivalent is
 `claude mcp login workday`.
 
-Sign-in needs no client ID or secret. Claude Code discovers the authorization server from the
-gateway and registers a client automatically, then stores the token in your OS keychain.
+Sign-in normally needs no client ID or secret: Claude Code discovers your gateway's authorization
+server, registers a client automatically, and stores the token in your OS keychain. If your gateway
+does not support dynamic client registration, this step fails — see
+[Troubleshooting](#troubleshooting) for the manual fallback.
 
 ## Use
 
@@ -39,15 +41,19 @@ carry a deployment-specific prefix, so they will not look identical across tenan
 
 ## Troubleshooting
 
-| Symptom                                        | Fix                                                                |
-| ---------------------------------------------- | ------------------------------------------------------------------ |
-| No tools, or `401 Unauthorized`                | `/mcp` → sign in to `workday`                                      |
-| Wrong tenant's data                            | Reconfigure the plugin options, then sign in again                 |
-| Duplicate Workday tools                        | Another Workday plugin is enabled alongside this one — disable one |
-| `does not support dynamic client registration` | See below                                                          |
+| Symptom                                        | Fix                                                                          |
+| ---------------------------------------------- | ---------------------------------------------------------------------------- |
+| No tools, or `401 Unauthorized`                | `/mcp` → sign in to `workday`                                                |
+| Wrong tenant's data                            | Update the plugin's options in `~/.claude/settings.json`, then sign in again |
+| Duplicate Workday tools                        | Another Workday plugin is enabled alongside this one — disable one           |
+| `does not support dynamic client registration` | See below                                                                    |
+
+Plugin options are read from your user settings (`~/.claude/settings.json`) and from managed
+settings — not from a project's `.claude/settings.json`, so putting them there has no effect.
 
 If your gateway rejects dynamic client registration, it needs a pre-registered OAuth client, which a
-plugin manifest cannot supply. Add the server manually instead:
+plugin manifest cannot supply. Register `http://localhost:8765/callback` as a redirect URI on that
+OAuth client, then add the server manually:
 
 ```sh
 claude mcp add --transport http \
@@ -55,8 +61,7 @@ claude mcp add --transport http \
   workday <your-gateway-mcp-url>
 ```
 
-Register `http://localhost:8765/callback` as a redirect URI on that client first. The secret is
-prompted for and stored in your keychain, never in a file.
+The secret is prompted for and stored in your keychain, never in a file.
 
 ## Package for Cowork
 
