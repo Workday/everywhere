@@ -2,7 +2,7 @@
   "mcpServers": {
     "workday": {
       "type": "http",
-      "url": "${user_config.gateway_url}"
+      "url": "https://sana.we.myworkday.com/mcp"
     }
   }
 }
