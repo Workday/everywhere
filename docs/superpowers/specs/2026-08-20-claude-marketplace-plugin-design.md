@@ -252,3 +252,19 @@ The caveat is that this rests on a recollection rather than a verified contract;
 suggested confirming with the gateway team. If the headers turn out to still be required, restoring
 them means re-adding the two `userConfig` fields, the `headers` block, and the permitted-literal
 exception in the allow-list test.
+
+**2026-09-18 — hard-coded the gateway URL; dropped `gateway_url` user configuration.** The team
+settled on a single, consistent Agent Gateway endpoint for this connector
+(`https://sana.we.myworkday.com/mcp`) rather than a per-tenant address. That invalidates the earlier
+assumption that the gateway URL is deployment-specific and must never be committed: it is now a
+fixed, public endpoint shared by every installer, so the manifest declares it directly.
+
+`plugins/everywhere/.mcp.json` sets `url` to the literal endpoint instead of
+`${user_config.gateway_url}`, and `plugins/everywhere/.claude-plugin/plugin.json` drops the
+`userConfig` block entirely — the plugin now takes zero configuration. Sign-in still resolves the
+tenant, so per-tenant routing is unaffected.
+
+The old "hard-codes nothing at all" and "names no host anywhere in the file" allow-list tests in
+`tests/claude-plugin/manifest.test.ts` were removed: they encoded the previous design's central
+constraint, which no longer holds. Their replacement asserts the connector's `url` equals the
+literal endpoint, and that the plugin manifest declares no `userConfig` at all.

@@ -12,23 +12,17 @@ at runtime; this plugin ships no skills, commands, or agents of its own.
 
 ## Configure
 
-Enabling the plugin prompts for one value, the gateway's MCP endpoint. It has no default — the whole
-address comes from you, and nothing about your gateway is stored in this repository.
-
-| Option                | Sent as        | Example                                                |
-| --------------------- | -------------- | ------------------------------------------------------ |
-| Agent Gateway MCP URL | the server URL | `https://<region>.agent.workday.com/<your-tenant>/mcp` |
-
-The URL is tenant-scoped, so the tenant path segment is what routes your requests. The connector
-sends no custom headers.
+Nothing to configure. The plugin connects to the shared Agent Gateway endpoint
+(`https://sana.we.myworkday.com/mcp`); sign-in determines your tenant. The connector sends no custom
+headers.
 
 ## Connect
 
 Run `/mcp`, pick `workday`, and complete sign-in in the browser. From a shell, the equivalent is
 `claude mcp login workday`.
 
-Sign-in normally needs no client ID or secret: Claude Code discovers your gateway's authorization
-server, registers a client automatically, and stores the token in your OS keychain. If your gateway
+Sign-in normally needs no client ID or secret: Claude Code discovers the gateway's authorization
+server, registers a client automatically, and stores the token in your OS keychain. If the gateway
 does not support dynamic client registration, this step fails — see
 [Troubleshooting](#troubleshooting) for the manual fallback.
 
@@ -39,24 +33,20 @@ carry a deployment-specific prefix, so they will not look identical across tenan
 
 ## Troubleshooting
 
-| Symptom                                        | Fix                                                                                           |
-| ---------------------------------------------- | --------------------------------------------------------------------------------------------- |
-| No tools, or `401 Unauthorized`                | `/mcp` → sign in to `workday`                                                                 |
-| Wrong tenant's data                            | Check the tenant segment of your gateway URL in `~/.claude/settings.json`, then sign in again |
-| Duplicate Workday tools                        | Another Workday plugin is enabled alongside this one — disable one                            |
-| `does not support dynamic client registration` | See below                                                                                     |
+| Symptom                                        | Fix                                                                |
+| ---------------------------------------------- | ------------------------------------------------------------------ |
+| No tools, or `401 Unauthorized`                | `/mcp` → sign in to `workday`                                      |
+| Duplicate Workday tools                        | Another Workday plugin is enabled alongside this one — disable one |
+| `does not support dynamic client registration` | See below                                                          |
 
-Plugin options are read from your user settings (`~/.claude/settings.json`) and from managed
-settings — not from a project's `.claude/settings.json`, so putting them there has no effect.
-
-If your gateway rejects dynamic client registration, it needs a pre-registered OAuth client, which a
+If the gateway rejects dynamic client registration, it needs a pre-registered OAuth client, which a
 plugin manifest cannot supply. Register `http://localhost:8765/callback` as a redirect URI on that
 OAuth client, then add the server manually:
 
 ```sh
 claude mcp add --transport http \
   --client-id <your-client-id> --client-secret --callback-port 8765 \
-  workday <your-gateway-mcp-url>
+  workday https://sana.we.myworkday.com/mcp
 ```
 
 The secret is prompted for and stored in your keychain, never in a file.
