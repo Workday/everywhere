@@ -1,5 +1,6 @@
 name: Bug Report
-description: Report a bug or unexpected behavior in the Workday Everywhere SDK
+description:
+  Report a bug or unexpected behavior in the Claude Code plugin or the Workday Everywhere SDK
 title: '[Bug]: '
 labels: ['bug']
 body:
@@ -7,6 +8,20 @@ body:
     attributes:
       value: |
         Thanks for taking the time to report this bug! Please fill out the sections below to help us understand and fix the issue.
+
+  - type: dropdown
+    id: area
+    attributes:
+      label: Which part of the project is this about?
+      description: |
+        The Claude Code plugin lives on the default branch. The `@workday/everywhere` SDK and CLI live on the [`sdk`](https://github.com/Workday/everywhere/tree/sdk) branch.
+      options:
+        - Claude Code plugin (Agent Gateway connector)
+        - SDK or `everywhere` CLI
+        - Documentation
+        - "I'm not sure"
+    validations:
+      required: true
 
   - type: textarea
     id: description
@@ -66,10 +81,11 @@ body:
       label: Environment Information
       description: Help us understand your setup.
       value: |
-        - Node.js version:
-        - SDK version:
         - Operating System:
-        - Package manager:
+        - Claude Code version (plugin issues):
+        - Plugin version (plugin issues):
+        - Node.js version (SDK issues):
+        - SDK version (SDK issues):
 
   - type: textarea
     id: additional

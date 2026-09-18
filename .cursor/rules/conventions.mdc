@@ -1,5 +1,5 @@
 ---
-description: Always-on conventions for Workday Everywhere SDK changes
+description: Always-on conventions for the Workday Claude Code plugin marketplace
 alwaysApply: true
 ---
 
@@ -7,22 +7,28 @@ alwaysApply: true
 
 ## Project Context
 
-This is a public SDK consumed by external users. Treat exported symbols as public contracts.
+This branch hosts the `workday` **Claude Code plugin marketplace** and the plugins it advertises — today just **Workday Everywhere**, an HTTP MCP connector to the Workday Agent Gateway. It is a public repository with no application code: JSON manifests, documentation, and a manifest test suite.
 
-## Public API Stability
+The `@workday/everywhere` SDK and CLI live on the **`sdk` branch**. The two branches have permanently diverged and must never be merged into each other. SDK work belongs on `sdk`; do not reintroduce `src/`, `cli/`, or `examples/` here.
 
-- Do not introduce breaking API changes without a deprecation and migration path.
-- Additive changes are preferred over removals or signature changes.
-- Check backwards compatibility before finalizing edits.
+"Plugin" is overloaded: here it means a *Claude Code plugin*; on `sdk` it means a *Workday Everywhere plugin* (a React app running inside Workday).
+
+## Manifest Stability
+
+The plugin manifest is a public contract for existing installs.
+
+- Do not rename the plugin, the marketplace, or the MCP server.
+- Do not remove or rename a `userConfig` key; do not add a new **required** one.
+- Bump `version` in `plugins/everywhere/.claude-plugin/plugin.json` for any user-visible change — Claude Code and Cowork cache by version.
 
 ## Toolchain and Commands
 
 - Package manager: `npm`
-- Typecheck: `npx tsc --noEmit`
-- Lint: `ESLint` (typescript-eslint strict config)
+- Typecheck: `npx tsc --noEmit` (covers `tests/` only)
 - Format: `Prettier` (see `.prettierrc.json`)
 - Task runner: `just` (see `.justfile`)
-- Common commands: `just setup`, `just check`, `just test`, `just tidy`
+- Common commands: `just setup`, `just check`, `just test`, `just tidy`, `just bundle-plugin`
+- No ESLint and no build step on this branch; both live on `sdk`.
 
 ## Git Workflow
 
@@ -37,17 +43,9 @@ This is a public SDK consumed by external users. Treat exported symbols as publi
 - Remove after merge: `git worktree remove .worktrees/<name>`
 - Announce the worktree name when creating or switching.
 
-## Import Convention
-
-TypeScript imports must use `.js` extensions for local module imports in emitted npm packages.
-
-- Correct: `import { Thing } from './thing.js';`
-- Incorrect: `import { Thing } from './thing.ts';`
-- Incorrect: `import { Thing } from './thing';`
-
 ## Testing Process
 
-For TypeScript implementation and test edits, follow the strict TDD rule in `tdd.mdc`.
+For TypeScript and manifest edits, follow the strict TDD rule in `tdd.mdc`: assert the new invariant in `tests/claude-plugin/manifest.test.ts` before editing the JSON.
 
 ## Agent rules (Cursor)
 

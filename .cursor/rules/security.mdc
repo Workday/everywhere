@@ -11,11 +11,13 @@ This project is **public**. Agents must avoid changes that expose secrets, priva
 
 - **Secrets:** passwords, API keys, tokens, private keys, OAuth secrets, or credential-bearing connection strings—in source, tests, fixtures, examples, or config checked into the repo.
 - **Non-public references:** hostnames or URLs for private corporate infrastructure (e.g. private source control, CI, artifact, wiki, or ticketing portals). Prefer neutral placeholders in docs and examples.
+- **Gateway hostnames or tenants:** no real Agent Gateway URL, region, or tenant may appear in `.mcp.json`, `plugin.json`, or any README. The URL comes from the user at install time and nowhere else; the manifest tests enforce this.
+- **Committed OAuth client material:** `.mcp.json` must carry no `oauth` block, no client ID or secret, and no headers. Claude Code registers a client dynamically at sign-in.
 - **Non-public packages or registries:** dependencies that exist only in private registries not published for public use, or `.npmrc`/CI config that points to private registries. Use the same public npm patterns as the rest of this repo. Do not copy dependency names from non-public libraries into `package.json` unless they are verified public packages.
 
 ## Examples and fixtures
 
-- In `examples/`, tests, and docs, use **obviously placeholder** values (`example-token`, `your-tenant-here`, `replace-me`). Never use realistic-looking strings that could be mistaken for live credentials.
+- In tests and docs, use **obviously placeholder** values (`example-token`, `your-tenant-here`, `replace-me`, `https://<region>.agent.workday.com/<your-tenant>/mcp`). Never use realistic-looking strings that could be mistaken for live credentials or a live gateway.
 
 ## Dependencies
 
@@ -32,7 +34,7 @@ This project is **public**. Agents must avoid changes that expose secrets, priva
 
 ## Outbound network calls
 
-- Do not introduce new **outbound network calls** from SDK or CLI runtime code (telemetry, version checks, analytics, crash reporting) without maintainer sign-off. Surprise network traffic is a privacy and supply-chain concern for downstream consumers.
+- The plugin's only outbound traffic is the MCP connection to the user's own gateway. Do not add telemetry, version checks, analytics, or crash reporting, and do not add a second MCP server or any local `command` server, without maintainer sign-off. Surprise network traffic is a privacy and supply-chain concern for downstream consumers.
 
 ## Logging hygiene
 

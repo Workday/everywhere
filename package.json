@@ -1,83 +1,20 @@
 {
-  "name": "@workday/everywhere",
-  "version": "0.5.0",
-  "private": false,
+  "name": "workday-everywhere-marketplace",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Claude Code plugin marketplace for Workday integrations.",
   "repository": {
     "type": "git",
     "url": "https://github.com/Workday/everywhere"
   },
   "license": "Apache-2.0",
   "type": "module",
-  "main": "./dist/index.js",
-  "types": "./dist/index.d.ts",
-  "exports": {
-    ".": {
-      "types": "./dist/index.d.ts",
-      "default": "./dist/index.js"
-    },
-    "./components": {
-      "types": "./dist/components/index.d.ts",
-      "default": "./dist/components/index.js"
-    },
-    "./hooks": {
-      "types": "./dist/hooks/index.d.ts",
-      "default": "./dist/hooks/index.js"
-    },
-    "./data": {
-      "types": "./dist/data/index.d.ts",
-      "default": "./dist/data/index.js"
-    },
-    "./build": {
-      "types": "./dist/build/index.d.ts",
-      "default": "./dist/build/index.js"
-    }
-  },
-  "bin": {
-    "everywhere": "./bin/everywhere.js"
-  },
-  "files": [
-    "dist",
-    "bin",
-    "cli/dist",
-    "cli/package.json",
-    "cli/oclif.manifest.json"
-  ],
-  "peerDependencies": {
-    "react": ">=18",
-    "react-dom": ">=18"
-  },
-  "peerDependenciesMeta": {
-    "react": {
-      "optional": true
-    },
-    "react-dom": {
-      "optional": true
-    }
-  },
-  "dependencies": {
-    "@oclif/core": "4.14.0",
-    "chalk": "^6.0.0",
-    "esbuild": "^0.28",
-    "jszip": "^3.10.1",
-    "vite": "^8"
-  },
   "devDependencies": {
-    "@eslint/js": "^10.0.1",
-    "@testing-library/dom": "^10.4.1",
-    "@testing-library/react": "^16.3.2",
     "@types/node": "^26.2.0",
-    "@types/react": "^19.2.17",
-    "@types/react-dom": "^19",
-    "eslint": "^10.4.1",
-    "happy-dom": "^20.11.6",
     "husky": "^9.1.7",
     "lint-staged": "^17.0.7",
     "prettier": "^3.8.4",
-    "react": "^19",
-    "react-dom": "^19",
-    "ts-node": "^10.9.2",
     "typescript": "^6",
-    "typescript-eslint": "^8.61.1",
     "vitest": "^4.1.9"
   },
   "scripts": {
@@ -85,8 +22,7 @@
   },
   "lint-staged": {
     "*.{js,ts,json}": [
-      "prettier --check",
-      "eslint"
+      "prettier --check"
     ],
     "*.{md,yaml,yml}": [
       "prettier --check"
