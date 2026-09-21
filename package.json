@@ -58,7 +58,7 @@
     "@oclif/core": "4.14.0",
     "chalk": "^6.0.0",
     "esbuild": "^0.28",
-    "jszip": "^3.10.1",
+    "jszip": "^3.10.2",
     "vite": "^8"
   },
   "devDependencies": {
