@@ -17,10 +17,9 @@ This is a **public** project. Agent edits should keep it approachable for newcom
 - **Do not weaken or skip tests** to land changes; follow project TDD expectations in `.claude/CLAUDE.md` and `tdd.mdc`.
 - If you add or rename test commands, ensure **README or CONTRIBUTING** documents how to run them.
 
-## Generated documentation
+## Pointing at the SDK
 
-- Use **TypeScript-appropriate** doc generators when maintainers add them.
-- When generated docs exist in-repo, **keep generation steps** documented and outputs consistent with source changes.
+- The `@workday/everywhere` SDK and CLI live on the **`sdk` branch**. Keep the README's pointer to it accurate — visitors arriving for the SDK land on the default branch first, and a missing pointer reads as a deleted project.
 
 ## Code hygiene
 
@@ -48,4 +47,4 @@ This is a **public** project. Agent edits should keep it approachable for newcom
 ## CI and publishing (maintainers)
 
 - Prefer **modern CI** (e.g. GitHub Actions) that runs tests on changes; if README has CI badges, they should reflect the **actual** pipelines.
-- Public packages belong on **public registries** (e.g. npm for this project); private mirror registries are an organizational consumption concern, not something agents configure here.
+- Nothing on this branch publishes to npm. The plugin is distributed by the marketplace manifest on the default branch and by `just bundle-plugin` for Cowork uploads; npm publish machinery lives on `sdk`.

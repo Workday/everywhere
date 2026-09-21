@@ -5,32 +5,63 @@ repository.
 
 ## Project Overview
 
-The Workday Everywhere SDK provides the core libraries and framework for building Workday Everywhere
-(WE) platform integrations. This is a **public** repository — all changes must be made carefully to
-avoid breaking downstream users.
+This branch hosts the `workday` **Claude Code plugin marketplace** and the plugins it advertises.
+Today that is one plugin, **Workday Everywhere**, which connects Claude to the Workday Agent Gateway
+over HTTP MCP. The gateway supplies every tool at runtime; the plugin ships no skills, commands, or
+agents.
 
-## Public API Stability
+This is a **public** repository — all changes must be made carefully to avoid breaking downstream
+users.
 
-This SDK is consumed by external users. Treat every exported symbol as a public contract:
+There is no application code here. The plugin is JSON manifests plus documentation; the only
+TypeScript is the manifest test suite.
 
-- **No breaking changes** to public APIs without a deprecation path.
-- Additions are safe; removals and signature changes require careful migration support.
-- Review all changes for backwards compatibility before committing.
+### Where the SDK went
+
+The `@workday/everywhere` SDK and its `everywhere` CLI live on the **`sdk` branch**, with their full
+history. `main` and `sdk` have permanently diverged — they share files by name only, and merging one
+into the other is never the right move. If a request concerns the SDK, the CLI, `src/`, `cli/`, or
+`examples/`, that work belongs on `sdk`, not here. SDK releases to npm are currently paused.
+
+"Plugin" means two different things across these branches. Here it is a _Claude Code plugin_. On
+`sdk` it is a _Workday Everywhere plugin_ — a React app that runs inside Workday. Do not conflate
+them.
+
+## Manifest stability
+
+The plugin manifest is a public contract for everyone who has already installed the plugin:
+
+- Renaming the plugin, the marketplace, or the MCP server breaks existing installs.
+- Removing or renaming a `userConfig` key silently drops that user's configured value.
+- Adding a new **required** `userConfig` key breaks existing installs; prefer optional keys.
+- Bump `version` in `plugins/everywhere/.claude-plugin/plugin.json` for any user-visible change —
+  Claude Code and Cowork both cache by version.
+
+## Repository layout
+
+| Path                   | Contents                                           |
+| ---------------------- | -------------------------------------------------- |
+| `.claude-plugin/`      | Marketplace manifest listing the published plugins |
+| `plugins/everywhere/`  | The Workday Everywhere connector plugin            |
+| `tests/claude-plugin/` | Manifest validation tests                          |
+| `docs/superpowers/`    | Design specs and implementation plans              |
 
 ## Toolchain
 
 - **Package manager:** npm
-- **Type checking:** `npx tsc --noEmit`
-- **Linter:** [ESLint](https://eslint.org/) with typescript-eslint (strict config)
+- **Type checking:** `npx tsc --noEmit` (covers `tests/` only)
 - **Formatter:** [Prettier](https://prettier.io/) — see `.prettierrc.json` for settings
 - **Task runner:** [just](https://github.com/casey/just) — see `.justfile` for available targets
+
+There is no ESLint and no build step on this branch; both live on `sdk`.
 
 ### Common Commands
 
 - `just setup` — install dependencies
-- `just check` — typecheck + lint
-- `just test` — run tests
+- `just check` — format check + typecheck
+- `just test` — run the manifest tests
 - `just tidy` — format source files
+- `just bundle-plugin` — zip the plugin for Cowork's "Upload Plugin" flow (needs `jq`)
 
 ## Commit Conventions
 
@@ -42,7 +73,7 @@ Use [Conventional Commits](https://www.conventionalcommits.org/) format:
 
 Types: `feat`, `fix`, `chore`, `docs`, `refactor`, `test`, `style`, `perf`
 
-Scope is optional but encouraged (e.g. `fix(auth): ...`, `feat(events): ...`).
+Scope is optional but encouraged (e.g. `fix(plugin): ...`, `docs(marketplace): ...`).
 
 ## Jira ticket hygiene
 
@@ -86,16 +117,6 @@ git worktree add .worktrees/<name> -b <branch-name> origin/main
 git worktree remove .worktrees/<name>
 ```
 
-## Import Conventions
-
-All imports must use `.js` file extensions (the standard for npm packages that emit JS):
-
-```typescript
-import { Something } from './module.js'; // Correct
-import { Something } from './module.ts'; // Incorrect
-import { Something } from './module'; // Incorrect
-```
-
 ## Test-Driven Development
 
 We follow **test-driven development (TDD)** for all implementation work:
@@ -121,6 +142,9 @@ We follow **test-driven development (TDD)** for all implementation work:
 
 6. **One describe per branch.** When a code path branches on a condition, each branch is captured in
    its own `describe` block. Nest `describe` blocks to reflect the structure of the behavior.
+
+On this branch the rule applies to manifest changes too: assert the new invariant in
+`tests/claude-plugin/manifest.test.ts` before editing the JSON.
 
 ## Agent alignment (Cursor + Claude)
 
@@ -149,13 +173,16 @@ secrets, supply chain, and disclosure).
    realistic-looking strings.
 2. **Private systems and domains** — Avoid real hostnames or URLs for private infrastructure
    (including private corporate domains and private Git/CI/artifact/wiki portals). Use fictional
-   placeholders where examples need a URL.
-3. **Non-public dependencies** — Do not add packages or registry configuration meant for private
-   registry flows. This package is public (`@workday/everywhere` on public npm); new deps must be
-   **publicly resolvable** the same way existing ones are. Be alert to **dependency confusion**: do
-   not transcribe non-public package names from other repos without verifying they are legitimate
-   public packages.
-4. **Sensitive narrative in commits and comments** — Avoid embedding confidential details, private
+   placeholders where examples need a URL. **This is the sharpest risk on this branch:** no real
+   gateway hostname or tenant may appear in `.mcp.json`, `plugin.json`, or the READMEs. The gateway
+   URL comes from the user at install time and nowhere else, and the manifest tests enforce it.
+3. **No committed OAuth client material** — `.mcp.json` must carry no `oauth` block, no client ID,
+   and no headers. Claude Code registers a client dynamically at sign-in.
+4. **Non-public dependencies** — Do not add packages or registry configuration meant for private
+   registry flows; new deps must be **publicly resolvable** on public npm. Be alert to **dependency
+   confusion**: do not transcribe non-public package names from other repos without verifying they
+   are legitimate public packages.
+5. **Sensitive narrative in commits and comments** — Avoid embedding confidential details, private
    links, or authentication artifacts in commit messages, PR text, or comments that sync to the
    public repository.
 
@@ -182,9 +209,9 @@ secrets, supply chain, and disclosure).
 
 ### Outbound network calls
 
-- Do not introduce new **outbound network calls** from SDK or CLI runtime code (telemetry, version
-  checks, analytics, crash reporting) without maintainer sign-off. Surprise network traffic is a
-  privacy and supply-chain concern for downstream consumers.
+- The plugin's only outbound traffic is the MCP connection to the user's own gateway. Do not add
+  telemetry, version checks, analytics, or crash reporting, and do not add a second MCP server or
+  any local `command` server without maintainer sign-off.
 
 ### Logging hygiene
 
@@ -222,8 +249,10 @@ builds, clear legal posture).
 ### README and documentation
 
 - The **README** should stay **interesting, accurate, and sufficient for onboarding**: what the
-  project is, how to try it quickly, and where to read more (`CONTRIBUTING.md` for dev setup
-  including `just test`, etc.).
+  project is, how to install the plugin quickly, and where to read more
+  (`plugins/everywhere/README.md` for configuration, `CONTRIBUTING.md` for dev setup).
+- The README must keep pointing at the `sdk` branch. Visitors arriving for `@workday/everywhere`
+  land on `main` first, and a missing pointer reads as a deleted project.
 - When workflow commands change, **update the docs you touch** so a newcomer is not misled.
 
 ### Tests
@@ -231,11 +260,6 @@ builds, clear legal posture).
 - The project expects **automated tests**; agents follow the TDD protocol above.
 - **Describe how to run tests** in README or CONTRIBUTING (this repo documents commands in
   CONTRIBUTING—keep that section current).
-
-### Generated API / reference docs
-
-- Use **TypeScript-appropriate** doc generators when maintainers add them.
-- Keep doc generation **documented and repeatable** if outputs are checked in.
 
 ### Code cleanliness
 
@@ -262,12 +286,9 @@ builds, clear legal posture).
 
 ### Release and publishing (context)
 
-- **CI** should run tests automatically (e.g. GitHub Actions); if README has CI badges, they should
-  match **real** status.
-- **Publishing** for this ecosystem is **public npm**; mirroring into private registries or
-  switching private consumers to OSS artifacts is **post-release organizational work** (artifact
-  review and private distribution)—not something to encode in application source without maintainer
-  request.
+- Nothing on this branch publishes to npm. The plugin is distributed by the marketplace manifest on
+  the default branch, and by `just bundle-plugin` for Cowork uploads. Do not add npm publish
+  workflows here — that machinery lives on `sdk`.
 
 ### Naming and trademarks
 
