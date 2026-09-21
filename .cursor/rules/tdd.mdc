@@ -2,7 +2,6 @@
 description: TDD and test-structure requirements for TypeScript changes
 globs:
   - "**/*.ts"
-  - "**/*.tsx"
 alwaysApply: false
 ---
 

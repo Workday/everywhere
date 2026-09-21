@@ -29,7 +29,7 @@ body:
       label: What happened?
       description: Provide a clear and concise description of what the bug is.
       placeholder: |
-        Example: When I run `everywhere build`, the command fails with an esbuild error even though my plugin previews correctly with `everywhere view`.
+        Example: After `/plugin install everywhere@workday` and signing in via `/mcp`, Claude lists no Workday tools at all.
     validations:
       required: true
 
@@ -39,10 +39,10 @@ body:
       label: Steps to Reproduce
       description: Tell us how to reproduce this issue. Be as specific as possible.
       placeholder: |
-        1. Create a plugin with `npm init -y && npm install @workday/everywhere`
-        2. Add a plugin.tsx with ...
-        3. Run `npx everywhere build`
-        4. See error ...
+        1. Run `/plugin marketplace add Workday/everywhere`
+        2. Run `/plugin install everywhere@workday`
+        3. Run `/mcp` and sign in to `workday`
+        4. Ask Claude a Workday question — see error ...
     validations:
       required: true
 
@@ -52,7 +52,7 @@ body:
       label: What did you expect to happen?
       description: Describe what you expected to happen instead.
       placeholder: |
-        Example: I expected the build command to produce a zip file in the dist/ directory.
+        Example: I expected Claude to list the gateway's tools and answer using my Workday data.
     validations:
       required: true
 
@@ -94,7 +94,7 @@ body:
       description: |
         Add any other context about the problem here. For example:
         - Does this happen every time or only sometimes?
-        - Does this affect `everywhere view` as well, or only `everywhere build`?
+        - Does it happen in a fresh project, or only in one particular workspace?
         - Are there any workarounds you've found?
       placeholder: Any additional information that might help us fix this bug.
 

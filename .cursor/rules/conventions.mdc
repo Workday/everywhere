@@ -18,7 +18,7 @@ The `@workday/everywhere` SDK and CLI live on the **`sdk` branch**. The two bran
 The plugin manifest is a public contract for existing installs.
 
 - Do not rename the plugin, the marketplace, or the MCP server.
-- Do not remove or rename a `userConfig` key; do not add a new **required** one.
+- The connector points at a fixed, shared gateway endpoint and declares no `userConfig`. Changing that URL repoints every install at once — treat it as a breaking change. Do not add a `userConfig` key without maintainer sign-off; it would prompt every existing user on upgrade.
 - Bump `version` in `plugins/everywhere/.claude-plugin/plugin.json` for any user-visible change — Claude Code and Cowork cache by version.
 
 ## Toolchain and Commands
