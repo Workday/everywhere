@@ -38,8 +38,9 @@ just setup
 | `just bundle-plugin` | Zip the plugin for Cowork's upload flow       |
 
 This branch holds no application code — the plugin is JSON manifests and documentation. `just test`
-runs the manifest tests in `tests/claude-plugin/`, which assert the plugin and marketplace manifests
-stay consistent with each other and leak no gateway hostnames.
+runs the manifest tests in `tests/claude-plugin/`, which assert that the plugin and marketplace
+manifests stay consistent with each other and that the connector keeps its expected shape: exactly
+one HTTP server, no local command, no custom headers, and no committed OAuth client material.
 
 ### Testing a plugin change locally
 

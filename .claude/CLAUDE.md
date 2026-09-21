@@ -32,8 +32,10 @@ them.
 The plugin manifest is a public contract for everyone who has already installed the plugin:
 
 - Renaming the plugin, the marketplace, or the MCP server breaks existing installs.
-- Removing or renaming a `userConfig` key silently drops that user's configured value.
-- Adding a new **required** `userConfig` key breaks existing installs; prefer optional keys.
+- The connector points at a **fixed, shared** gateway endpoint and declares no `userConfig`.
+  Changing that URL repoints every install at once; treat it as a breaking change, not a tweak.
+- Adding a `userConfig` key would prompt every existing user on upgrade. Do not add one without
+  maintainer sign-off.
 - Bump `version` in `plugins/everywhere/.claude-plugin/plugin.json` for any user-visible change —
   Claude Code and Cowork both cache by version.
 
@@ -44,7 +46,6 @@ The plugin manifest is a public contract for everyone who has already installed 
 | `.claude-plugin/`      | Marketplace manifest listing the published plugins |
 | `plugins/everywhere/`  | The Workday Everywhere connector plugin            |
 | `tests/claude-plugin/` | Manifest validation tests                          |
-| `docs/superpowers/`    | Design specs and implementation plans              |
 
 ## Toolchain
 
@@ -173,9 +174,10 @@ secrets, supply chain, and disclosure).
    realistic-looking strings.
 2. **Private systems and domains** — Avoid real hostnames or URLs for private infrastructure
    (including private corporate domains and private Git/CI/artifact/wiki portals). Use fictional
-   placeholders where examples need a URL. **This is the sharpest risk on this branch:** no real
-   gateway hostname or tenant may appear in `.mcp.json`, `plugin.json`, or the READMEs. The gateway
-   URL comes from the user at install time and nowhere else, and the manifest tests enforce it.
+   placeholders where examples need a URL. **The one deliberate exception** is the shared Agent
+   Gateway endpoint in `.mcp.json` and the plugin README: it is public by design, because the
+   connector cannot work without it. Adding any _other_ real hostname still needs maintainer
+   sign-off, and no tenant identifier, customer name, or internal portal may appear anywhere.
 3. **No committed OAuth client material** — `.mcp.json` must carry no `oauth` block, no client ID,
    and no headers. Claude Code registers a client dynamically at sign-in.
 4. **Non-public dependencies** — Do not add packages or registry configuration meant for private
@@ -209,7 +211,7 @@ secrets, supply chain, and disclosure).
 
 ### Outbound network calls
 
-- The plugin's only outbound traffic is the MCP connection to the user's own gateway. Do not add
+- The plugin's only outbound traffic is the MCP connection to the shared Agent Gateway. Do not add
   telemetry, version checks, analytics, or crash reporting, and do not add a second MCP server or
   any local `command` server without maintainer sign-off.
 

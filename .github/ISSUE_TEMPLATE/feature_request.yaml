@@ -29,7 +29,7 @@ body:
       label: What would you like to see?
       description: Provide a clear and concise description of the feature you'd like to see.
       placeholder: |
-        Example: I would like the `everywhere build` command to support minification of the output bundle.
+        Example: I would like the connector to expose a slash command that summarizes my open Workday tasks.
     validations:
       required: true
 
@@ -41,7 +41,7 @@ body:
         Explain the problem or need this feature would address. Help us understand why this is
         important to you.
       placeholder: |
-        Example: Our plugin bundles are large because they include unminified library code. This increases load times for end users.
+        Example: I ask the same three questions every morning and have to phrase them from scratch each time.
     validations:
       required: true
 
@@ -52,9 +52,9 @@ body:
       description: Walk us through a typical scenario where you'd use this feature.
       placeholder: |
         Example:
-        1. Run `npx everywhere build --minify`
-        2. The output zip contains a minified plugin.js
-        3. Upload the smaller bundle for faster delivery
+        1. Run `/workday:tasks` in any project
+        2. Claude calls the gateway's task tools
+        3. I get a short list of what needs my attention today
     validations:
       required: true
 
@@ -65,7 +65,7 @@ body:
       description: |
         Describe how you think this feature should work. Don't worry about implementation details — just describe the developer experience you'd like to see.
       placeholder: |
-        Example: A `--minify` flag on the build command that enables esbuild minification. Could also be a config option in package.json.
+        Example: A command shipped with the plugin that wraps the gateway's task tools behind one prompt.
 
   - type: textarea
     id: alternatives
@@ -74,16 +74,16 @@ body:
       description:
         Are there any current workarounds you're using? What other solutions have you considered?
       placeholder: |
-        Example: I'm running a separate esbuild step after the build to minify, but this is fragile and doesn't integrate with the zip packaging.
+        Example: I keep the prompt in a scratch file and paste it in, but it drifts out of date.
 
   - type: textarea
     id: examples
     attributes:
       label: Examples or References
       description: |
-        Are there any other tools or SDKs that do something similar? Feel free to share links, screenshots, or examples.
+        Do any other plugins or connectors do something similar? Feel free to share links, screenshots, or examples.
       placeholder: |
-        Example: Vite's `build` command minifies by default and has a `--minify` flag to control it.
+        Example: Another MCP connector ships a `/standup` command that does roughly this shape of thing.
 
   - type: dropdown
     id: priority
@@ -93,7 +93,7 @@ body:
       options:
         - 'Nice to have - would be convenient'
         - 'Important - would improve my workflow significantly'
-        - 'Critical - I really need this to use the SDK effectively'
+        - 'Critical - I really need this to use the plugin effectively'
         - 'Unsure'
     validations:
       required: true

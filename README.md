@@ -13,8 +13,8 @@ or agents of its own.
 /plugin install everywhere@workday
 ```
 
-Enabling the plugin prompts for your gateway's MCP endpoint — there is no default, and nothing about
-your gateway is stored in this repository. Then run `/mcp`, pick `workday`, and sign in.
+There is nothing to configure — the connector points at the shared Workday Agent Gateway endpoint.
+Run `/mcp`, pick `workday`, and sign in; your sign-in determines which tenant's data you see.
 
 Full configuration, connection, and troubleshooting docs live in
 [`plugins/everywhere/README.md`](plugins/everywhere/README.md).
@@ -42,7 +42,6 @@ The published package on npm is unchanged; releases from that branch are current
 | `.claude-plugin/`      | Marketplace manifest listing the published plugins |
 | `plugins/everywhere/`  | The Workday Everywhere connector plugin            |
 | `tests/claude-plugin/` | Manifest validation tests                          |
-| `docs/superpowers/`    | Design specs and implementation plans              |
 
 ## Development
 
