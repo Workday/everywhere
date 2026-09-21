@@ -7,13 +7,5 @@
   "homepage": "https://github.com/Workday/everywhere",
   "repository": "https://github.com/Workday/everywhere",
   "license": "Apache-2.0",
-  "keywords": ["workday", "mcp", "agent-gateway", "connector"],
-  "userConfig": {
-    "gateway_url": {
-      "type": "string",
-      "title": "Agent Gateway MCP URL",
-      "description": "Full MCP endpoint for your tenant, e.g. https://<region>.agent.workday.com/<your-tenant>/mcp",
-      "required": true
-    }
-  }
+  "keywords": ["workday", "mcp", "agent-gateway", "connector"]
 }

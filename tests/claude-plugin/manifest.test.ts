@@ -8,20 +8,12 @@ const repoRoot = resolve(dirname(fileURLToPath(import.meta.url)), '../..');
 const readText = (relativePath: string): string =>
   readFileSync(resolve(repoRoot, relativePath), 'utf8');
 
-interface UserConfigField {
-  type: string;
-  title: string;
-  description: string;
-  required?: boolean;
-  default?: unknown;
-}
-
 interface PluginManifest {
   name: string;
   version: string;
   license: string;
   skills?: unknown;
-  userConfig: Record<string, UserConfigField>;
+  userConfig?: Record<string, unknown>;
 }
 
 interface McpServer {
@@ -51,8 +43,6 @@ const pluginManifest = JSON.parse(
   readText('plugins/everywhere/.claude-plugin/plugin.json')
 ) as PluginManifest;
 
-const userConfigEntries = Object.entries(pluginManifest.userConfig ?? {});
-
 const mcpText = readText('plugins/everywhere/.mcp.json');
 const mcpConfig = JSON.parse(mcpText) as McpConfig;
 
@@ -71,26 +61,8 @@ describe('the everywhere plugin manifest', () => {
     expect(pluginManifest.skills).toBeUndefined();
   });
 
-  describe('user configuration', () => {
-    it('declares exactly the fields the connector needs, and no others', () => {
-      expect(Object.keys(pluginManifest.userConfig).sort()).toEqual(['gateway_url']);
-    });
-
-    it('marks every field as required', () => {
-      const notRequired = userConfigEntries
-        .filter(([, field]) => field.required !== true)
-        .map(([key]) => key);
-
-      expect(notRequired).toEqual([]);
-    });
-
-    it('gives no field a default, so no gateway is hard-coded', () => {
-      const withDefaults = userConfigEntries
-        .filter(([, field]) => 'default' in field)
-        .map(([key]) => key);
-
-      expect(withDefaults).toEqual([]);
-    });
+  it('declares no user configuration, since the gateway is a single shared endpoint', () => {
+    expect(pluginManifest.userConfig).toBeUndefined();
   });
 });
 
@@ -101,10 +73,6 @@ describe('the MCP connector', () => {
   if (!server) {
     throw new Error('.mcp.json declares no "workday" server');
   }
-
-  const connectorValues = [server.url ?? '', ...Object.values(server.headers ?? {})];
-
-  const isUserConfigTemplate = (value: string): boolean => /^\$\{user_config\.\w+\}$/.test(value);
 
   it('declares exactly one server', () => {
     expect(serverNames).toHaveLength(1);
@@ -122,28 +90,16 @@ describe('the MCP connector', () => {
     expect(server.command).toBeUndefined();
   });
 
-  it('takes its URL from user configuration', () => {
-    expect(server.url).toBe('${user_config.gateway_url}');
+  it('connects to the shared Agent Gateway endpoint', () => {
+    expect(server.url).toBe('https://sana.we.myworkday.com/mcp');
   });
 
   it('sends no custom headers', () => {
     expect(server.headers).toBeUndefined();
   });
 
-  describe('public repository safety', () => {
-    it('commits no OAuth client material', () => {
-      expect(server.oauth).toBeUndefined();
-    });
-
-    it('hard-codes nothing at all', () => {
-      const hardCoded = connectorValues.filter((value) => !isUserConfigTemplate(value));
-
-      expect(hardCoded).toEqual([]);
-    });
-
-    it('names no host anywhere in the file', () => {
-      expect(mcpText).not.toMatch(/\/\/[\w.-]+\./);
-    });
+  it('commits no OAuth client material', () => {
+    expect(server.oauth).toBeUndefined();
   });
 });
 
