@@ -1,6 +1,6 @@
-# Sana by Workday — Claude Code plugin
+# Sana from Workday — Claude Code plugin
 
-Connects Claude to Sana by Workday, powered by Sana — Workday's trusted AI. The plugin uses the
+Connects Claude to Sana from Workday, powered by Sana — Workday's trusted AI. The plugin uses the
 shared Workday Agent Gateway as an HTTP MCP server; the gateway supplies every tool at runtime, and
 this plugin ships no skills, commands, or agents of its own.
 

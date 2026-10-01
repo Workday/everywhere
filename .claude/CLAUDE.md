@@ -7,7 +7,7 @@ repository.
 
 This branch hosts the `workday` **Claude Code plugin marketplace** and the plugins it advertises.
 Today that is two plugins, **Workday Custom Agents** (`custom-agents`, powered by Agent Ready Tools)
-and **Sana by Workday** (`sana`, powered by Sana). Both share one connector to the Workday Agent
+and **Sana from Workday** (`sana`, powered by Sana). Both share one connector to the Workday Agent
 Gateway over HTTP MCP. The gateway supplies every tool at runtime; the plugins ship no skills,
 commands, or agents. The former `everywhere` plugin was retired in their favor.
 
@@ -48,7 +48,7 @@ The plugin manifest is a public contract for everyone who has already installed 
 | ------------------------ | -------------------------------------------------- |
 | `.claude-plugin/`        | Marketplace manifest listing the published plugins |
 | `plugins/custom-agents/` | The Workday Custom Agents plugin                   |
-| `plugins/sana/`          | The Sana by Workday plugin                         |
+| `plugins/sana/`          | The Sana from Workday plugin                       |
 | `tests/claude-plugin/`   | Connector policy tests                             |
 
 ## Toolchain

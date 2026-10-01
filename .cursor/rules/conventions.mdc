@@ -7,7 +7,7 @@ alwaysApply: true
 
 ## Project Context
 
-This branch hosts the `workday` **Claude Code plugin marketplace** and the plugins it advertises — today **Workday Custom Agents** (`custom-agents`) and **Sana by Workday** (`sana`), which share one HTTP MCP connector to the Workday Agent Gateway. It is a public repository with no application code: JSON manifests, documentation, and a manifest test suite.
+This branch hosts the `workday` **Claude Code plugin marketplace** and the plugins it advertises — today **Workday Custom Agents** (`custom-agents`) and **Sana from Workday** (`sana`), which share one HTTP MCP connector to the Workday Agent Gateway. It is a public repository with no application code: JSON manifests, documentation, and a manifest test suite.
 
 The `@workday/everywhere` SDK and CLI live on the **`sdk` branch**. The two branches have permanently diverged and must never be merged into each other. SDK work belongs on `sdk`; do not reintroduce `src/`, `cli/`, or `examples/` here.
 

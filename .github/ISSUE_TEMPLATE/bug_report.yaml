@@ -17,7 +17,7 @@ body:
         The Claude Code plugins live on the default branch. The `@workday/everywhere` SDK and CLI live on the [`sdk`](https://github.com/Workday/everywhere/tree/sdk) branch.
       options:
         - Claude Code plugin — Workday Custom Agents
-        - Claude Code plugin — Sana by Workday
+        - Claude Code plugin — Sana from Workday
         - SDK or `everywhere` CLI
         - Documentation
         - "I'm not sure"

@@ -1,8 +1,8 @@
 {
   "name": "sana",
-  "displayName": "Sana by Workday",
+  "displayName": "Sana from Workday",
   "version": "0.1.0",
-  "description": "Connect Claude to Sana by Workday, powered by Sana — Workday's trusted AI.",
+  "description": "Connect Claude to Sana from Workday, powered by Sana — Workday's trusted AI.",
   "author": { "name": "Workday" },
   "homepage": "https://github.com/Workday/everywhere",
   "repository": "https://github.com/Workday/everywhere",

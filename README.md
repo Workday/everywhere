@@ -5,7 +5,7 @@ This repository hosts the `workday` Claude Code plugin marketplace and the plugi
 | Plugin                    | Install                 | Powered by                 |
 | ------------------------- | ----------------------- | -------------------------- |
 | **Workday Custom Agents** | `custom-agents@workday` | Agent Ready Tools          |
-| **Sana by Workday**       | `sana@workday`          | Sana, Workday's trusted AI |
+| **Sana from Workday**     | `sana@workday`          | Sana, Workday's trusted AI |
 
 Both plugins share one connector to the Workday Agent Gateway over HTTP MCP. The gateway supplies
 every tool at runtime, so neither plugin ships skills, commands, or agents of its own. Install one
@@ -58,7 +58,7 @@ The published package on npm is unchanged; releases from that branch are current
 | ------------------------ | -------------------------------------------------- |
 | `.claude-plugin/`        | Marketplace manifest listing the published plugins |
 | `plugins/custom-agents/` | The Workday Custom Agents plugin                   |
-| `plugins/sana/`          | The Sana by Workday plugin                         |
+| `plugins/sana/`          | The Sana from Workday plugin                       |
 | `tests/claude-plugin/`   | Manifest validation tests                          |
 
 ## Development

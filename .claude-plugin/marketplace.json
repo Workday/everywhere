@@ -19,8 +19,8 @@
     {
       "name": "sana",
       "source": "./plugins/sana",
-      "displayName": "Sana by Workday",
-      "description": "Connect Claude to Sana by Workday, powered by Sana — Workday's trusted AI.",
+      "displayName": "Sana from Workday",
+      "description": "Connect Claude to Sana from Workday, powered by Sana — Workday's trusted AI.",
       "category": "productivity",
       "keywords": ["workday", "mcp", "sana"],
       "license": "Apache-2.0"
