@@ -9,7 +9,8 @@ This branch hosts the `workday` **Claude Code plugin marketplace** and the plugi
 Today that is two plugins, **Workday Custom Agents** (`custom-agents`, powered by Agent Ready Tools)
 and **Sana from Workday** (`sana`, powered by Sana). Both share one connector to the Workday Agent
 Gateway over HTTP MCP. The gateway supplies every tool at runtime; the plugins ship no skills,
-commands, or agents. The former `everywhere` plugin was retired in their favor.
+commands, or agents. The former `everywhere` plugin was retired; a `renames` entry in the
+marketplace manifest moves its installs to `custom-agents`. Keep that entry.
 
 This is a **public** repository — all changes must be made carefully to avoid breaking downstream
 users.

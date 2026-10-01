@@ -27,14 +27,17 @@ Full configuration, connection, and troubleshooting docs live in each plugin's R
 
 ### Migrating from `everywhere`
 
-The `everywhere` plugin has been replaced by the two plugins above. If you installed it, remove it
-and install a replacement:
+The `everywhere` plugin is now **Workday Custom Agents**. On Claude Code v2.1.193 or later, the
+marketplace carries your `everywhere@workday` install and its settings over to
+`custom-agents@workday`. Claude Code then needs the new plugin fetched once:
 
 ```text
 /plugin marketplace update workday
-/plugin uninstall everywhere@workday
-/plugin install custom-agents@workday   # or: sana@workday
+/plugin install custom-agents@workday
 ```
+
+To use Sana from Workday instead, install `sana@workday` and uninstall `custom-agents@workday`. On
+older Claude Code versions, uninstall `everywhere@workday` and install one of the plugins above.
 
 ## Looking for the SDK?
 

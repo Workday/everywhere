@@ -50,6 +50,16 @@ describe.each(PLUGINS)('the %s plugin', (slug) => {
   });
 });
 
+describe('the retired everywhere plugin', () => {
+  const marketplace = readJson<{ renames?: Record<string, string | null> }>(
+    '.claude-plugin/marketplace.json'
+  );
+
+  it('moves existing installs to custom-agents', () => {
+    expect(marketplace.renames?.['everywhere']).toBe('custom-agents');
+  });
+});
+
 describe('the shared connector', () => {
   it('is identical across every plugin', () => {
     expect(readText('plugins/custom-agents/.mcp.json')).toBe(readText('plugins/sana/.mcp.json'));

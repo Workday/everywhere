@@ -6,6 +6,9 @@
     "url": "https://github.com/Workday/everywhere"
   },
   "description": "Claude Code plugins for Workday integrations.",
+  "renames": {
+    "everywhere": "custom-agents"
+  },
   "plugins": [
     {
       "name": "custom-agents",
