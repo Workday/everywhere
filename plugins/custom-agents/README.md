@@ -1,13 +1,14 @@
-# Workday Everywhere — Claude Code plugin
+# Workday Custom Agents — Claude Code plugin
 
-Connects Claude to the Workday Agent Gateway as an HTTP MCP server. The gateway supplies every tool
-at runtime; this plugin ships no skills, commands, or agents of its own.
+Connects Claude to Workday Custom Agents, powered by Agent Ready Tools. The plugin uses the shared
+Workday Agent Gateway as an HTTP MCP server; the gateway supplies every tool at runtime, and this
+plugin ships no skills, commands, or agents of its own.
 
 ## Install
 
 ```text
 /plugin marketplace add Workday/everywhere
-/plugin install everywhere@workday
+/plugin install custom-agents@workday
 ```
 
 ## Configure
@@ -54,8 +55,8 @@ The secret is prompted for and stored in your keychain, never in a file.
 ## Package for Cowork
 
 ```sh
-just bundle-plugin
+just bundle-plugin custom-agents
 ```
 
-Writes `dist/everywhere-plugin-<version>.zip` for Cowork's "Upload Plugin" flow. Bump `version` in
-`.claude-plugin/plugin.json` before re-uploading — Cowork caches by version.
+Writes `dist/custom-agents-plugin-<version>.zip` for Cowork's "Upload Plugin" flow. Bump `version`
+in `.claude-plugin/plugin.json` before re-uploading — Cowork caches by version.

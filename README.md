@@ -2,22 +2,39 @@
 
 This repository hosts the `workday` Claude Code plugin marketplace and the plugins it advertises.
 
-Today that is one plugin, **Workday Everywhere**, which connects Claude to the Workday Agent Gateway
-over HTTP MCP. The gateway supplies every tool at runtime, so the plugin ships no skills, commands,
-or agents of its own.
+| Plugin                    | Install                 | Powered by                 |
+| ------------------------- | ----------------------- | -------------------------- |
+| **Workday Custom Agents** | `custom-agents@workday` | Agent Ready Tools          |
+| **Sana by Workday**       | `sana@workday`          | Sana, Workday's trusted AI |
+
+Both plugins share one connector to the Workday Agent Gateway over HTTP MCP. The gateway supplies
+every tool at runtime, so neither plugin ships skills, commands, or agents of its own. Install one
+or the other — enabling both gives you duplicate tools.
 
 ## Install
 
 ```text
 /plugin marketplace add Workday/everywhere
-/plugin install everywhere@workday
+/plugin install custom-agents@workday   # or: sana@workday
 ```
 
 There is nothing to configure — the connector points at the shared Workday Agent Gateway endpoint.
 Run `/mcp`, pick `workday`, and sign in; your sign-in determines which tenant's data you see.
 
-Full configuration, connection, and troubleshooting docs live in
-[`plugins/everywhere/README.md`](plugins/everywhere/README.md).
+Full configuration, connection, and troubleshooting docs live in each plugin's README:
+[`plugins/custom-agents/`](plugins/custom-agents/README.md) and
+[`plugins/sana/`](plugins/sana/README.md).
+
+### Migrating from `everywhere`
+
+The `everywhere` plugin has been replaced by the two plugins above. If you installed it, remove it
+and install a replacement:
+
+```text
+/plugin marketplace update workday
+/plugin uninstall everywhere@workday
+/plugin install custom-agents@workday   # or: sana@workday
+```
 
 ## Looking for the SDK?
 
@@ -37,11 +54,12 @@ The published package on npm is unchanged; releases from that branch are current
 
 ## Repository layout
 
-| Path                   | Contents                                           |
-| ---------------------- | -------------------------------------------------- |
-| `.claude-plugin/`      | Marketplace manifest listing the published plugins |
-| `plugins/everywhere/`  | The Workday Everywhere connector plugin            |
-| `tests/claude-plugin/` | Manifest validation tests                          |
+| Path                     | Contents                                           |
+| ------------------------ | -------------------------------------------------- |
+| `.claude-plugin/`        | Marketplace manifest listing the published plugins |
+| `plugins/custom-agents/` | The Workday Custom Agents plugin                   |
+| `plugins/sana/`          | The Sana by Workday plugin                         |
+| `tests/claude-plugin/`   | Manifest validation tests                          |
 
 ## Development
 

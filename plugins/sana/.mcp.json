@@ -1,0 +1,8 @@
+{
+  "mcpServers": {
+    "workday": {
+      "type": "http",
+      "url": "https://sana.we.myworkday.com/mcp"
+    }
+  }
+}
