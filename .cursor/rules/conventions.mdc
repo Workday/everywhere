@@ -19,7 +19,7 @@ The plugin manifest is a public contract for existing installs.
 
 - Do not rename a plugin, the marketplace, or the MCP server.
 - Both plugins share one connector: their `.mcp.json` files must stay identical (the tests enforce it).
-- The connector points at a fixed, shared gateway endpoint and declares no `userConfig`. Changing that URL repoints every install at once — treat it as a breaking change. Do not add a `userConfig` key without maintainer sign-off; it would prompt every existing user on upgrade.
+- The connector ships with an empty `url` (Anthropic's recommended path: the connector directory listing supplies the Agent Gateway endpoint) and declares no `userConfig`. Setting a URL would override the listing for every install — treat it as a breaking change. Do not add a `userConfig` key without maintainer sign-off; it would prompt every existing user on upgrade.
 - Bump `version` in `plugins/<plugin>/.claude-plugin/plugin.json` for any user-visible change to that plugin — Claude Code and Cowork cache by version.
 
 ## Toolchain and Commands
@@ -46,7 +46,7 @@ The plugin manifest is a public contract for existing installs.
 
 ## Testing Process
 
-For TypeScript edits, follow the strict TDD rule in `tdd.mdc`. Schema validity is left to plugin submission; `tests/claude-plugin/manifest.test.ts` covers only connector policy (shared URL, no `userConfig`, no command, headers, or OAuth material, identical `.mcp.json` across plugins). When a manifest change touches one of those rules, assert it there before editing the JSON.
+For TypeScript edits, follow the strict TDD rule in `tdd.mdc`. Schema validity is left to plugin submission; `tests/claude-plugin/manifest.test.ts` covers only connector policy (empty URL, no `userConfig`, no command, headers, or OAuth material, identical `.mcp.json` across plugins). When a manifest change touches one of those rules, assert it there before editing the JSON.
 
 ## Agent rules (Cursor)
 

@@ -36,8 +36,10 @@ The plugin manifest is a public contract for everyone who has already installed 
 - Renaming a plugin, the marketplace, or the MCP server breaks existing installs.
 - Both plugins share one connector: their `.mcp.json` files must stay byte-identical, and the tests
   enforce it. Change both together.
-- The connector points at a **fixed, shared** gateway endpoint and declares no `userConfig`.
-  Changing that URL repoints every install at once; treat it as a breaking change, not a tweak.
+- The connector ships with an **empty** `url`, and declares no `userConfig`. This follows
+  Anthropic's recommended path for the connector directory listing, which supplies the Agent Gateway
+  endpoint. Setting a URL here would override the listing for every install; treat it as a breaking
+  change, not a tweak.
 - Adding a `userConfig` key would prompt every existing user on upgrade. Do not add one without
   maintainer sign-off.
 - Bump `version` in `plugins/<plugin>/.claude-plugin/plugin.json` for any user-visible change to
@@ -150,7 +152,7 @@ We follow **test-driven development (TDD)** for all implementation work:
    its own `describe` block. Nest `describe` blocks to reflect the structure of the behavior.
 
 Schema validity is left to plugin submission, so `tests/claude-plugin/manifest.test.ts` covers only
-connector policy: the shared URL, no `userConfig`, no command, headers, or OAuth material, and an
+connector policy: the empty URL, no `userConfig`, no command, headers, or OAuth material, and an
 identical `.mcp.json` across plugins. When a manifest change touches one of those rules, assert it
 there before editing the JSON.
 

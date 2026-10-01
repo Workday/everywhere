@@ -4,7 +4,7 @@ import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 // Schema validity is checked by plugin submission. These tests guard the policy invariants a
-// schema check cannot see: the shared gateway endpoint, and nothing committed that changes how
+// schema check cannot see: the empty connector URL, and nothing committed that changes how
 // existing installs authenticate or prompt.
 
 const repoRoot = resolve(dirname(fileURLToPath(import.meta.url)), '../..');
@@ -33,8 +33,8 @@ describe.each(PLUGINS)('the %s plugin', (slug) => {
     expect(Object.keys(servers)).toEqual(['workday']);
   });
 
-  it('connects to the shared Agent Gateway endpoint over HTTP', () => {
-    expect(server).toMatchObject({ type: 'http', url: 'https://sana.we.myworkday.com/mcp' });
+  it('connects over HTTP with an empty URL, which the directory listing supplies', () => {
+    expect(server).toMatchObject({ type: 'http', url: '' });
   });
 
   it('runs no local command', () => {

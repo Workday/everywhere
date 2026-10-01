@@ -13,9 +13,15 @@ this plugin ships no skills, commands, or agents of its own.
 
 ## Configure
 
-Nothing to configure. The plugin connects to the shared Agent Gateway endpoint
-(`https://sana.we.myworkday.com/mcp`); sign-in determines your tenant. The connector sends no custom
-headers.
+Nothing to configure. The connector in `.mcp.json` ships with an empty `url`: the Agent Gateway
+endpoint comes from Workday's connector listing in Claude, and sign-in determines your tenant. The
+connector sends no custom headers.
+
+Until the listing is available, add the shared endpoint by hand:
+
+```sh
+claude mcp add --transport http workday https://sana.we.myworkday.com/mcp
+```
 
 ## Connect
 

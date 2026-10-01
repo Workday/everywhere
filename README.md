@@ -18,8 +18,9 @@ or the other — enabling both gives you duplicate tools.
 /plugin install custom-agents@workday   # or: sana@workday
 ```
 
-There is nothing to configure — the connector points at the shared Workday Agent Gateway endpoint.
-Run `/mcp`, pick `workday`, and sign in; your sign-in determines which tenant's data you see.
+There is nothing to configure — the connector ships with an empty URL, and the Workday Agent Gateway
+endpoint comes from Workday's connector listing in Claude. Run `/mcp`, pick `workday`, and sign in;
+your sign-in determines which tenant's data you see.
 
 Full configuration, connection, and troubleshooting docs live in each plugin's README:
 [`plugins/custom-agents/`](plugins/custom-agents/README.md) and
