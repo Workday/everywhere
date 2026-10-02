@@ -7,7 +7,7 @@ alwaysApply: true
 
 ## Project Context
 
-This branch hosts the `workday` **Claude Code plugin marketplace** and the plugins it advertises — today just **Workday Everywhere**, an HTTP MCP connector to the Workday Agent Gateway. It is a public repository with no application code: JSON manifests, documentation, and a manifest test suite.
+This branch hosts the `workday` **Claude Code plugin marketplace** and the plugins it advertises — today **Workday Custom Agents** (`custom-agents`) and **Sana from Workday** (`sana`), which share one HTTP MCP connector to the Workday Agent Gateway. It is a public repository with no application code: JSON manifests, documentation, and a manifest test suite.
 
 The `@workday/everywhere` SDK and CLI live on the **`sdk` branch**. The two branches have permanently diverged and must never be merged into each other. SDK work belongs on `sdk`; do not reintroduce `src/`, `cli/`, or `examples/` here.
 
@@ -17,9 +17,10 @@ The `@workday/everywhere` SDK and CLI live on the **`sdk` branch**. The two bran
 
 The plugin manifest is a public contract for existing installs.
 
-- Do not rename the plugin, the marketplace, or the MCP server.
-- The connector points at a fixed, shared gateway endpoint and declares no `userConfig`. Changing that URL repoints every install at once — treat it as a breaking change. Do not add a `userConfig` key without maintainer sign-off; it would prompt every existing user on upgrade.
-- Bump `version` in `plugins/everywhere/.claude-plugin/plugin.json` for any user-visible change — Claude Code and Cowork cache by version.
+- Do not rename a plugin, the marketplace, or the MCP server.
+- Both plugins share one connector: their `.mcp.json` files must stay identical (the tests enforce it).
+- The connector ships with an empty `url` (Anthropic's recommended path: an organization Owner enters the tenant's Agent Gateway URL through the connector directory listing) and declares no `userConfig`. Setting a URL would override the listing for every install — treat it as a breaking change. Do not add a `userConfig` key without maintainer sign-off; it would prompt every existing user on upgrade.
+- Bump `version` in `plugins/<plugin>/.claude-plugin/plugin.json` for any user-visible change to that plugin — Claude Code and Cowork cache by version.
 
 ## Toolchain and Commands
 
@@ -27,7 +28,7 @@ The plugin manifest is a public contract for existing installs.
 - Typecheck: `npx tsc --noEmit` (covers `tests/` only)
 - Format: `Prettier` (see `.prettierrc.json`)
 - Task runner: `just` (see `.justfile`)
-- Common commands: `just setup`, `just check`, `just test`, `just tidy`, `just bundle-plugin`
+- Common commands: `just setup`, `just check`, `just test`, `just tidy`, `just bundle-plugin <plugin>`
 - No ESLint and no build step on this branch; both live on `sdk`.
 
 ## Git Workflow
@@ -45,7 +46,7 @@ The plugin manifest is a public contract for existing installs.
 
 ## Testing Process
 
-For TypeScript and manifest edits, follow the strict TDD rule in `tdd.mdc`: assert the new invariant in `tests/claude-plugin/manifest.test.ts` before editing the JSON.
+For TypeScript edits, follow the strict TDD rule in `tdd.mdc`. Schema validity is left to plugin submission; `tests/claude-plugin/manifest.test.ts` covers only connector policy (empty URL, no `userConfig`, no command, headers, or OAuth material, identical `.mcp.json` across plugins). When a manifest change touches one of those rules, assert it there before editing the JSON.
 
 ## Agent rules (Cursor)
 
