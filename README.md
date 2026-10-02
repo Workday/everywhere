@@ -18,10 +18,10 @@ or the other — enabling both gives you duplicate tools.
 /plugin install custom-agents@workday   # or: sana@workday
 ```
 
-The connector ships with an empty URL, because each Workday tenant has its own Agent Gateway URL. An
-organization Owner enters it once for the team through Workday's connector listing in Claude (**Add
-for your team**). Members then run `/mcp`, pick `workday`, and sign in with their own Workday
-account.
+The connector needs your Workday tenant's Agent Gateway URL and an OAuth client ID, entered by an
+organization Owner (or, in Claude Code, by each user) — the gateway does not support automatic
+client registration. Each plugin's README walks through the setup. Members then run `/mcp`, pick
+`workday`, and sign in with their own Workday account.
 
 Full configuration, connection, and troubleshooting docs live in each plugin's README:
 [`plugins/custom-agents/`](plugins/custom-agents/README.md) and

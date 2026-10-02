@@ -188,7 +188,8 @@ secrets, supply chain, and disclosure).
    connector cannot work without it. Adding any _other_ real hostname still needs maintainer
    sign-off, and no tenant identifier, customer name, or internal portal may appear anywhere.
 3. **No committed OAuth client material** — `.mcp.json` must carry no `oauth` block, no client ID,
-   and no headers. Claude Code registers a client dynamically at sign-in.
+   and no headers. The gateway has no automatic client registration, so the OAuth client ID is
+   entered by an Owner or user at setup, never committed.
 4. **Non-public dependencies** — Do not add packages or registry configuration meant for private
    registry flows; new deps must be **publicly resolvable** on public npm. Be alert to **dependency
    confusion**: do not transcribe non-public package names from other repos without verifying they
