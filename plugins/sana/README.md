@@ -1,8 +1,8 @@
 # Sana from Workday — Claude Code plugin
 
 Connects Claude to Sana from Workday, powered by Sana — Workday's trusted AI. The plugin uses the
-shared Workday Agent Gateway as an HTTP MCP server; the gateway supplies every tool at runtime, and
-this plugin ships no skills, commands, or agents of its own.
+Workday Agent Gateway as an HTTP MCP server; the gateway supplies every tool at runtime, and this
+plugin ships no skills, commands, or agents of its own.
 
 ## Install
 
@@ -13,14 +13,17 @@ this plugin ships no skills, commands, or agents of its own.
 
 ## Configure
 
-Nothing to configure. The connector in `.mcp.json` ships with an empty `url`: the Agent Gateway
-endpoint comes from Workday's connector listing in Claude, and sign-in determines your tenant. The
-connector sends no custom headers.
+The Agent Gateway URL is specific to each Workday tenant, so the connector in `.mcp.json` ships with
+an empty `url`. An organization Owner sets it once for the team: **Add for your team** on the
+plugin's connector opens Workday's connector listing in Claude, where the Owner enters the tenant's
+Agent Gateway URL. Members then sign in with their own Workday account. The connector sends no
+custom headers.
 
-Until the listing is available, add the shared endpoint by hand:
+This needs Workday's connector listing to be live. Until then, add the server by hand with your
+tenant's Agent Gateway URL:
 
 ```sh
-claude mcp add --transport http workday https://sana.we.myworkday.com/mcp
+claude mcp add --transport http workday <your-tenant-gateway-url>
 ```
 
 ## Connect
@@ -53,7 +56,7 @@ OAuth client, then add the server manually:
 ```sh
 claude mcp add --transport http \
   --client-id <your-client-id> --client-secret --callback-port 8765 \
-  workday https://sana.we.myworkday.com/mcp
+  workday <your-tenant-gateway-url>
 ```
 
 The secret is prompted for and stored in your keychain, never in a file.

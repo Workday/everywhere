@@ -25,7 +25,7 @@ describe.each(PLUGINS)('the %s plugin', (slug) => {
   const servers = readJson<McpConfig>(`plugins/${slug}/.mcp.json`).mcpServers;
   const server = servers['workday'] ?? {};
 
-  it('declares no user configuration, since the gateway is a single shared endpoint', () => {
+  it('declares no user configuration, since the directory listing collects the gateway URL', () => {
     expect('userConfig' in manifest).toBe(false);
   });
 
@@ -33,7 +33,7 @@ describe.each(PLUGINS)('the %s plugin', (slug) => {
     expect(Object.keys(servers)).toEqual(['workday']);
   });
 
-  it('connects over HTTP with an empty URL, which the directory listing supplies', () => {
+  it('connects over HTTP with an empty URL, which an Owner fills in through the directory listing', () => {
     expect(server).toMatchObject({ type: 'http', url: '' });
   });
 

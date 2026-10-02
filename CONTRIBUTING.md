@@ -39,9 +39,10 @@ just setup
 
 This branch holds no application code — the plugins are JSON manifests and documentation. Schema
 validity is checked when a plugin is submitted, so `just test` covers only the policy rules a schema
-check cannot see. Both plugins must declare one HTTP connector with an empty `url` (the connector
-listing supplies the endpoint), declare no `userConfig`, and commit no local command, custom
-headers, or OAuth client material. The two plugins' `.mcp.json` files must also stay identical.
+check cannot see. Both plugins must declare one HTTP connector with an empty `url` (an Owner enters
+the tenant's URL through the connector listing), declare no `userConfig`, and commit no local
+command, custom headers, or OAuth client material. The two plugins' `.mcp.json` files must also stay
+identical.
 
 ### Testing a plugin change locally
 

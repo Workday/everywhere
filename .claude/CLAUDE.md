@@ -37,9 +37,9 @@ The plugin manifest is a public contract for everyone who has already installed 
 - Both plugins share one connector: their `.mcp.json` files must stay byte-identical, and the tests
   enforce it. Change both together.
 - The connector ships with an **empty** `url`, and declares no `userConfig`. This follows
-  Anthropic's recommended path for the connector directory listing, which supplies the Agent Gateway
-  endpoint. Setting a URL here would override the listing for every install; treat it as a breaking
-  change, not a tweak.
+  Anthropic's recommended path for the connector directory listing: an organization Owner enters the
+  tenant's Agent Gateway URL there. Setting a URL here would override the listing for every install;
+  treat it as a breaking change, not a tweak.
 - Adding a `userConfig` key would prompt every existing user on upgrade. Do not add one without
   maintainer sign-off.
 - Bump `version` in `plugins/<plugin>/.claude-plugin/plugin.json` for any user-visible change to
