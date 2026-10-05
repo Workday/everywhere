@@ -10,7 +10,7 @@
   "license": "Apache-2.0",
   "type": "module",
   "devDependencies": {
-    "@types/node": "^26.2.0",
+    "@types/node": "^26.6.4",
     "husky": "^9.1.7",
     "lint-staged": "^17.0.7",
     "prettier": "^3.9.9",
