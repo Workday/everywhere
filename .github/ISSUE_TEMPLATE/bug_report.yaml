@@ -14,9 +14,8 @@ body:
     attributes:
       label: Which part of the project is this about?
       description: |
-        The Claude Code plugins live on the default branch. The `@workday/everywhere` SDK and CLI live on the [`sdk`](https://github.com/Workday/everywhere/tree/sdk) branch.
+        The Claude Code plugin lives on the default branch. The `@workday/everywhere` SDK and CLI live on the [`sdk`](https://github.com/Workday/everywhere/tree/sdk) branch.
       options:
-        - Claude Code plugin — Workday Custom Agents
         - Claude Code plugin — Sana from Workday
         - SDK or `everywhere` CLI
         - Documentation
@@ -41,7 +40,7 @@ body:
       description: Tell us how to reproduce this issue. Be as specific as possible.
       placeholder: |
         1. Run `/plugin marketplace add Workday/everywhere`
-        2. Run `/plugin install sana@workday` (or `custom-agents@workday`)
+        2. Run `/plugin install sana@workday`
         3. Run `/mcp` and sign in to `workday`
         4. Ask Claude a Workday question — see error ...
     validations:

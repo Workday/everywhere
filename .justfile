@@ -17,11 +17,11 @@ check:
 test:
     npx vitest run --exclude ".worktrees/**"
 
-# Package one plugin into a zip for Cowork's "Upload Plugin" flow (e.g. `just bundle-plugin sana`)
-bundle-plugin plugin:
+# Package the Sana plugin into a zip for Cowork's "Upload Plugin" flow
+bundle-plugin:
     #!/usr/bin/env bash
     set -euo pipefail
-    dir="plugins/{{ plugin }}"
+    dir="plugins/sana"
     manifest="$dir/.claude-plugin/plugin.json"
     if [ ! -f "$manifest" ]; then
         echo "error: no plugin manifest at $manifest" >&2
@@ -33,7 +33,7 @@ bundle-plugin plugin:
         exit 1
     fi
     mkdir -p dist
-    out="$(pwd)/dist/{{ plugin }}-plugin-${version}.zip"
+    out="$(pwd)/dist/sana-plugin-${version}.zip"
     rm -f "$out"
     cd "$dir"
     zip -rX "$out" . -x '*.DS_Store'

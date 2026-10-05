@@ -18,11 +18,9 @@ interface McpConfig {
   mcpServers: Record<string, Record<string, unknown>>;
 }
 
-const PLUGINS = ['custom-agents', 'sana'];
-
-describe.each(PLUGINS)('the %s plugin', (slug) => {
-  const manifest = readJson<Record<string, unknown>>(`plugins/${slug}/.claude-plugin/plugin.json`);
-  const servers = readJson<McpConfig>(`plugins/${slug}/.mcp.json`).mcpServers;
+describe('the Sana from Workday plugin', () => {
+  const manifest = readJson<Record<string, unknown>>('plugins/sana/.claude-plugin/plugin.json');
+  const servers = readJson<McpConfig>('plugins/sana/.mcp.json').mcpServers;
   const server = servers['workday'] ?? {};
 
   it('declares no user configuration, since the directory listing collects the gateway URL', () => {
@@ -50,18 +48,19 @@ describe.each(PLUGINS)('the %s plugin', (slug) => {
   });
 });
 
-describe('the retired everywhere plugin', () => {
-  const marketplace = readJson<{ renames?: Record<string, string | null> }>(
-    '.claude-plugin/marketplace.json'
-  );
+describe('the Workday marketplace', () => {
+  const marketplace = readJson<{
+    renames?: Record<string, string | null>;
+    plugins: { name: string; source: string; displayName: string }[];
+  }>('.claude-plugin/marketplace.json');
 
-  it('moves existing installs to custom-agents', () => {
-    expect(marketplace.renames?.['everywhere']).toBe('custom-agents');
+  it('lists only Sana from Workday', () => {
+    expect(
+      marketplace.plugins.map(({ name, source, displayName }) => ({ name, source, displayName }))
+    ).toEqual([{ name: 'sana', source: './plugins/sana', displayName: 'Sana from Workday' }]);
   });
-});
 
-describe('the shared connector', () => {
-  it('is identical across every plugin', () => {
-    expect(readText('plugins/custom-agents/.mcp.json')).toBe(readText('plugins/sana/.mcp.json'));
+  it('moves existing everywhere installs to sana', () => {
+    expect(marketplace.renames?.['everywhere']).toBe('sana');
   });
 });

@@ -5,17 +5,16 @@ repository.
 
 ## Project Overview
 
-This branch hosts the `workday` **Claude Code plugin marketplace** and the plugins it advertises.
-Today that is two plugins, **Workday Custom Agents** (`custom-agents`, powered by Agent Ready Tools)
-and **Sana from Workday** (`sana`, powered by Sana). Both share one connector to the Workday Agent
-Gateway over HTTP MCP. The gateway supplies every tool at runtime; the plugins ship no skills,
-commands, or agents. The former `everywhere` plugin was retired; a `renames` entry in the
-marketplace manifest moves its installs to `custom-agents`. Keep that entry.
+This branch hosts the `workday` **Claude Code plugin marketplace** and its single listing, **Sana
+from Workday** (`sana`, powered by Sana). The plugin connects to the Workday Agent Gateway over HTTP
+MCP. The gateway supplies every tool at runtime; the plugin ships no skills, commands, or agents.
+The former `everywhere` plugin was retired; a `renames` entry in the marketplace manifest moves its
+installs to `sana`. Keep that entry.
 
 This is a **public** repository — all changes must be made carefully to avoid breaking downstream
 users.
 
-There is no application code here. The plugins are JSON manifests plus documentation; the only
+There is no application code here. The plugin is JSON manifests plus documentation; the only
 TypeScript is the manifest test suite.
 
 ### Where the SDK went
@@ -34,25 +33,24 @@ them.
 The plugin manifest is a public contract for everyone who has already installed the plugin:
 
 - Renaming a plugin, the marketplace, or the MCP server breaks existing installs.
-- Both plugins share one connector: their `.mcp.json` files must stay byte-identical, and the tests
-  enforce it. Change both together.
+- The marketplace lists only Sana from Workday and migrates existing `everywhere` installs to
+  `sana`. The tests enforce both rules.
 - The connector ships with an **empty** `url`, and declares no `userConfig`. This follows
   Anthropic's recommended path for the connector directory listing: an organization Owner enters the
   tenant's Agent Gateway URL there. Setting a URL here would override the listing for every install;
   treat it as a breaking change, not a tweak.
 - Adding a `userConfig` key would prompt every existing user on upgrade. Do not add one without
   maintainer sign-off.
-- Bump `version` in `plugins/<plugin>/.claude-plugin/plugin.json` for any user-visible change to
-  that plugin — Claude Code and Cowork both cache by version.
+- Bump `version` in `plugins/sana/.claude-plugin/plugin.json` for any user-visible change to that
+  plugin — Claude Code and Cowork both cache by version.
 
 ## Repository layout
 
-| Path                     | Contents                                           |
-| ------------------------ | -------------------------------------------------- |
-| `.claude-plugin/`        | Marketplace manifest listing the published plugins |
-| `plugins/custom-agents/` | The Workday Custom Agents plugin                   |
-| `plugins/sana/`          | The Sana from Workday plugin                       |
-| `tests/claude-plugin/`   | Connector policy tests                             |
+| Path                   | Contents                                          |
+| ---------------------- | ------------------------------------------------- |
+| `.claude-plugin/`      | Marketplace manifest listing the published plugin |
+| `plugins/sana/`        | The Sana from Workday plugin                      |
+| `tests/claude-plugin/` | Connector policy tests                            |
 
 ## Toolchain
 
@@ -69,7 +67,7 @@ There is no ESLint and no build step on this branch; both live on `sdk`.
 - `just check` — format check + typecheck
 - `just test` — run the connector policy tests
 - `just tidy` — format source files
-- `just bundle-plugin <plugin>` — zip one plugin for Cowork's "Upload Plugin" flow (needs `jq`)
+- `just bundle-plugin` — zip the Sana plugin for Cowork's "Upload Plugin" flow (needs `jq`)
 
 ## Commit Conventions
 
@@ -151,10 +149,10 @@ We follow **test-driven development (TDD)** for all implementation work:
 6. **One describe per branch.** When a code path branches on a condition, each branch is captured in
    its own `describe` block. Nest `describe` blocks to reflect the structure of the behavior.
 
-Schema validity is left to plugin submission, so `tests/claude-plugin/manifest.test.ts` covers only
-connector policy: the empty URL, no `userConfig`, no command, headers, or OAuth material, and an
-identical `.mcp.json` across plugins. When a manifest change touches one of those rules, assert it
-there before editing the JSON.
+Schema validity is left to plugin submission, so `tests/claude-plugin/manifest.test.ts` covers
+connector policy (the empty URL, no `userConfig`, no command, headers, or OAuth material), the
+single Sana listing, and migration from `everywhere`. When a manifest change touches one of those
+rules, assert it there before editing the JSON.
 
 ## Agent alignment (Cursor + Claude)
 
@@ -261,8 +259,8 @@ builds, clear legal posture).
 ### README and documentation
 
 - The **README** should stay **interesting, accurate, and sufficient for onboarding**: what the
-  project is, how to install the plugin quickly, and where to read more
-  (`plugins/<plugin>/README.md` for configuration, `CONTRIBUTING.md` for dev setup).
+  project is, how to install the plugin quickly, and where to read more (`plugins/sana/README.md`
+  for configuration, `CONTRIBUTING.md` for dev setup).
 - The README must keep pointing at the `sdk` branch. Visitors arriving for `@workday/everywhere`
   land on `main` first, and a missing pointer reads as a deleted project.
 - When workflow commands change, **update the docs you touch** so a newcomer is not misled.
@@ -298,8 +296,8 @@ builds, clear legal posture).
 
 ### Release and publishing (context)
 
-- Nothing on this branch publishes to npm. The plugins are distributed by the marketplace manifest
-  on the default branch, and by `just bundle-plugin` for Cowork uploads. Do not add npm publish
+- Nothing on this branch publishes to npm. The plugin is distributed by the marketplace manifest on
+  the default branch, and by `just bundle-plugin` for Cowork uploads. Do not add npm publish
   workflows here — that machinery lives on `sdk`.
 
 ### Naming and trademarks

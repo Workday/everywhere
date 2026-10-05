@@ -5,20 +5,11 @@
     "name": "Workday",
     "url": "https://github.com/Workday/everywhere"
   },
-  "description": "Claude Code plugins for Workday integrations.",
+  "description": "Sana from Workday for Claude Code.",
   "renames": {
-    "everywhere": "custom-agents"
+    "everywhere": "sana"
   },
   "plugins": [
-    {
-      "name": "custom-agents",
-      "source": "./plugins/custom-agents",
-      "displayName": "Workday Custom Agents",
-      "description": "Connect Claude to Workday Custom Agents, powered by Agent Ready Tools.",
-      "category": "productivity",
-      "keywords": ["workday", "mcp", "custom-agents", "agent-ready-tools"],
-      "license": "Apache-2.0"
-    },
     {
       "name": "sana",
       "source": "./plugins/sana",

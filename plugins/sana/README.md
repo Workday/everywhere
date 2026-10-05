@@ -59,7 +59,7 @@ carry a deployment-specific prefix, so they will not look identical across tenan
 ## Package for Cowork
 
 ```sh
-just bundle-plugin sana
+just bundle-plugin
 ```
 
 Writes `dist/sana-plugin-<version>.zip` for Cowork's "Upload Plugin" flow. Bump `version` in
