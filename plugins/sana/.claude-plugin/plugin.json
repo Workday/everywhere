@@ -3,7 +3,7 @@
   "displayName": "Sana from Workday",
   "version": "0.1.0",
   "description": "Connect Claude to Sana from Workday, powered by Sana — Workday's trusted AI.",
-  "icon": "./workday-logo.png",
+  "icon": "./logo.png",
   "author": { "name": "Workday" },
   "homepage": "https://github.com/Workday/everywhere",
   "repository": "https://github.com/Workday/everywhere",
