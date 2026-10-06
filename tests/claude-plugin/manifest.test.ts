@@ -22,9 +22,18 @@ describe('the Sana from Workday plugin', () => {
   const manifest = readJson<Record<string, unknown>>('plugins/sana/.claude-plugin/plugin.json');
   const servers = readJson<McpConfig>('plugins/sana/.mcp.json').mcpServers;
   const server = servers['workday'] ?? {};
+  const skill = readText('plugins/sana/skills/workday/SKILL.md');
 
   it('declares no user configuration, since the directory listing collects the gateway URL', () => {
     expect('userConfig' in manifest).toBe(false);
+  });
+
+  it('bundles the Workday routing skill', () => {
+    expect(skill).toContain('# Workday HR Assistant');
+  });
+
+  it('registers the bundled skill under the workday name', () => {
+    expect(skill).toMatch(/^name: workday$/m);
   });
 
   it('declares exactly one MCP server, named "workday"', () => {

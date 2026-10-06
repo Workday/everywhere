@@ -1,8 +1,8 @@
 # Sana from Workday — Claude Code plugin
 
 Connects Claude to Sana from Workday, powered by Sana — Workday's trusted AI. The plugin uses the
-Workday Agent Gateway as an HTTP MCP server; the gateway supplies every tool at runtime, and this
-plugin ships no skills, commands, or agents of its own.
+Workday Agent Gateway as an HTTP MCP server. The gateway supplies every tool at runtime, while the
+bundled `workday` skill teaches Claude how to discover and route those tools safely.
 
 ## Install
 
@@ -44,8 +44,9 @@ Run `/mcp`, pick `workday`, and complete sign-in in the browser. From a shell, t
 
 ## Use
 
-Ask Claude a Workday question. It lists the gateway's tools and calls the right one. Tool names
-carry a deployment-specific prefix, so they will not look identical across tenants.
+Ask Claude a Workday question. The bundled skill tells it to inspect the gateway's routing
+resources, list the available tools, and call the exact tool the tenant provides. Tool names carry a
+deployment-specific prefix, so they will not look identical across tenants.
 
 ## Troubleshooting
 
