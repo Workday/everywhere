@@ -37,12 +37,13 @@ just setup
 | `just tidy`          | Format source files                          |
 | `just bundle-plugin` | Zip the Sana plugin for Cowork's upload flow |
 
-This branch holds no application code — the plugin is JSON manifests and documentation. Schema
-validity is checked when a plugin is submitted, so `just test` covers only the policy rules a schema
-check cannot see. The plugin must declare one HTTP connector with an empty `url` (an Owner enters
-the tenant's URL through the connector listing), declare no `userConfig`, and commit no local
-command, custom headers, or OAuth client material. Tests also ensure the marketplace lists only Sana
-from Workday and migrates existing `everywhere` installs to `sana`.
+This branch holds no application code — the plugin is JSON manifests, documentation, and a routing
+skill. Schema validity is checked when a plugin is submitted, so `just test` covers the bundled
+skill and policy rules a schema check cannot see. The plugin must declare one HTTP connector with an
+empty `url` (an Owner enters the tenant's URL through the connector listing), declare no
+`userConfig`, and commit no local command, custom headers, or OAuth client material. Tests also
+ensure the marketplace lists only Sana from Workday and migrates existing `everywhere` installs to
+`sana`.
 
 ### Testing a plugin change locally
 

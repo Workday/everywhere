@@ -7,15 +7,15 @@ repository.
 
 This branch hosts the `workday` **Claude Code plugin marketplace** and its single listing, **Sana
 from Workday** (`sana`, powered by Sana). The plugin connects to the Workday Agent Gateway over HTTP
-MCP. The gateway supplies every tool at runtime; the plugin ships no skills, commands, or agents.
-The former `everywhere` plugin was retired; a `renames` entry in the marketplace manifest moves its
-installs to `sana`. Keep that entry.
+MCP. The gateway supplies every tool at runtime; the plugin bundles one `workday` routing skill and
+ships no commands or agents. The former `everywhere` plugin was retired; a `renames` entry in the
+marketplace manifest moves its installs to `sana`. Keep that entry.
 
 This is a **public** repository — all changes must be made carefully to avoid breaking downstream
 users.
 
-There is no application code here. The plugin is JSON manifests plus documentation; the only
-TypeScript is the manifest test suite.
+There is no application code here. The plugin is JSON manifests, documentation, and a Markdown
+routing skill; the only TypeScript is the manifest test suite.
 
 ### Where the SDK went
 
@@ -49,8 +49,8 @@ The plugin manifest is a public contract for everyone who has already installed 
 | Path                   | Contents                                          |
 | ---------------------- | ------------------------------------------------- |
 | `.claude-plugin/`      | Marketplace manifest listing the published plugin |
-| `plugins/sana/`        | The Sana from Workday plugin                      |
-| `tests/claude-plugin/` | Connector policy tests                            |
+| `plugins/sana/`        | The Sana from Workday plugin and routing skill    |
+| `tests/claude-plugin/` | Plugin bundle and connector policy tests          |
 
 ## Toolchain
 
@@ -149,10 +149,10 @@ We follow **test-driven development (TDD)** for all implementation work:
 6. **One describe per branch.** When a code path branches on a condition, each branch is captured in
    its own `describe` block. Nest `describe` blocks to reflect the structure of the behavior.
 
-Schema validity is left to plugin submission, so `tests/claude-plugin/manifest.test.ts` covers
-connector policy (the empty URL, no `userConfig`, no command, headers, or OAuth material), the
-single Sana listing, and migration from `everywhere`. When a manifest change touches one of those
-rules, assert it there before editing the JSON.
+Schema validity is left to plugin submission, so `tests/claude-plugin/manifest.test.ts` covers the
+bundled skill, connector policy (the empty URL, no `userConfig`, no command, headers, or OAuth
+material), the single Sana listing, and migration from `everywhere`. When a plugin change touches
+one of those rules, assert it there before editing the implementation.
 
 ## Agent alignment (Cursor + Claude)
 
