@@ -28,7 +28,7 @@ the user, in these words: "Preparing your Workday card. This takes about a minut
 cannot read resources, poll per `workday-tools-only`. Otherwise follow the routing skill.
 
 Take the name, job title, and work location from the answer. If a name arrives with a parenthetical
-role list, such as `Betty Liu (manager 4300, CostCtrMgr 30.3, …)`, display only the text before
+role list, such as `Alex Example (manager 4300, CostCtrMgr 30.3, …)`, display only the text before
 ` (`. Never show the role list.
 
 If the reply skips name, job title, or work location, or replaces one of those with a link, send one
