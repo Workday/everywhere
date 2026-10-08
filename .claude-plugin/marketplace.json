@@ -14,7 +14,7 @@
       "name": "sana",
       "source": "./plugins/sana",
       "displayName": "Sana from Workday",
-      "description": "Connect Claude to Sana from Workday, powered by Sana — Workday's trusted AI.",
+      "description": "Workday in Claude through the Agent Gateway. Live gateway routing chooses catalog tools or agents and supplies agent ids. Ask a Workday question, or explicitly run /workday-onboard for a welcome card with your name and job title.",
       "category": "productivity",
       "keywords": ["workday", "mcp", "sana"],
       "license": "Apache-2.0"

@@ -2,7 +2,7 @@
 
 Connects Claude to Sana from Workday, powered by Sana — Workday's trusted AI. The plugin uses the
 Workday Agent Gateway as an HTTP MCP server. The gateway supplies every tool at runtime, while the
-bundled `workday` skill teaches Claude how to discover and route those tools safely.
+bundled skills teach Claude how to discover and route those tools safely.
 
 ## Install
 
@@ -42,11 +42,19 @@ the connector up from it with **Add for your team**.
 Run `/mcp`, pick `workday`, and complete sign-in in the browser. From a shell, the equivalent is
 `claude mcp login workday`. Claude Code stores the token in your OS keychain.
 
+When the Workday tools appear, Claude says it is connected. That sentence does not call Workday.
+
 ## Use
 
-Ask Claude a Workday question. The bundled skill tells it to inspect the gateway's routing
+Ask Claude a Workday question. The `workday` skill tells it to inspect the gateway's routing
 resources, list the available tools, and call the exact tool the tenant provides. Tool names carry a
-deployment-specific prefix, so they will not look identical across tenants.
+deployment-specific prefix, so they will not look identical across tenants. `agent_id` comes from
+that live routing skill.
+
+`/workday-onboard` asks Workday's agent, through live gateway routing, for the signed-in worker's
+name, job title, and work location, then builds one card. Running it again refreshes that card. It
+does not run on connect, and a normal Workday question does not build it. `using-workday-design` is
+the card look.
 
 ## Troubleshooting
 
