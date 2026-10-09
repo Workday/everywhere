@@ -1,7 +1,7 @@
 {
   "name": "sana",
   "displayName": "Sana from Workday",
-  "version": "0.1.3",
+  "version": "0.1.1",
   "description": "Get work done in Workday with Sana in Claude.",
   "icon": "./logo.png",
   "author": { "name": "Workday" },

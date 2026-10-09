@@ -9,7 +9,7 @@ description:
   workday-agent-dialogue. Questions about what this connection can do, and which agents are exposed,
   use a standing reply, not an agent. Do not invent an agent_id or answer Workday questions from
   general knowledge."
-version: '7.1-sana'
+version: '1.1'
 tags: [workday, hr]
 ---
 
