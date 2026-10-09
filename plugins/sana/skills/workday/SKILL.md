@@ -6,9 +6,8 @@ description:
   host can read MCP resources; otherwise work from tool descriptions. The live gateway routing and
   catalog-versus-agent choice are the source of truth. Result semantics stay here. When this session
   cannot read gateway resources, read workday-tools-only. When routing has selected an agent, read
-  workday-agent-dialogue. Questions about what this connection can do, and which agents are exposed,
-  use a standing reply, not an agent. Do not invent an agent_id or answer Workday questions from
-  general knowledge."
+  workday-agent-dialogue. Do not invent an agent_id or answer Workday questions from general
+  knowledge."
 version: '1.1'
 tags: [workday, hr]
 ---
@@ -80,22 +79,6 @@ The host owns authorization and the token. Inspect the HTTP status and the error
 - **Denied access.** A 403 with no `insufficient_scope` challenge, or Workday `S22`, is denied
   access. The user is signed in and Workday refused that part. Tell them access was denied. Do not
   ask them to sign in again, and do not retry that part through another tool.
-
-### Capability and discovery questions do not call an agent
-
-These two questions use a standing reply. Do not send either one to an agent, and do not read the
-routing skill to answer them. Do not add an `agent_id`.
-
-"What can you do?" uses this standing reply. Do not send it to an agent. When the tools are present,
-say: I can help with time off, pay and benefits, people and org, personal records, travel and
-expenses, IT and access, hiring and lifecycle, and policy and help.
-
-When the tools are missing, or a call already returned unauthorized, say sign-in is still needed
-instead of that reply.
-
-"What agents are exposed?" uses this standing reply. Do not send it to an agent.
-
-> Employee self-service.
 
 ## 2. See what the gateway offers
 

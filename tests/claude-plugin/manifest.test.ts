@@ -134,28 +134,14 @@ describe('the workday skill', () => {
   });
 
   describe('when the user asks what the connector can do', () => {
-    it('uses a standing reply and does not call an agent', () => {
-      expect(skill).toContain(
-        '"What can you do?" uses this standing reply. Do not send it to an agent.'
-      );
-    });
-
-    it('lists the standing Workday areas', () => {
-      expect(skill).toContain(
-        'time off, pay and benefits, people and org, personal records, travel and expenses, IT and access, hiring and lifecycle, and policy and help'
-      );
+    it('does not prescribe a standing reply', () => {
+      expect(skill).not.toContain('What can you do?');
     });
   });
 
   describe('when the user asks which agents are exposed', () => {
-    it('uses a standing reply and does not call an agent', () => {
-      expect(skill).toContain(
-        '"What agents are exposed?" uses this standing reply. Do not send it to an agent.'
-      );
-    });
-
-    it('names Employee self-service', () => {
-      expect(skill).toContain('> Employee self-service.');
+    it('does not prescribe a standing reply', () => {
+      expect(skill).not.toContain('What agents are exposed?');
     });
   });
 });

@@ -3,14 +3,14 @@ name: workday-onboard
 description:
   "Build the personal Workday onboard card. Invoke only when the user runs /workday-onboard. One
   agent query for the signed-in worker's name, job title, and work location, then one inline card.
-  Running /workday-onboard again refreshes that card. Do not run this for a normal Workday question,
-  for 'what can you do', or because the connector just connected."
+  Running /workday-onboard again refreshes that card. Do not run this for a normal Workday question
+  or because the connector just connected."
 ---
 
 # Workday onboard
 
-`/workday-onboard` spends one agent run and publishes one card. A normal question, a fresh
-connection, and "what can you do?" do not run it — `workday` answers those locally.
+`/workday-onboard` spends one agent run and publishes one card. A normal question and a fresh
+connection do not run it.
 
 Load `workday` before the query. Its live gateway routing, catalog-versus-agent choice, agent-id
 resolution, and polling are authoritative. For this card, routing must choose an agent. Do not call
