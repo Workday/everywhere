@@ -59,7 +59,9 @@ The plugin manifest is a public contract for everyone who has already installed 
 
 - **Package manager:** npm
 - **Type checking:** `npx tsc --noEmit` (covers `tests/` only)
-- **Formatter:** [Prettier](https://prettier.io/) — see `.prettierrc.json` for settings
+- **Formatter:** [Prettier](https://prettier.io/) — see `.prettierrc.json` for settings.
+  `plugins/sana/README.md` is soft-wrapped (`proseWrap: "never"`) because the Claude plugin
+  directory renders hard wraps as line breaks; keep it that way.
 - **Task runner:** [just](https://github.com/casey/just) — see `.justfile` for available targets
 
 There is no ESLint and no build step on this branch; both live on `sdk`.
