@@ -17,20 +17,25 @@ check:
 test:
     npx vitest run --exclude ".worktrees/**"
 
-# Package the Claude plugin into a zip for Cowork's "Upload Plugin" flow
+# Package the Sana plugin into a zip for Cowork's "Upload Plugin" flow
 bundle-plugin:
     #!/usr/bin/env bash
     set -euo pipefail
-    manifest=plugins/everywhere/.claude-plugin/plugin.json
+    dir="plugins/sana"
+    manifest="$dir/.claude-plugin/plugin.json"
+    if [ ! -f "$manifest" ]; then
+        echo "error: no plugin manifest at $manifest" >&2
+        exit 1
+    fi
     version=$(jq -r '.version // empty' "$manifest")
     if [ -z "$version" ]; then
         echo "error: no version found in $manifest" >&2
         exit 1
     fi
     mkdir -p dist
-    out="$(pwd)/dist/everywhere-plugin-${version}.zip"
+    out="$(pwd)/dist/sana-plugin-${version}.zip"
     rm -f "$out"
-    cd plugins/everywhere
+    cd "$dir"
     zip -rX "$out" . -x '*.DS_Store'
 
 # Remove build artifacts

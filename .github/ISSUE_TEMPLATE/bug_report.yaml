@@ -16,7 +16,7 @@ body:
       description: |
         The Claude Code plugin lives on the default branch. The `@workday/everywhere` SDK and CLI live on the [`sdk`](https://github.com/Workday/everywhere/tree/sdk) branch.
       options:
-        - Claude Code plugin (Agent Gateway connector)
+        - Claude Code plugin — Sana from Workday
         - SDK or `everywhere` CLI
         - Documentation
         - "I'm not sure"
@@ -29,7 +29,7 @@ body:
       label: What happened?
       description: Provide a clear and concise description of what the bug is.
       placeholder: |
-        Example: After `/plugin install everywhere@workday` and signing in via `/mcp`, Claude lists no Workday tools at all.
+        Example: After `/plugin install sana@workday` and signing in via `/mcp`, Claude lists no Workday tools at all.
     validations:
       required: true
 
@@ -40,7 +40,7 @@ body:
       description: Tell us how to reproduce this issue. Be as specific as possible.
       placeholder: |
         1. Run `/plugin marketplace add Workday/everywhere`
-        2. Run `/plugin install everywhere@workday`
+        2. Run `/plugin install sana@workday`
         3. Run `/mcp` and sign in to `workday`
         4. Ask Claude a Workday question — see error ...
     validations:

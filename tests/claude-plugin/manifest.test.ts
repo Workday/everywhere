@@ -1,128 +1,75 @@
 import { describe, it, expect } from 'vitest';
-import { existsSync, readFileSync } from 'node:fs';
+import { readFileSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
+
+// Schema validity is checked by plugin submission. These tests guard the policy invariants a
+// schema check cannot see: the empty connector URL, and nothing committed that changes how
+// existing installs authenticate or prompt.
 
 const repoRoot = resolve(dirname(fileURLToPath(import.meta.url)), '../..');
 
 const readText = (relativePath: string): string =>
   readFileSync(resolve(repoRoot, relativePath), 'utf8');
 
-interface PluginManifest {
-  name: string;
-  version: string;
-  license: string;
-  skills?: unknown;
-  userConfig?: Record<string, unknown>;
-}
-
-interface McpServer {
-  type?: string;
-  url?: string;
-  command?: string;
-  oauth?: unknown;
-  headers?: Record<string, string>;
-}
+const readJson = <T>(relativePath: string): T => JSON.parse(readText(relativePath)) as T;
 
 interface McpConfig {
-  mcpServers: Record<string, McpServer>;
+  mcpServers: Record<string, Record<string, unknown>>;
 }
 
-interface MarketplaceEntry {
-  name: string;
-  source: string;
-  license?: string;
-}
+describe('the Sana from Workday plugin', () => {
+  const manifest = readJson<Record<string, unknown>>('plugins/sana/.claude-plugin/plugin.json');
+  const servers = readJson<McpConfig>('plugins/sana/.mcp.json').mcpServers;
+  const server = servers['workday'] ?? {};
+  const skill = readText('plugins/sana/skills/workday/SKILL.md');
 
-interface MarketplaceManifest {
-  name: string;
-  plugins: MarketplaceEntry[];
-}
-
-const pluginManifest = JSON.parse(
-  readText('plugins/everywhere/.claude-plugin/plugin.json')
-) as PluginManifest;
-
-const mcpText = readText('plugins/everywhere/.mcp.json');
-const mcpConfig = JSON.parse(mcpText) as McpConfig;
-
-const marketplace = JSON.parse(readText('.claude-plugin/marketplace.json')) as MarketplaceManifest;
-
-describe('the everywhere plugin manifest', () => {
-  it('names the plugin "everywhere"', () => {
-    expect(pluginManifest.name).toBe('everywhere');
+  it('declares no user configuration, since the directory listing collects the gateway URL', () => {
+    expect('userConfig' in manifest).toBe(false);
   });
 
-  it('declares the repository license', () => {
-    expect(pluginManifest.license).toBe('Apache-2.0');
+  it('bundles the Workday routing skill', () => {
+    expect(skill).toContain('# Workday HR Assistant');
   });
 
-  it('bundles no skills', () => {
-    expect(pluginManifest.skills).toBeUndefined();
+  it('registers the bundled skill under the workday name', () => {
+    expect(skill).toMatch(/^name: workday$/m);
   });
 
-  it('declares no user configuration, since the gateway is a single shared endpoint', () => {
-    expect(pluginManifest.userConfig).toBeUndefined();
-  });
-});
-
-describe('the MCP connector', () => {
-  const serverNames = Object.keys(mcpConfig.mcpServers);
-  const server = mcpConfig.mcpServers['workday'];
-
-  if (!server) {
-    throw new Error('.mcp.json declares no "workday" server');
-  }
-
-  it('declares exactly one server', () => {
-    expect(serverNames).toHaveLength(1);
+  it('declares exactly one MCP server, named "workday"', () => {
+    expect(Object.keys(servers)).toEqual(['workday']);
   });
 
-  it('names the server "workday"', () => {
-    expect(serverNames).toEqual(['workday']);
-  });
-
-  it('connects over HTTP', () => {
-    expect(server.type).toBe('http');
+  it('connects over HTTP with an empty URL, which an Owner fills in through the directory listing', () => {
+    expect(server).toMatchObject({ type: 'http', url: '' });
   });
 
   it('runs no local command', () => {
-    expect(server.command).toBeUndefined();
-  });
-
-  it('connects to the shared Agent Gateway endpoint', () => {
-    expect(server.url).toBe('https://sana.we.myworkday.com/mcp');
+    expect('command' in server).toBe(false);
   });
 
   it('sends no custom headers', () => {
-    expect(server.headers).toBeUndefined();
+    expect('headers' in server).toBe(false);
   });
 
   it('commits no OAuth client material', () => {
-    expect(server.oauth).toBeUndefined();
+    expect('oauth' in server).toBe(false);
   });
 });
 
-describe('the marketplace manifest', () => {
-  const entry = marketplace.plugins[0];
+describe('the Workday marketplace', () => {
+  const marketplace = readJson<{
+    renames?: Record<string, string | null>;
+    plugins: { name: string; source: string; displayName: string }[];
+  }>('.claude-plugin/marketplace.json');
 
-  it('names the marketplace "workday"', () => {
-    expect(marketplace.name).toBe('workday');
+  it('lists only Sana from Workday', () => {
+    expect(
+      marketplace.plugins.map(({ name, source, displayName }) => ({ name, source, displayName }))
+    ).toEqual([{ name: 'sana', source: './plugins/sana', displayName: 'Sana from Workday' }]);
   });
 
-  it('advertises exactly one plugin', () => {
-    expect(marketplace.plugins).toHaveLength(1);
-  });
-
-  it('advertises the everywhere plugin', () => {
-    expect(entry?.name).toBe('everywhere');
-  });
-
-  it('points at a plugin directory that exists', () => {
-    expect(entry?.source && existsSync(resolve(repoRoot, entry.source))).toBe(true);
-  });
-
-  it('declares the same license as the plugin it advertises', () => {
-    expect(entry?.license).toBe(pluginManifest.license);
+  it('moves existing everywhere installs to sana', () => {
+    expect(marketplace.renames?.['everywhere']).toBe('sana');
   });
 });

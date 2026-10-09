@@ -1,23 +1,38 @@
 # Workday Everywhere — Claude Code plugin marketplace
 
-This repository hosts the `workday` Claude Code plugin marketplace and the plugins it advertises.
+This repository hosts the `workday` Claude Code plugin marketplace and its single listing, **Sana
+from Workday**, powered by Sana — Workday's trusted AI.
 
-Today that is one plugin, **Workday Everywhere**, which connects Claude to the Workday Agent Gateway
-over HTTP MCP. The gateway supplies every tool at runtime, so the plugin ships no skills, commands,
-or agents of its own.
+The plugin connects to the Workday Agent Gateway over HTTP MCP. The gateway supplies every tool at
+runtime, and the plugin bundles a `workday` skill that guides tool discovery and routing.
 
 ## Install
 
 ```text
 /plugin marketplace add Workday/everywhere
-/plugin install everywhere@workday
+/plugin install sana@workday
 ```
 
-There is nothing to configure — the connector points at the shared Workday Agent Gateway endpoint.
-Run `/mcp`, pick `workday`, and sign in; your sign-in determines which tenant's data you see.
+The connector needs your Workday tenant's MCP URL and an OAuth client (ID and secret), entered by an
+organization Owner (or, in Claude Code, by each user) — the gateway does not support automatic
+client registration. The plugin's README walks through the setup, including the redirect URIs to
+register on the client. Members then sign in with their own Workday account.
 
-Full configuration, connection, and troubleshooting docs live in
-[`plugins/everywhere/README.md`](plugins/everywhere/README.md).
+Full configuration, connection, and troubleshooting docs live in the plugin's README:
+[`plugins/sana/`](plugins/sana/README.md).
+
+### Migrating from `everywhere`
+
+The `everywhere` plugin is now **Sana from Workday**. On Claude Code v2.1.193 or later, the
+marketplace carries your `everywhere@workday` install and its settings over to `sana@workday`.
+Claude Code then needs the new plugin fetched once:
+
+```text
+/plugin marketplace update workday
+/plugin install sana@workday
+```
+
+On older Claude Code versions, uninstall `everywhere@workday` and install `sana@workday`.
 
 ## Looking for the SDK?
 
@@ -37,11 +52,11 @@ The published package on npm is unchanged; releases from that branch are current
 
 ## Repository layout
 
-| Path                   | Contents                                           |
-| ---------------------- | -------------------------------------------------- |
-| `.claude-plugin/`      | Marketplace manifest listing the published plugins |
-| `plugins/everywhere/`  | The Workday Everywhere connector plugin            |
-| `tests/claude-plugin/` | Manifest validation tests                          |
+| Path                   | Contents                                          |
+| ---------------------- | ------------------------------------------------- |
+| `.claude-plugin/`      | Marketplace manifest listing the published plugin |
+| `plugins/sana/`        | The Sana from Workday plugin and routing skill    |
+| `tests/claude-plugin/` | Manifest validation tests                         |
 
 ## Development
 

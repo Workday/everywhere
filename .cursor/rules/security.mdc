@@ -12,7 +12,7 @@ This project is **public**. Agents must avoid changes that expose secrets, priva
 - **Secrets:** passwords, API keys, tokens, private keys, OAuth secrets, or credential-bearing connection strings—in source, tests, fixtures, examples, or config checked into the repo.
 - **Non-public references:** hostnames or URLs for private corporate infrastructure (e.g. private source control, CI, artifact, wiki, or ticketing portals). Prefer neutral placeholders in docs and examples.
 - **Tenant identifiers and other real hosts:** the shared Agent Gateway endpoint in `.mcp.json` and the plugin README is public by design and is the *only* real host allowed. No tenant identifier, customer name, internal portal, or additional hostname may appear anywhere; adding another real host needs maintainer sign-off.
-- **Committed OAuth client material:** `.mcp.json` must carry no `oauth` block, no client ID or secret, and no headers. Claude Code registers a client dynamically at sign-in.
+- **Committed OAuth client material:** `.mcp.json` must carry no `oauth` block, no client ID or secret, and no headers. The gateway has no automatic client registration, so the OAuth client ID is entered by an Owner or user at setup, never committed.
 - **Non-public packages or registries:** dependencies that exist only in private registries not published for public use, or `.npmrc`/CI config that points to private registries. Use the same public npm patterns as the rest of this repo. Do not copy dependency names from non-public libraries into `package.json` unless they are verified public packages.
 
 ## Examples and fixtures

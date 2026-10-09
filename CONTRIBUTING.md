@@ -29,18 +29,21 @@ just setup
 
 ### Development Workflow
 
-| Command              | Description                                   |
-| -------------------- | --------------------------------------------- |
-| `just setup`         | Install dependencies                          |
-| `just check`         | Format check and typecheck                    |
-| `just test`          | Validate the plugin and marketplace manifests |
-| `just tidy`          | Format source files                           |
-| `just bundle-plugin` | Zip the plugin for Cowork's upload flow       |
+| Command              | Description                                  |
+| -------------------- | -------------------------------------------- |
+| `just setup`         | Install dependencies                         |
+| `just check`         | Format check and typecheck                   |
+| `just test`          | Check the connector policy rules             |
+| `just tidy`          | Format source files                          |
+| `just bundle-plugin` | Zip the Sana plugin for Cowork's upload flow |
 
-This branch holds no application code — the plugin is JSON manifests and documentation. `just test`
-runs the manifest tests in `tests/claude-plugin/`, which assert that the plugin and marketplace
-manifests stay consistent with each other and that the connector keeps its expected shape: exactly
-one HTTP server, no local command, no custom headers, and no committed OAuth client material.
+This branch holds no application code — the plugin is JSON manifests, documentation, and a routing
+skill. Schema validity is checked when a plugin is submitted, so `just test` covers the bundled
+skill and policy rules a schema check cannot see. The plugin must declare one HTTP connector with an
+empty `url` (an Owner enters the tenant's URL through the connector listing), declare no
+`userConfig`, and commit no local command, custom headers, or OAuth client material. Tests also
+ensure the marketplace lists only Sana from Workday and migrates existing `everywhere` installs to
+`sana`.
 
 ### Testing a plugin change locally
 
@@ -48,13 +51,13 @@ Point a local marketplace at your checkout, then install from it:
 
 ```text
 /plugin marketplace add /path/to/everywhere
-/plugin install everywhere@workday
+/plugin install sana@workday
 ```
 
 ### Releasing a plugin change
 
-Bump `version` in `plugins/everywhere/.claude-plugin/plugin.json` — Claude Code and Cowork both
-cache by version, so an unchanged version will not be picked up.
+Bump `version` in `plugins/sana/.claude-plugin/plugin.json` when you change the plugin — Claude Code
+and Cowork both cache by version, so an unchanged version will not be picked up.
 
 ### Commit Conventions
 
