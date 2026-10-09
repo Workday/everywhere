@@ -19,7 +19,7 @@ The plugin manifest is a public contract for existing installs.
 
 - Do not rename a plugin, the marketplace, or the MCP server.
 - The marketplace lists only Sana from Workday and migrates existing `everywhere` installs to `sana` (the tests enforce both rules).
-- The connector ships with an empty `url` (Anthropic's recommended path: an organization Owner enters the tenant's Agent Gateway URL through the connector directory listing) and declares no `userConfig`. Setting a URL would override the listing for every install — treat it as a breaking change. Do not add a `userConfig` key without maintainer sign-off; it would prompt every existing user on upgrade.
+- The connector ships with an empty `url` (Anthropic's recommended path: an organization Owner enters the tenant's MCP URL through the connector directory listing) and declares no `userConfig`. Setting a URL would override the listing for every install — treat it as a breaking change. Do not add a `userConfig` key without maintainer sign-off; it would prompt every existing user on upgrade.
 - Bump `version` in `plugins/sana/.claude-plugin/plugin.json` for any user-visible change to the plugin — Claude Code and Cowork cache by version.
 
 ## Toolchain and Commands

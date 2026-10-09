@@ -15,10 +15,10 @@ session cannot read gateway resources, and `workday-agent-dialogue` after routin
 /plugin install sana@workday
 ```
 
-The connector needs your Workday tenant's Agent Gateway URL and an OAuth client ID, entered by an
+The connector needs your Workday tenant's MCP URL and an OAuth client (ID and secret), entered by an
 organization Owner (or, in Claude Code, by each user) — the gateway does not support automatic
-client registration. The plugin's README walks through the setup. Members then run `/mcp`, pick
-`workday`, and sign in with their own Workday account.
+client registration. The plugin's README walks through the setup, including the redirect URIs to
+register on the client. Members then sign in with their own Workday account.
 
 Full configuration, connection, and troubleshooting docs live in the plugin's README:
 [`plugins/sana/`](plugins/sana/README.md).
