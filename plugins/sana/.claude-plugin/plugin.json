@@ -2,11 +2,15 @@
   "name": "sana",
   "displayName": "Sana from Workday",
   "version": "0.1.0",
-  "description": "Connect Claude to Sana from Workday, powered by Sana — Workday's trusted AI.",
+  "description": "Get work done in Workday with Sana in Claude.",
   "icon": "./logo.png",
   "author": { "name": "Workday" },
   "homepage": "https://github.com/Workday/everywhere",
   "repository": "https://github.com/Workday/everywhere",
   "license": "Apache-2.0",
+  "privacyPolicyUrl": "https://www.workday.com/en-us/privacy.html",
+  "supportUrl": "https://www.workday.com/en-ca/services/support.html",
+  "documentationUrl": "https://collaborate.workday.com/t5/Workday-for-Teams-Slack-Copilot/Sana-for-Claude-EA-Program-Invitation/ta-p/2290778",
+  "termsOfServiceUrl": "https://www.workday.com/en-us/legal/end-user-agreement.html",
   "keywords": ["workday", "mcp", "sana"]
 }
