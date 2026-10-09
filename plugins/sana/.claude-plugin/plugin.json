@@ -1,7 +1,7 @@
 {
   "name": "sana",
   "displayName": "Sana from Workday",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Get work done in Workday with Sana in Claude.",
   "icon": "./logo.png",
   "author": { "name": "Workday" },
@@ -12,5 +12,6 @@
   "supportUrl": "https://www.workday.com/en-ca/services/support.html",
   "documentationUrl": "https://collaborate.workday.com/t5/Workday-for-Teams-Slack-Copilot/Sana-for-Claude-EA-Program-Invitation/ta-p/2290778",
   "termsOfServiceUrl": "https://www.workday.com/en-us/legal/end-user-agreement.html",
-  "keywords": ["workday", "mcp", "sana"]
+  "keywords": ["workday", "mcp", "sana"],
+  "skills": ["./skills/"]
 }

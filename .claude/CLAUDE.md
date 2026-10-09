@@ -7,15 +7,18 @@ repository.
 
 This branch hosts the `workday` **Claude Code plugin marketplace** and its single listing, **Sana
 from Workday** (`sana`, powered by Sana). The plugin connects to the Workday Agent Gateway over HTTP
-MCP. The gateway supplies every tool at runtime; the plugin bundles one `workday` routing skill and
-ships no commands or agents. The former `everywhere` plugin was retired; a `renames` entry in the
-marketplace manifest moves its installs to `sana`. Keep that entry.
+MCP. The gateway supplies every tool at runtime. The plugin bundles `workday` for every Workday
+question, `workday-tools-only` when the session cannot read gateway resources, and
+`workday-agent-dialogue` after routing selects an agent. `workday-onboard` loads `workday`.
+`using-workday-design` loads when a page or card is built. The plugin ships no commands or agents.
+The former `everywhere` plugin was retired; a `renames` entry in the marketplace manifest moves its
+installs to `sana`. Keep that entry.
 
 This is a **public** repository — all changes must be made carefully to avoid breaking downstream
 users.
 
-There is no application code here. The plugin is JSON manifests, documentation, and a Markdown
-routing skill; the only TypeScript is the manifest test suite.
+There is no application code here. The plugin is JSON manifests, documentation, and Markdown skills;
+the only TypeScript is the manifest test suite.
 
 ### Where the SDK went
 
@@ -49,7 +52,7 @@ The plugin manifest is a public contract for everyone who has already installed 
 | Path                   | Contents                                          |
 | ---------------------- | ------------------------------------------------- |
 | `.claude-plugin/`      | Marketplace manifest listing the published plugin |
-| `plugins/sana/`        | The Sana from Workday plugin and routing skill    |
+| `plugins/sana/`        | The Sana from Workday plugin and its skills       |
 | `tests/claude-plugin/` | Plugin bundle and connector policy tests          |
 
 ## Toolchain
