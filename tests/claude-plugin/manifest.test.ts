@@ -21,7 +21,7 @@ interface McpConfig {
 describe('the Sana from Workday plugin', () => {
   const manifest = readJson<Record<string, unknown>>('plugins/sana/.claude-plugin/plugin.json');
   const servers = readJson<McpConfig>('plugins/sana/.mcp.json').mcpServers;
-  const server = servers['workday'] ?? {};
+  const server = servers['Sana from Workday'] ?? {};
   const skill = readText('plugins/sana/skills/workday/SKILL.md');
 
   it('declares no user configuration, since the directory listing collects the gateway URL', () => {
@@ -36,8 +36,8 @@ describe('the Sana from Workday plugin', () => {
     expect(skill).toMatch(/^name: workday$/m);
   });
 
-  it('declares exactly one MCP server, named "workday"', () => {
-    expect(Object.keys(servers)).toEqual(['workday']);
+  it('declares exactly one MCP server, named "Sana from Workday"', () => {
+    expect(Object.keys(servers)).toEqual(['Sana from Workday']);
   });
 
   it('connects over HTTP with an empty URL, which an Owner fills in through the directory listing', () => {
