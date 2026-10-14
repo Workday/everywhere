@@ -4,7 +4,7 @@ description:
   'Use when a Workday session has tools but cannot read MCP resources (no ListMcpResourcesTool or
   ReadMcpResourceTool). Work from tool descriptions, poll an agent run, and render A2UI as markdown.
   Do not use when a resource reader exists. Load the workday skill first. Do not invent an agent_id.'
-version: '1.0'
+version: '1.1'
 tags: [workday, hr]
 ---
 
@@ -37,10 +37,9 @@ Check the tool list once. Do not search for a resource reader again in that sess
 
 Submit returns `run_id`, `thread_id`, and `agent_id` with status `pending` or `running`. Poll
 `get_workday_plugin_run_status` with those three ids. Wait 5 seconds before every poll, including
-the first. Do that wait in the same turn, and do not background it. `pending` and `running` are not
-a decline. Stop after about 2 minutes and tell the user the request is still running. A wait between
-polls is not a message to the user. The reply they see is the terminal answer, not a note that a
-timer finished.
+the first. Do that wait in the same turn. `pending` and `running` are not a decline. After about 2
+minutes, continue that poll in a background task. A wait between polls is not a message to the user.
+The reply they see is the terminal answer, not a note that a timer finished.
 
 When routing has selected an agent, also read `workday-agent-dialogue` before you send.
 
@@ -57,7 +56,7 @@ user's answer, call `send_a2ui_action_to_workday_plugin` with the original event
 resolved `context` (no unresolved `{ "path": "..." }` references), and the same `agent_id` and
 `thread_id`. Then poll again.
 
-If status is `interrupted` and there is no `ui_intent`, resume with `send_action_to_workday_plugin`
+If status is `interrupted` and there is no `ui_intent`, resume with `send_query_to_workday_plugin`
 on the same thread. Poll again.
 
 When there is no `ui_intent`, parse the terminal JSON, strip any `a2ui` fence from `text`, and lead
