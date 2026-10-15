@@ -113,6 +113,18 @@ describe('the workday skill', () => {
     expect(skill).toContain('read `workday-tools-only`');
   });
 
+  it('points tools-only hosts at the plugin skill list and get verbs', () => {
+    expect(skill).toContain('list_workday_plugin_skills');
+  });
+
+  it('scopes Workday coverage before other skills load', () => {
+    expect(skill).toContain('## What Workday covers');
+  });
+
+  it('lists example Workday areas so the model knows when to load this skill', () => {
+    expect(skill).toContain('| Time');
+  });
+
   it('reads the live routing skill before the first Workday call', () => {
     expect(skill).toContain('workday-agent-routing');
   });
@@ -164,6 +176,22 @@ describe('the workday skill', () => {
 
 describe('the workday-tools-only skill', () => {
   const skill = readText('plugins/sana/skills/workday-tools-only/SKILL.md').replace(/\s+/g, ' ');
+
+  it('lists gateway skills with list_workday_plugin_skills when resources/list is unavailable', () => {
+    expect(skill).toContain('list_workday_plugin_skills');
+  });
+
+  it('reads a gateway skill with get_workday_plugin_skill when resources/read is unavailable', () => {
+    expect(skill).toContain('get_workday_plugin_skill');
+  });
+
+  it('uses the skill tools as the substitute for resources/list and resources/read', () => {
+    expect(skill).toContain('substitute for `resources/list` and `resources/read`');
+  });
+
+  it('requires the exact listed skill uri for get_workday_plugin_skill', () => {
+    expect(skill).toContain('exact `uri`');
+  });
 
   it('resumes an interrupt without ui_intent through send_query_to_workday_plugin', () => {
     expect(skill).toContain('resume with `send_query_to_workday_plugin` on the same thread');
