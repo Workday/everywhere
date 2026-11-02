@@ -1,0 +1,7 @@
+id	segment	utterance	critical	expected	aspirational	model
+connector-tools	connector	List every tool name currently available that mentions Workday, Sana, or workday_plugin. Reply with the exact tool names only, one per line. If none, reply NONE.	contains: send_query_to_workday_plugin || contains: get_workday_plugin_run_status || not_contains: NONE	max_seconds: 120		
+ess-next-holiday	ESS / holidays	When is my next work holiday?	contains_any: holiday|Veterans|Thanksgiving|Christmas|New Year || not_contains: connector isn't	max_seconds: 300		
+ess-manager	ESS / worker profile	Who is my manager?	not_contains: connector isn't	contains_any: manager|report|Banks || max_seconds: 300		
+ess-july4	ESS / holidays	Is July 4th a holiday?	contains_any: July|holiday|Independence || not_contains: connector isn't	max_seconds: 300		
+ess-vacation-balance	ESS / time off	What's my vacation balance?	contains_any: hour|balance|PTO|vacation || not_contains: connector isn't	max_seconds: 600		
+ess-live-refetch	ESS / time off	Call Workday again right now (do not reuse earlier answers in this chat). What is my current Paid Time Off balance in hours?	tool_called: mcp__sana-mcp-connector__send_query_to_workday_plugin || contains_any: hour|PTO|balance	not_contains: connector isn't || max_seconds: 600		

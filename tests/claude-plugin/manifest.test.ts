@@ -288,3 +288,22 @@ describe('the Workday marketplace', () => {
     expect(marketplace.renames?.['everywhere']).toBe('sana');
   });
 });
+
+describe('the Microsoft 365 Copilot package', () => {
+  const manifest = readJson<{
+    agentConnectors: {
+      toolSource: {
+        remoteMcpServer: { mcpServerUrl: string; authorization: { referenceId: string } };
+      };
+    }[];
+  }>('plugins/sana-copilot/manifest.json');
+  const connector = manifest.agentConnectors[0].toolSource.remoteMcpServer;
+
+  it('ships a placeholder MCP URL instead of a tenant gateway', () => {
+    expect(connector.mcpServerUrl).toBe('https://your-tenant-here.example/mcp');
+  });
+
+  it('ships a placeholder OAuth vault reference', () => {
+    expect(connector.authorization.referenceId).toBe('replace-me');
+  });
+});

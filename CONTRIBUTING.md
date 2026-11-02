@@ -36,6 +36,7 @@ just setup
 | `just test`          | Check the connector policy rules             |
 | `just tidy`          | Format source files                          |
 | `just bundle-plugin` | Zip the Sana plugin for Cowork's upload flow |
+| `just bundle-copilot` | Zip the Copilot package (placeholders must be filled locally first) |
 
 This branch holds no application code — the plugin is JSON manifests, documentation, and a routing
 skill. Schema validity is checked when a plugin is submitted, so `just test` covers the bundled

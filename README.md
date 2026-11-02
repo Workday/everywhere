@@ -54,11 +54,12 @@ The published package on npm is unchanged; releases from that branch are current
 
 ## Repository layout
 
-| Path                   | Contents                                          |
-| ---------------------- | ------------------------------------------------- |
-| `.claude-plugin/`      | Marketplace manifest listing the published plugin |
-| `plugins/sana/`        | The Sana from Workday plugin and its skills       |
-| `tests/claude-plugin/` | Manifest validation tests                         |
+| Path                    | Contents                                                   |
+| ----------------------- | ---------------------------------------------------------- |
+| `.claude-plugin/`       | Marketplace manifest listing the published plugin          |
+| `plugins/sana/`         | The Sana from Workday plugin and its skills                |
+| `plugins/sana-copilot/` | Microsoft 365 Copilot sideload package (placeholders only) |
+| `tests/claude-plugin/`  | Manifest validation tests                                  |
 
 ## Development
 

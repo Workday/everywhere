@@ -1,0 +1,53 @@
+[
+  {
+    "id": "connector-tools",
+    "prompt": "List every tool name currently available that mentions Workday, Sana, or workday_plugin. Reply with the exact tool names only, one per line. If none, reply NONE.",
+    "expect_tools_any": [
+      "send_query_to_workday_plugin",
+      "get_workday_plugin_run_status",
+      "mcp__sana-mcp-connector__"
+    ],
+    "forbid_response_patterns": ["(?m)^NONE\\.?$"],
+    "require_workday_tool_call": false
+  },
+  {
+    "id": "ess-next-holiday",
+    "prompt": "When is my next work holiday?",
+    "expect_response_patterns": ["(?i)(holiday|veterans|thanksgiving|christmas|new year|\\b\\d{1,2}[/-]\\d{1,2}|january|february|march|april|may|june|july|august|september|october|november|december)"],
+    "forbid_response_patterns": ["(?i)connector isn.?t", "(?i)tools are missing", "(?i)can.?t (tell|check|look)"],
+    "require_workday_tool_call": false,
+    "require_workday_tool_call_on_fresh": true
+  },
+  {
+    "id": "ess-manager",
+    "prompt": "Who is my manager?",
+    "expect_response_patterns": ["(?i)(manager|report|supervisor|[A-Z][a-z]+\\s+[A-Z][a-z]+)"],
+    "forbid_response_patterns": ["(?i)connector isn.?t", "(?i)can.?t (tell|check|look)"],
+    "require_workday_tool_call": false,
+    "require_workday_tool_call_on_fresh": true
+  },
+  {
+    "id": "ess-july4",
+    "prompt": "Is July 4th a holiday?",
+    "expect_response_patterns": ["(?i)(july|holiday|independence)"],
+    "forbid_response_patterns": ["(?i)connector isn.?t", "(?i)can.?t (tell|check|look)"],
+    "require_workday_tool_call": false,
+    "require_workday_tool_call_on_fresh": true
+  },
+  {
+    "id": "ess-vacation-balance",
+    "prompt": "What's my vacation balance?",
+    "expect_response_patterns": ["(?i)(vacation|balance|day|hour|pto|time off|\\d+)"],
+    "forbid_response_patterns": ["(?i)connector isn.?t", "(?i)can.?t (tell|check|look)"],
+    "require_workday_tool_call": false,
+    "require_workday_tool_call_on_fresh": true
+  },
+  {
+    "id": "ess-live-refetch",
+    "prompt": "Call Workday again right now (do not reuse earlier answers in this chat). What is my current Paid Time Off balance in hours?",
+    "expect_response_patterns": ["(?i)(\\d+\\s*hours?|balance|pto|paid time off)"],
+    "forbid_response_patterns": ["(?i)connector isn.?t", "(?i)checked (earlier|before|previously)"],
+    "require_workday_tool_call": true
+  }
+]
+

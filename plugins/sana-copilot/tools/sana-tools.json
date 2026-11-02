@@ -1,0 +1,101 @@
+{
+  "tools": [
+    {
+      "name": "send_query_to_workday_plugin",
+      "description": "Send a message to a Workday agent: a question or lookup (balances, status, policy) or a change (submit, approve, update). This tool can change Workday data. Confirm the details of a change with the user before sending it; the agent may also ask the user to confirm before it submits. Waits up to 20 seconds and joins the run; a terminal result includes text and ui_intent. If status is still pending or running, poll run status after 5 seconds. Pass agent_id for the target agent. Pass combination_id or thread_id to continue; when the prior run is interrupted with no ui_intent, the message resumes it.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "message": {
+            "type": "string",
+            "description": "The question or change request to send to the agent (e.g. \"How much PTO do I have?\" or \"Request 3 days of PTO next week\")."
+          },
+          "agent_id": {
+            "type": "string",
+            "enum": ["ess_agent_service"],
+            "description": "agent_id must be a registered gateway agent id from the tool schema enum. Domain map: ess_agent_service (ESS). Never invent nicknames like \"workday\" or \"hr\", and never use an MCP server or tool name."
+          },
+          "thread_id": {
+            "type": "string",
+            "format": "uuid",
+            "description": "Thread ID (UUID) from a prior response. Omit to start a new conversation."
+          },
+          "combination_id": {
+            "type": "string",
+            "description": "Continuation ID from a prior response. Its thread component (before the first colon) supersedes thread_id; remaining content is ignored."
+          }
+        },
+        "required": ["message", "agent_id"]
+      },
+      "annotations": {
+        "readOnlyHint": false,
+        "openWorldHint": true
+      }
+    },
+    {
+      "name": "send_a2ui_action_to_workday_plugin",
+      "description": "Submit a structured Workday UI action. Waits up to 20 seconds and joins the run; a terminal result includes text and ui_intent. If status is still pending or running, poll run status after 5 seconds. Pass agent_id for the target agent. Pass combination_id or thread_id to continue.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "The action event name (e.g. \"submitContactForm\")."
+          },
+          "context": {
+            "type": "object",
+            "additionalProperties": true,
+            "description": "Resolved context from the action definition."
+          },
+          "agent_id": {
+            "type": "string",
+            "enum": ["ess_agent_service"],
+            "description": "agent_id must be a registered gateway agent id from the tool schema enum. Domain map: ess_agent_service (ESS). Never invent nicknames like \"workday\" or \"hr\", and never use an MCP server or tool name."
+          },
+          "thread_id": {
+            "type": "string",
+            "format": "uuid",
+            "description": "Thread ID (UUID) from a prior response. Preferred when resuming a pending UI interrupt on an existing conversation."
+          },
+          "combination_id": {
+            "type": "string",
+            "description": "Continuation ID from a prior response. Its thread component (before the first colon) supersedes thread_id; remaining content is ignored."
+          }
+        },
+        "required": ["name", "agent_id"]
+      },
+      "annotations": {
+        "readOnlyHint": false,
+        "openWorldHint": true
+      }
+    },
+    {
+      "name": "get_workday_plugin_run_status",
+      "description": "Wait up to 20 seconds for an existing Workday agent run identified by agent_id, thread_id, and run_id, using the join API. Returns status, and includes text and ui_intent when the run finishes. If status is still pending or running, wait 5 seconds and call again with the same ids. After 2 minutes, continue that poll in a background task.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "agent_id": {
+            "type": "string",
+            "description": "Target Workday agent ID."
+          },
+          "thread_id": {
+            "type": "string",
+            "format": "uuid",
+            "description": "Thread (UUID) containing the run."
+          },
+          "run_id": {
+            "type": "string",
+            "format": "uuid",
+            "description": "Run (UUID) to poll."
+          }
+        },
+        "required": ["agent_id", "thread_id", "run_id"]
+      },
+      "annotations": {
+        "readOnlyHint": true,
+        "openWorldHint": true
+      }
+    }
+  ]
+}

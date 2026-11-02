@@ -38,6 +38,27 @@ bundle-plugin:
     cd "$dir"
     zip -rX "$out" . -x '*.DS_Store'
 
+# Package the Copilot sideload app. Fill placeholders locally before upload.
+bundle-copilot:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    dir="plugins/sana-copilot"
+    manifest="$dir/manifest.json"
+    if [ ! -f "$manifest" ]; then
+        echo "error: no Copilot manifest at $manifest" >&2
+        exit 1
+    fi
+    version=$(jq -r '.version // empty' "$manifest")
+    if [ -z "$version" ]; then
+        echo "error: no version found in $manifest" >&2
+        exit 1
+    fi
+    mkdir -p dist
+    out="$(pwd)/dist/sana-copilot-${version}.zip"
+    rm -f "$out"
+    cd "$dir"
+    zip -rX "$out" . -x '*.DS_Store' -x 'evals/results/*' -x 'evals/results/**/*' -x 'README.md'
+
 # Remove build artifacts
 clean:
     rm -rf dist/

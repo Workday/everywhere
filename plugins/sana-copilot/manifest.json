@@ -1,0 +1,66 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/teams/v1.29/MicrosoftTeams.schema.json",
+  "manifestVersion": "1.29",
+  "version": "0.4.5",
+  "id": "438bc9d2-ada0-4939-b52f-e9dd44fc3f2e",
+  "developer": {
+    "name": "Workday",
+    "websiteUrl": "https://github.com/Workday/everywhere",
+    "privacyUrl": "https://www.workday.com/en-us/privacy.html",
+    "termsOfUseUrl": "https://www.workday.com/en-us/legal/end-user-agreement.html"
+  },
+  "name": {
+    "short": "Sana Connector",
+    "full": "Sana from Workday MCP Connector"
+  },
+  "description": {
+    "short": "Workday MCP connector and skills for Copilot Cowork",
+    "full": "Connects Microsoft 365 Copilot Cowork to the authenticated Workday Agent Gateway MCP server for Sana from Workday. Includes Workday routing and ESS skills. Tools are discovered dynamically from the gateway at runtime."
+  },
+  "icons": {
+    "color": "color.png",
+    "outline": "outline.png"
+  },
+  "accentColor": "#0875E1",
+  "agentSkills": [
+    {
+      "folder": "./skills/workday"
+    },
+    {
+      "folder": "./skills/workday-tools-only"
+    },
+    {
+      "folder": "./skills/workday-agent-dialogue"
+    },
+    {
+      "folder": "./skills/workday-agent-routing"
+    },
+    {
+      "folder": "./skills/workday-agent-ess"
+    },
+    {
+      "folder": "./skills/workday-agent-response-ui"
+    },
+    {
+      "folder": "./skills/workday-onboard"
+    },
+    {
+      "folder": "./skills/using-workday-design"
+    }
+  ],
+  "agentConnectors": [
+    {
+      "id": "sana-mcp-connector",
+      "displayName": "Workday Agent Gateway",
+      "toolSource": {
+        "remoteMcpServer": {
+          "mcpServerUrl": "https://your-tenant-here.example/mcp",
+          "authorization": {
+            "type": "OAuthPluginVault",
+            "referenceId": "replace-me"
+          }
+        }
+      }
+    }
+  ]
+}
