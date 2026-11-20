@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { existsSync, readFileSync } from 'node:fs';
+import { existsSync, lstatSync, readdirSync, readFileSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -13,7 +13,6 @@ const readText = (relativePath: string): string =>
   readFileSync(resolve(repoRoot, relativePath), 'utf8');
 
 const readJson = <T>(relativePath: string): T => JSON.parse(readText(relativePath)) as T;
-
 interface McpConfig {
   mcpServers: Record<string, Record<string, unknown>>;
 }
@@ -54,10 +53,6 @@ describe('the Sana from Workday plugin', () => {
 
   it('commits no OAuth client material', () => {
     expect('oauth' in server).toBe(false);
-  });
-
-  it('loads skills from the plugin skills directory', () => {
-    expect(manifest.skills).toEqual(['./skills/']);
   });
 });
 
@@ -286,5 +281,173 @@ describe('the Workday marketplace', () => {
 
   it('moves existing everywhere installs to sana', () => {
     expect(marketplace.renames?.['everywhere']).toBe('sana');
+  });
+});
+
+// Every skill lives once, in plugins/sana/skills. All ship to Claude, and all but the onboard card
+// ship to ChatGPT.
+const sharedSkillsDir = 'plugins/sana/skills';
+const sharedSkillNames = existsSync(resolve(repoRoot, sharedSkillsDir))
+  ? readdirSync(resolve(repoRoot, sharedSkillsDir)).sort()
+  : [];
+const sharedSkillText = sharedSkillNames
+  .map((name) => readText(`${sharedSkillsDir}/${name}/SKILL.md`))
+  .join('\n');
+
+describe('the shared skills', () => {
+  it('are the routing, tools-only, agent-dialogue, HTML design and onboarding skills', () => {
+    expect(sharedSkillNames).toEqual([
+      'using-workday-design',
+      'workday',
+      'workday-agent-dialogue',
+      'workday-onboard',
+      'workday-tools-only',
+    ]);
+  });
+
+  it('do not mention a host by name', () => {
+    expect(sharedSkillText).not.toMatch(/claude|cowork|chatgpt|copilot/i);
+  });
+});
+
+// plugins/sana/.claude-plugin/plugin.json is the plugin's one manifest, edited by hand. Claude reads
+// it at that path, and ChatGPT accepts a Claude-compatible manifest, so both hosts load the same file.
+describe('the plugin manifest', () => {
+  const manifest = readJson<Record<string, unknown> & { interface?: Record<string, unknown> }>(
+    'plugins/sana/.claude-plugin/plugin.json'
+  );
+  const listing = manifest.interface ?? {};
+
+  it('loads the shared skills folder', () => {
+    expect(manifest.skills).toEqual(['./skills/']);
+  });
+
+  // ChatGPT picks a plugin.json at the plugin root, or a .codex-plugin manifest, ahead of this one,
+  // so either would hide it.
+  it.each(['plugin.json', '.codex-plugin'])('has no second manifest at %s', (path) => {
+    expect(existsSync(resolve(repoRoot, 'plugins/sana', path))).toBe(false);
+  });
+
+  // ChatGPT takes its directory listing from the interface block. Claude ignores the block, so
+  // Claude's validator does not check it. ChatGPT checks the values when the zip is uploaded.
+  describe('the ChatGPT listing', () => {
+    const requiredFields = [
+      'displayName',
+      'shortDescription',
+      'longDescription',
+      'developerName',
+      'category',
+      'capabilities',
+      'composerIcon',
+      'logo',
+      'websiteURL',
+      'supportURL',
+      'privacyPolicyURL',
+      'termsOfServiceURL',
+    ];
+
+    it('sets every field OpenAI requires', () => {
+      expect(requiredFields.filter((field) => !(field in listing))).toEqual([]);
+    });
+
+    // The listing repeats values the manifest already holds for Claude. These keep the two in step.
+    it.each([
+      ['displayName', 'displayName'],
+      ['logo', 'icon'],
+      ['supportURL', 'supportUrl'],
+      ['privacyPolicyURL', 'privacyPolicyUrl'],
+      ['termsOfServiceURL', 'termsOfServiceUrl'],
+    ])('gives %s the same value as the manifest %s', (listingField, manifestField) => {
+      expect(listing[listingField]).toBe(manifest[manifestField]);
+    });
+
+    // Admins apply for the Beta through a separate access form for each host. The manifest
+    // description is what Claude shows, and the listing's longDescription is what ChatGPT shows, so
+    // the two descriptions match except for which form they link. This is temporary: when the Beta
+    // ends, drop the links, delete this block and restore the plain longDescription-equals-description
+    // check above.
+    describe('the access form link', () => {
+      const claudeAccessForm = 'https://forms.gle/pz138pmAUE8x92B46';
+      const chatgptAccessForm = 'https://forms.gle/VwG9avJces6m71cq5';
+
+      it('points ChatGPT at the ChatGPT access form', () => {
+        expect(listing.longDescription).toContain(chatgptAccessForm);
+      });
+
+      it('points Claude at the Claude access form', () => {
+        expect(manifest.description).toContain(claudeAccessForm);
+      });
+
+      it('is the only difference between the two descriptions', () => {
+        expect(listing.longDescription).toBe(
+          String(manifest.description).replace(claudeAccessForm, chatgptAccessForm)
+        );
+      });
+    });
+
+    it('does not mention another host', () => {
+      expect(JSON.stringify(listing)).not.toMatch(/claude|cowork|copilot/i);
+    });
+
+    // The workspace admin creates the Workday connection in ChatGPT as a custom MCP server, so the
+    // listing names no server and no workspace-specific app.
+    it.each(['mcpServers', 'apps', 'userConfig'])('declares no %s', (field) => {
+      expect(field in listing).toBe(false);
+    });
+  });
+});
+
+// ChatGPT rejects an upload whose .mcp.json names a server with no matching workspace connection,
+// so the ChatGPT bundle recipe in .justfile must not list the connector file. The onboard card
+// ships to Claude only, so the recipe also excludes that skill's folder.
+describe('the ChatGPT bundle', () => {
+  const recipe = readText('.justfile').match(
+    /^bundle-chatgpt: \(_bundle "([^"]+)" "([^"]+)"(?: "([^"]+)")?\)$/m
+  );
+
+  it('names its zip after the host', () => {
+    expect(recipe?.[1]).toBe('sana-chatgpt');
+  });
+
+  it('leaves out the connector file', () => {
+    expect(recipe?.[2]).toBe('.claude-plugin skills logo.png');
+  });
+
+  it('leaves out the onboard skill', () => {
+    expect(recipe?.[3]).toBe('skills/workday-onboard/*');
+  });
+});
+
+describe('the Claude bundle', () => {
+  const recipe = readText('.justfile').match(/^bundle-claude: \(_bundle "([^"]+)" (.+)\)$/m);
+
+  it('names its zip after the host', () => {
+    expect(recipe?.[1]).toBe('sana-claude');
+  });
+
+  it('excludes nothing, so it keeps the onboard skill', () => {
+    expect(recipe?.[2]).toBe('".claude-plugin .mcp.json skills logo.png"');
+  });
+});
+
+// Claude and ChatGPT both reject an uploaded zip that contains a symbolic link, and a link checked
+// out on a machine with links turned off becomes a text file the host cannot read.
+describe('the plugin folder', () => {
+  const linksUnder = (dir: string): string[] =>
+    readdirSync(dir).flatMap((entry) => {
+      const path = resolve(dir, entry);
+      const stat = lstatSync(path);
+      if (stat.isSymbolicLink()) return [path];
+      return stat.isDirectory() ? linksUnder(path) : [];
+    });
+
+  it('holds no symbolic link', () => {
+    expect(linksUnder(resolve(repoRoot, 'plugins/sana'))).toEqual([]);
+  });
+});
+
+describe('the plugins folder', () => {
+  it('holds one plugin, which Claude and ChatGPT both load', () => {
+    expect(readdirSync(resolve(repoRoot, 'plugins')).sort()).toEqual(['sana']);
   });
 });

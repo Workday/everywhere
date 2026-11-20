@@ -6,8 +6,8 @@ description:
   substitute for resources/list and resources/read, then poll an agent run and render A2UI as
   markdown. Do not use when a resource reader exists. Load the workday skill first. Do not invent an
   agent_id.'
-version: '1.2'
-tags: [workday, hr]
+metadata:
+  version: '1.3'
 ---
 
 # Workday without gateway resources
@@ -19,8 +19,8 @@ Check the tool list once. Do not search for a resource reader again in that sess
 ## Read skills through the plugin verbs
 
 `list_workday_plugin_skills` and `get_workday_plugin_skill` are the substitute for `resources/list`
-and `resources/read` on this host (Cowork has no MCP resource primitives). Match them by suffix.
-Before the first Workday call:
+and `resources/read` when the session cannot read MCP resources. Match them by suffix. Before the
+first Workday call:
 
 1. Call `list_workday_plugin_skills`. Each link has a `name` (e.g.
    `workday-agent/workday-agent-routing`) and an exact `uri` (e.g.
@@ -62,8 +62,9 @@ rules below and copy `agent_id` from the submit tool's description or `inputSche
 Submit returns `run_id`, `thread_id`, and `agent_id` with status `pending` or `running`. Poll
 `get_workday_plugin_run_status` with those three ids. Wait 5 seconds before every poll, including
 the first. Do that wait in the same turn. `pending` and `running` are not a decline. After about 2
-minutes, continue that poll in a background task. A wait between polls is not a message to the user.
-The reply they see is the terminal answer, not a note that a timer finished.
+minutes, continue that poll in a background task when the host can run one. Otherwise tell the user
+the request is still running and offer to check again. A wait between polls is not a message to the
+user. The reply they see is the terminal answer, not a note that a timer finished.
 
 When routing has selected an agent, also read `workday-agent-dialogue` before you send.
 

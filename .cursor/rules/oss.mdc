@@ -14,7 +14,7 @@ This is a **public** project. Agent edits should keep it approachable for newcom
 
 ## Tests
 
-- **Do not weaken or skip tests** to land changes; follow project TDD expectations in `.claude/CLAUDE.md` and `tdd.mdc`.
+- **Do not weaken or skip tests** to land changes; follow project TDD expectations in `AGENTS.md` and `tdd.mdc`.
 - If you add or rename test commands, ensure **README or CONTRIBUTING** documents how to run them.
 
 ## Pointing at the SDK
@@ -47,4 +47,4 @@ This is a **public** project. Agent edits should keep it approachable for newcom
 ## CI and publishing (maintainers)
 
 - Prefer **modern CI** (e.g. GitHub Actions) that runs tests on changes; if README has CI badges, they should reflect the **actual** pipelines.
-- Nothing on this branch publishes to npm. The plugin is distributed by the marketplace manifest on the default branch and by `just bundle-plugin` for Cowork uploads; npm publish machinery lives on `sdk`.
+- Nothing on this branch publishes to npm. The plugin is distributed by the marketplace manifest on the default branch and by `just bundle-claude` for Cowork uploads; npm publish machinery lives on `sdk`.

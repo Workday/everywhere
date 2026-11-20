@@ -54,11 +54,20 @@ The published package on npm is unchanged; releases from that branch are current
 
 ## Repository layout
 
-| Path                   | Contents                                          |
-| ---------------------- | ------------------------------------------------- |
-| `.claude-plugin/`      | Marketplace manifest listing the published plugin |
-| `plugins/sana/`        | The Sana from Workday plugin and its skills       |
-| `tests/claude-plugin/` | Manifest validation tests                         |
+| Path                           | Contents                                                     |
+| ------------------------------ | ------------------------------------------------------------ |
+| `.claude-plugin/`              | Claude's marketplace catalog: which plugins this repo offers |
+| `plugins/sana/`                | The Sana plugin for Claude and ChatGPT                       |
+| `plugins/sana/.claude-plugin/` | The plugin's one manifest, read by both hosts                |
+| `docs/`                        | Host setup guides, kept outside the plugin                   |
+| `tests/claude-plugin/`         | Manifest validation tests                                    |
+
+**One manifest for two hosts.** `plugins/sana/.claude-plugin/plugin.json` is the plugin's only
+manifest. Claude reads it at that path. ChatGPT accepts a Claude-compatible manifest, so it loads
+the same file and takes its directory listing from the `interface` block, which Claude ignores. The
+`.claude-plugin/` folder at the repo root is a different thing: it is Claude's marketplace catalog,
+which says where the plugin is. ChatGPT installs from a zip built by `just bundle-chatgpt`; see
+`docs/chatgpt.md`.
 
 ## Development
 

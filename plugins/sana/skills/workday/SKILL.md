@@ -7,8 +7,8 @@ description:
   per workday-tools-only. The live gateway routing and catalog-versus-agent choice are the source of
   truth. When routing has selected an agent, read workday-agent-dialogue. Do not invent an agent_id
   or answer Workday questions from general knowledge."
-version: '1.2'
-tags: [workday, hr]
+metadata:
+  version: '1.2'
 ---
 
 # Workday HR Assistant

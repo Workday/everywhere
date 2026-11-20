@@ -28,7 +28,7 @@ The plugin manifest is a public contract for existing installs.
 - Typecheck: `npx tsc --noEmit` (covers `tests/` only)
 - Format: `Prettier` (see `.prettierrc.json`)
 - Task runner: `just` (see `.justfile`)
-- Common commands: `just setup`, `just check`, `just test`, `just tidy`, `just bundle-plugin`
+- Common commands: `just setup`, `just check`, `just test`, `just tidy`, `just bundle-claude`
 - No ESLint and no build step on this branch; both live on `sdk`.
 
 ## Git Workflow
@@ -50,4 +50,4 @@ For TypeScript edits, follow the strict TDD rule in `tdd.mdc`. Schema validity i
 
 ## Agent rules (Cursor)
 
-Additional always-on rules in `.cursor/rules/`: `security.mdc` (secrets, non-public surfaces, dependencies, workflows), `oss.mdc` (README quality, tests and docs hygiene, LICENSE/CONTRIBUTING). See `.claude/CLAUDE.md` for the full Claude Code narrative.
+Additional always-on rules in `.cursor/rules/`: `security.mdc` (secrets, non-public surfaces, dependencies, workflows), `oss.mdc` (README quality, tests and docs hygiene, LICENSE/CONTRIBUTING). See `AGENTS.md` for the full narrative shared by every agent.
