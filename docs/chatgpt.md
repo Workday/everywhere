@@ -92,4 +92,5 @@ because it holds nothing specific to one. ChatGPT caches by version, so bump `ve
 The zip holds the plugin's manifest at `.claude-plugin/plugin.json`, the skills and the logo.
 ChatGPT accepts that Claude-compatible manifest and takes its listing from the `interface` block.
 The zip leaves out `.mcp.json`, because ChatGPT rejects an upload that names a server with no
-matching workspace connection. The connection is the one you create in part 2.
+matching workspace connection. The connection is the one you create in part 2. It also leaves out
+the `workday-onboard` skill, which ships to Claude only.

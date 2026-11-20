@@ -284,7 +284,8 @@ describe('the Workday marketplace', () => {
   });
 });
 
-// Every skill lives once, in plugins/sana/skills, and ships to Claude and ChatGPT.
+// Every skill lives once, in plugins/sana/skills. All ship to Claude, and all but the onboard card
+// ship to ChatGPT.
 const sharedSkillsDir = 'plugins/sana/skills';
 const sharedSkillNames = existsSync(resolve(repoRoot, sharedSkillsDir))
   ? readdirSync(resolve(repoRoot, sharedSkillsDir)).sort()
@@ -374,12 +375,35 @@ describe('the plugin manifest', () => {
 });
 
 // ChatGPT rejects an upload whose .mcp.json names a server with no matching workspace connection,
-// so the ChatGPT bundle recipe in .justfile must not list the connector file.
+// so the ChatGPT bundle recipe in .justfile must not list the connector file. The onboard card
+// ships to Claude only, so the recipe also excludes that skill's folder.
 describe('the ChatGPT bundle', () => {
+  const recipe = readText('.justfile').match(
+    /^bundle-chatgpt: \(_bundle "([^"]+)" "([^"]+)"(?: "([^"]+)")?\)$/m
+  );
+
+  it('names its zip after the host', () => {
+    expect(recipe?.[1]).toBe('sana-chatgpt');
+  });
+
   it('leaves out the connector file', () => {
-    expect(
-      readText('.justfile').match(/^bundle-chatgpt: \(_bundle "[^"]+" "([^"]+)"\)$/m)?.[1]
-    ).toBe('.claude-plugin skills logo.png');
+    expect(recipe?.[2]).toBe('.claude-plugin skills logo.png');
+  });
+
+  it('leaves out the onboard skill', () => {
+    expect(recipe?.[3]).toBe('skills/workday-onboard/*');
+  });
+});
+
+describe('the Claude bundle', () => {
+  const recipe = readText('.justfile').match(/^bundle-claude: \(_bundle "([^"]+)" (.+)\)$/m);
+
+  it('names its zip after the host', () => {
+    expect(recipe?.[1]).toBe('sana-claude');
+  });
+
+  it('excludes nothing, so it keeps the onboard skill', () => {
+    expect(recipe?.[2]).toBe('".claude-plugin .mcp.json skills logo.png"');
   });
 });
 
