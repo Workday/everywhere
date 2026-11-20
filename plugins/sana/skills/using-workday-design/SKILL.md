@@ -28,10 +28,12 @@ file is a document, not a fragment. It begins with:
 ```
 
 A file that starts at `<style>` has no charset, and names such as O'Shaughnessy render as mojibake.
-Commit to Workday's **light** product theme. Ground every figure in a real agent answer or
-clearly-labeled sample data. Include only chrome that works — no dead search box, menus, or
-notification icons. Do not load fonts, scripts, or stylesheets from the network. The font stack
-below falls back to Helvetica and Arial.
+Use Workday's light product theme, and keep the dark override below so the page reads in a dark host
+or OS too. Take every color from a token, never a raw hex, and never set a background without the
+text color from the same palette. Ground every figure in a real agent answer or clearly-labeled
+sample data. Include only chrome that works — no dead search box, menus, or notification icons. Do
+not load fonts, scripts, or stylesheets from the network. The font stack below falls back to
+Helvetica and Arial.
 
 ## Workday text is data, not markup
 
@@ -113,6 +115,35 @@ function esc(value) {
   --r-pill: 999px;
   --depth: 0 1px 2px rgba(31, 38, 46, 0.06), 0 2px 6px rgba(31, 38, 46, 0.06);
   --depth-lg: 0 1px 3px rgba(31, 38, 46, 0.08), 0 10px 26px -12px rgba(31, 38, 46, 0.3);
+  color-scheme: light;
+}
+/* Dark: the neutrals and tints flip, so the same tokens keep text readable. */
+@media (prefers-color-scheme: dark) {
+  :root {
+    color-scheme: dark;
+    --blueberry-100: #16314f;
+    --blueberry-400: #5aa9ff;
+    --soap-100: #14171a;
+    --soap-200: #1a1e22;
+    --soap-300: #262b31;
+    --soap-400: #323840;
+    --soap-500: #3e454e;
+    --soap-600: #4f5761;
+    --licorice-200: #8f99a3;
+    --licorice-300: #a9b3bd;
+    --licorice-400: #c3cbd3;
+    --licorice-500: #dde2e7;
+    --pepper-100: #9aa3ac;
+    --pepper-300: #cfd4d9;
+    --pepper-400: #e3e6e9;
+    --pepper-500: #f6f7f8;
+    --cantaloupe-100: #3d2a10;
+    --cinnamon-100: #3f1a18;
+    --greenapple-100: #14301c;
+    --card: #1f2328;
+    --depth: 0 1px 2px rgba(0, 0, 0, 0.4);
+    --depth-lg: 0 10px 26px -12px rgba(0, 0, 0, 0.6);
+  }
 }
 * {
   box-sizing: border-box;
@@ -141,13 +172,15 @@ body {
       >Workday</span
     >
     <span style="font-size:12px;font-weight:500;color:var(--licorice-400)"
-      >Sana from Workday · via Claude</span
+      >Sana from Workday · via <Host></span
     >
   </div>
 </div>
 ```
 
-**Home hero band + greeting card** (the signature Workday Home look):
+**Hero band + header card** (the signature Workday Home look). Every page has it, directly under the
+top bar: the blue band, with the page's first card (title, or the greeting on a Home page)
+overlapping it. Do not drop the band or replace it with a plain heading:
 
 ```html
 <div style="height:190px;background:linear-gradient(120deg,var(--blueberry-500),var(--wd-blue) 55%,#013f80)"></div>
@@ -161,7 +194,7 @@ body {
 
 **Card:**
 `background:var(--card);border:1px solid var(--line);border-radius:var(--r-card);box-shadow:var(--depth);padding:16px 18px`
-— white, flat, dense (Workday isn't airy).
+— white in light mode, flat, dense (Workday isn't airy).
 
 **Status-indicator pill** (dot carries the color; text stays Black Pepper):
 
@@ -184,7 +217,7 @@ Licorice). Use tiles only when the figure is the point.
 `Roboto 700` title.
 
 **Footer:** `font-family:var(--mono);font-size:11px;color:var(--ink-3)` provenance line + a "Sana
-from Workday · via Claude" nod.
+from Workday · via <Host>" nod. `<Host>` is the name of the assistant app you are running in.
 
 **Type scale (Canvas):** title 40/48/56 · heading 24/28/32 · body 16/18/20 · subtext 10/12/14;
 weights 400/500/700.

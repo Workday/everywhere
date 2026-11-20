@@ -17,7 +17,7 @@ If you've found a bug or have a feature request, please
 
 - [Node.js](https://nodejs.org/) (LTS recommended)
 - [just](https://github.com/casey/just) command runner
-- [jq](https://jqlang.github.io/jq/) — only for `just bundle-plugin`
+- [jq](https://jqlang.github.io/jq/) and `zip` — only for the `just bundle` commands
 
 ### Getting Started
 
@@ -29,13 +29,15 @@ just setup
 
 ### Development Workflow
 
-| Command              | Description                                  |
-| -------------------- | -------------------------------------------- |
-| `just setup`         | Install dependencies                         |
-| `just check`         | Format check and typecheck                   |
-| `just test`          | Check the connector policy rules             |
-| `just tidy`          | Format source files                          |
-| `just bundle-plugin` | Zip the Sana plugin for Cowork's upload flow |
+| Command               | Description                                               |
+| --------------------- | --------------------------------------------------------- |
+| `just setup`          | Install dependencies                                      |
+| `just check`          | Format check and typecheck                                |
+| `just test`           | Check the connector policy rules                          |
+| `just tidy`           | Format source files                                       |
+| `just bundle`         | Zip the plugin for both hosts                             |
+| `just bundle-claude`  | Zip the Sana plugin for Cowork's upload flow              |
+| `just bundle-chatgpt` | Zip the Sana plugin for ChatGPT's "Upload plugin archive" |
 
 This branch holds no application code — the plugin is JSON manifests, documentation, and a routing
 skill. Schema validity is checked when a plugin is submitted, so `just test` covers the bundled
@@ -56,8 +58,9 @@ Point a local marketplace at your checkout, then install from it:
 
 ### Releasing a plugin change
 
-Bump `version` in `plugins/sana/.claude-plugin/plugin.json` when you change the plugin — Claude Code
-and Cowork both cache by version, so an unchanged version will not be picked up.
+Bump `version` in `plugins/sana/.claude-plugin/plugin.json` when you change the plugin. Claude and
+ChatGPT both read that manifest and cache by version, so an unchanged version will not be picked up.
+ChatGPT takes its directory listing from the manifest's `interface` block, which Claude ignores.
 
 ### Commit Conventions
 

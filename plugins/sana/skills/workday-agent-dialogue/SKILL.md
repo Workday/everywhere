@@ -4,8 +4,8 @@ description:
   'Use after Workday routing has already selected an agent, before you send the agent message. Batch
   related parts into one message and confirm an agent write with the user. Do not use for a catalog
   tool call. Do not choose an agent or an agent_id. Load the workday skill first.'
-version: '1.0'
-tags: [workday, hr]
+metadata:
+  version: '1.0'
 ---
 
 # Workday agent dialogue

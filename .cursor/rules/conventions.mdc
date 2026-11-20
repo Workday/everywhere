@@ -28,7 +28,7 @@ The plugin manifest is a public contract for existing installs.
 - Typecheck: `npx tsc --noEmit` (covers `tests/` only)
 - Format: `Prettier` (see `.prettierrc.json`)
 - Task runner: `just` (see `.justfile`)
-- Common commands: `just setup`, `just check`, `just test`, `just tidy`, `just bundle-plugin`
+- Common commands: `just setup`, `just check`, `just test`, `just tidy`, `just bundle-claude`
 - No ESLint and no build step on this branch; both live on `sdk`.
 
 ## Git Workflow

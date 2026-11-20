@@ -52,7 +52,7 @@ The plugin manifest is a public contract for everyone who has already installed 
 | Path                   | Contents                                          |
 | ---------------------- | ------------------------------------------------- |
 | `.claude-plugin/`      | Marketplace manifest listing the published plugin |
-| `plugins/sana/`        | The Sana from Workday plugin and its skills       |
+| `plugins/sana/`        | The Sana plugin for 3rd party agent frameworks    |
 | `tests/claude-plugin/` | Plugin bundle and connector policy tests          |
 
 ## Toolchain
@@ -72,7 +72,9 @@ There is no ESLint and no build step on this branch; both live on `sdk`.
 - `just check` — format check + typecheck
 - `just test` — run the connector policy tests
 - `just tidy` — format source files
-- `just bundle-plugin` — zip the Sana plugin for Cowork's "Upload Plugin" flow (needs `jq`)
+- `just bundle-claude` — zip the Sana plugin for Cowork's "Upload Plugin" flow (needs `jq`)
+- `just bundle-chatgpt` — zip the Sana plugin for ChatGPT's "Upload plugin archive" flow
+- `just bundle` — build both zips
 
 ## Commit Conventions
 
@@ -302,7 +304,7 @@ builds, clear legal posture).
 ### Release and publishing (context)
 
 - Nothing on this branch publishes to npm. The plugin is distributed by the marketplace manifest on
-  the default branch, and by `just bundle-plugin` for Cowork uploads. Do not add npm publish
+  the default branch, and by `just bundle-claude` for Cowork uploads. Do not add npm publish
   workflows here — that machinery lives on `sdk`.
 
 ### Naming and trademarks

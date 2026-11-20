@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { existsSync, readFileSync } from 'node:fs';
+import { existsSync, lstatSync, readdirSync, readFileSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -13,7 +13,6 @@ const readText = (relativePath: string): string =>
   readFileSync(resolve(repoRoot, relativePath), 'utf8');
 
 const readJson = <T>(relativePath: string): T => JSON.parse(readText(relativePath)) as T;
-
 interface McpConfig {
   mcpServers: Record<string, Record<string, unknown>>;
 }
@@ -54,10 +53,6 @@ describe('the Sana from Workday plugin', () => {
 
   it('commits no OAuth client material', () => {
     expect('oauth' in server).toBe(false);
-  });
-
-  it('loads skills from the plugin skills directory', () => {
-    expect(manifest.skills).toEqual(['./skills/']);
   });
 });
 
@@ -289,74 +284,123 @@ describe('the Workday marketplace', () => {
   });
 });
 
-describe('the Microsoft 365 Copilot package', () => {
-  const manifest = readJson<{
-    agentSkills: { folder: string }[];
-    agentConnectors: {
-      toolSource: {
-        remoteMcpServer: { mcpServerUrl: string; authorization: { referenceId: string } };
-      };
-    }[];
-  }>('plugins/sana-copilot/manifest.json');
-  const connector = manifest.agentConnectors[0]?.toolSource.remoteMcpServer;
-  const skillFolders = manifest.agentSkills.map(({ folder }) => folder);
+// Every skill lives once, in plugins/sana/skills, and ships to Claude and ChatGPT.
+const sharedSkillsDir = 'plugins/sana/skills';
+const sharedSkillNames = existsSync(resolve(repoRoot, sharedSkillsDir))
+  ? readdirSync(resolve(repoRoot, sharedSkillsDir)).sort()
+  : [];
+const sharedSkillText = sharedSkillNames
+  .map((name) => readText(`${sharedSkillsDir}/${name}/SKILL.md`))
+  .join('\n');
 
-  it('ships a placeholder MCP URL instead of a tenant gateway', () => {
-    expect(connector?.mcpServerUrl).toBe('https://your-tenant-here.example/mcp');
+describe('the shared skills', () => {
+  it('are the routing, tools-only, agent-dialogue, HTML design and onboarding skills', () => {
+    expect(sharedSkillNames).toEqual([
+      'using-workday-design',
+      'workday',
+      'workday-agent-dialogue',
+      'workday-onboard',
+      'workday-tools-only',
+    ]);
   });
 
-  it('ships a placeholder OAuth vault reference', () => {
-    expect(connector?.authorization.referenceId).toBe('replace-me');
+  it('do not mention a host by name', () => {
+    expect(sharedSkillText).not.toMatch(/claude|cowork|chatgpt|copilot/i);
+  });
+});
+
+// plugins/sana/.claude-plugin/plugin.json is the plugin's one manifest, edited by hand. Claude reads
+// it at that path, and ChatGPT accepts a Claude-compatible manifest, so both hosts load the same file.
+describe('the plugin manifest', () => {
+  const manifest = readJson<Record<string, unknown> & { interface?: Record<string, unknown> }>(
+    'plugins/sana/.claude-plugin/plugin.json'
+  );
+  const listing = manifest.interface ?? {};
+
+  it('loads the shared skills folder', () => {
+    expect(manifest.skills).toEqual(['./skills/']);
   });
 
-  describe('skills', () => {
-    it('leaves out the onboarding skill', () => {
-      expect(skillFolders).not.toContain('./skills/workday-onboard');
-    });
-
-    it('leaves out the HTML design skill', () => {
-      expect(skillFolders).not.toContain('./skills/using-workday-design');
-    });
-
-    it.each(['workday-agent-ess', 'workday-agent-response-ui', 'workday-agent-routing'])(
-      'fetches %s from the gateway instead of bundling it',
-      (name) => {
-        expect(skillFolders).not.toContain(`./skills/${name}`);
-      }
-    );
-
-    it('lists only skills that exist on disk', () => {
-      expect(
-        skillFolders.filter(
-          (folder) => !existsSync(resolve(repoRoot, 'plugins/sana-copilot', folder))
-        )
-      ).toEqual([]);
-    });
-
-    it('does not point the workday skill at the omitted HTML design skill', () => {
-      expect(readText('plugins/sana-copilot/skills/workday/SKILL.md')).not.toContain(
-        'using-workday-design'
-      );
-    });
+  // ChatGPT picks a plugin.json at the plugin root, or a .codex-plugin manifest, ahead of this one,
+  // so either would hide it.
+  it.each(['plugin.json', '.codex-plugin'])('has no second manifest at %s', (path) => {
+    expect(existsSync(resolve(repoRoot, 'plugins/sana', path))).toBe(false);
   });
 
-  describe('the tools-only skill', () => {
-    const toolsOnly = readText('plugins/sana-copilot/skills/workday-tools-only/SKILL.md');
+  // ChatGPT takes its directory listing from the interface block. Claude ignores the block, so
+  // Claude's validator does not check it. ChatGPT checks the values when the zip is uploaded.
+  describe('the ChatGPT listing', () => {
+    const requiredFields = [
+      'displayName',
+      'shortDescription',
+      'longDescription',
+      'developerName',
+      'category',
+      'capabilities',
+      'composerIcon',
+      'logo',
+      'websiteURL',
+      'supportURL',
+      'privacyPolicyURL',
+      'termsOfServiceURL',
+    ];
 
-    it('does not name the retired send_action verb', () => {
-      expect(toolsOnly).not.toContain('send_action_to_workday_plugin');
+    it('sets every field OpenAI requires', () => {
+      expect(requiredFields.filter((field) => !(field in listing))).toEqual([]);
     });
 
-    it('resumes an interrupted run without a ui_intent with send_query', () => {
-      expect(toolsOnly).toMatch(
-        /interrupted[\s\S]*no `ui_intent`[\s\S]*resume with `send_query_to_workday_plugin`/
-      );
+    // The listing repeats values the manifest already holds for Claude. These keep the two in step.
+    it.each([
+      ['displayName', 'displayName'],
+      ['longDescription', 'description'],
+      ['logo', 'icon'],
+      ['supportURL', 'supportUrl'],
+      ['privacyPolicyURL', 'privacyPolicyUrl'],
+      ['termsOfServiceURL', 'termsOfServiceUrl'],
+    ])('gives %s the same value as the manifest %s', (listingField, manifestField) => {
+      expect(listing[listingField]).toBe(manifest[manifestField]);
+    });
+
+    it('does not mention another host', () => {
+      expect(JSON.stringify(listing)).not.toMatch(/claude|cowork|copilot/i);
+    });
+
+    // The workspace admin creates the Workday connection in ChatGPT as a custom MCP server, so the
+    // listing names no server and no workspace-specific app.
+    it.each(['mcpServers', 'apps', 'userConfig'])('declares no %s', (field) => {
+      expect(field in listing).toBe(false);
     });
   });
+});
 
-  describe('packaging', () => {
-    it('ships no eval or smoke tests', () => {
-      expect(existsSync(resolve(repoRoot, 'plugins/sana-copilot/evals'))).toBe(false);
+// ChatGPT rejects an upload whose .mcp.json names a server with no matching workspace connection,
+// so the ChatGPT bundle recipe in .justfile must not list the connector file.
+describe('the ChatGPT bundle', () => {
+  it('leaves out the connector file', () => {
+    expect(
+      readText('.justfile').match(/^bundle-chatgpt: \(_bundle "[^"]+" "([^"]+)"\)$/m)?.[1]
+    ).toBe('.claude-plugin skills logo.png');
+  });
+});
+
+// Claude and ChatGPT both reject an uploaded zip that contains a symbolic link, and a link checked
+// out on a machine with links turned off becomes a text file the host cannot read.
+describe('the plugin folder', () => {
+  const linksUnder = (dir: string): string[] =>
+    readdirSync(dir).flatMap((entry) => {
+      const path = resolve(dir, entry);
+      const stat = lstatSync(path);
+      if (stat.isSymbolicLink()) return [path];
+      return stat.isDirectory() ? linksUnder(path) : [];
     });
+
+  it('holds no symbolic link', () => {
+    expect(linksUnder(resolve(repoRoot, 'plugins/sana'))).toEqual([]);
+  });
+});
+
+describe('the plugins folder', () => {
+  it('holds one plugin, which Claude and ChatGPT both load', () => {
+    expect(readdirSync(resolve(repoRoot, 'plugins')).sort()).toEqual(['sana']);
   });
 });

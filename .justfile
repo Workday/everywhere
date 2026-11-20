@@ -17,47 +17,34 @@ check:
 test:
     npx vitest run --exclude ".worktrees/**"
 
-# Package the Sana plugin into a zip for Cowork's "Upload Plugin" flow
-bundle-plugin:
-    #!/usr/bin/env bash
-    set -euo pipefail
-    dir="plugins/sana"
-    manifest="$dir/.claude-plugin/plugin.json"
-    if [ ! -f "$manifest" ]; then
-        echo "error: no plugin manifest at $manifest" >&2
-        exit 1
-    fi
-    version=$(jq -r '.version // empty' "$manifest")
-    if [ -z "$version" ]; then
-        echo "error: no version found in $manifest" >&2
-        exit 1
-    fi
-    mkdir -p dist
-    out="$(pwd)/dist/sana-plugin-${version}.zip"
-    rm -f "$out"
-    cd "$dir"
-    zip -rX "$out" . -x '*.DS_Store'
+# plugins/sana is one plugin for Claude and ChatGPT. Its one manifest is
+# plugins/sana/.claude-plugin/plugin.json, which both hosts read. Each bundle holds only the files
+# its host reads, and both get the same skills/.
 
-# Package the Copilot sideload app. Fill placeholders locally before upload.
-bundle-copilot:
+# Package every host's zip into dist/
+bundle: bundle-claude bundle-chatgpt
+
+# Package the Claude plugin for Cowork's "Upload Plugin" flow
+bundle-claude: (_bundle "sana-plugin" ".claude-plugin .mcp.json skills logo.png")
+
+# Package the ChatGPT plugin for "Upload plugin archive". ChatGPT rejects a zip that holds .mcp.json.
+bundle-chatgpt: (_bundle "sana-chatgpt" ".claude-plugin skills logo.png")
+
+# Zips the listed plugins/sana paths.
+[private]
+_bundle name paths:
     #!/usr/bin/env bash
     set -euo pipefail
-    dir="plugins/sana-copilot"
-    manifest="$dir/manifest.json"
-    if [ ! -f "$manifest" ]; then
-        echo "error: no Copilot manifest at $manifest" >&2
-        exit 1
-    fi
+    manifest="plugins/sana/.claude-plugin/plugin.json"
     version=$(jq -r '.version // empty' "$manifest")
     if [ -z "$version" ]; then
         echo "error: no version found in $manifest" >&2
         exit 1
     fi
     mkdir -p dist
-    out="$(pwd)/dist/sana-copilot-${version}.zip"
+    out="$(pwd)/dist/{{name}}-${version}.zip"
     rm -f "$out"
-    cd "$dir"
-    zip -rX "$out" . -x '*.DS_Store' -x 'README.md'
+    cd plugins/sana && zip -rX "$out" {{paths}} -x '*.DS_Store'
 
 # Remove build artifacts
 clean:
