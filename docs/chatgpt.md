@@ -61,6 +61,9 @@ again. The plugin does not need to change.
 2. Choose `sana-chatgpt-<version>.zip` and select **Add plugin**.
 3. Share the plugin with the same people as the connection.
 
+To update the plugin later, open it from **Plugins**, select **More actions** (`…`) > **Upload new
+version**, and choose the new zip. Everyone the plugin is shared with gets that version.
+
 ## Using it
 
 1. Install **Sana from Workday** from **Plugins**.
@@ -91,6 +94,7 @@ because it holds nothing specific to one. ChatGPT caches by version, so bump `ve
 
 The zip holds the plugin's manifest at `.claude-plugin/plugin.json`, the skills and the logo.
 ChatGPT accepts that Claude-compatible manifest and takes its listing from the `interface` block.
-The zip leaves out `.mcp.json`, because ChatGPT rejects an upload that names a server with no
-matching workspace connection. The connection is the one you create in part 2. It also leaves out
-the `workday-onboard` skill, which ships to Claude only.
+Its `longDescription` links the ChatGPT Beta access form, which differs from the Claude form in the
+top-level `description`. The zip leaves out `.mcp.json`, because ChatGPT rejects an upload that
+names a server with no matching workspace connection. The connection is the one you create in
+part 2. It also leaves out the `workday-onboard` skill, which ships to Claude only.

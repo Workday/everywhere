@@ -353,13 +353,36 @@ describe('the plugin manifest', () => {
     // The listing repeats values the manifest already holds for Claude. These keep the two in step.
     it.each([
       ['displayName', 'displayName'],
-      ['longDescription', 'description'],
       ['logo', 'icon'],
       ['supportURL', 'supportUrl'],
       ['privacyPolicyURL', 'privacyPolicyUrl'],
       ['termsOfServiceURL', 'termsOfServiceUrl'],
     ])('gives %s the same value as the manifest %s', (listingField, manifestField) => {
       expect(listing[listingField]).toBe(manifest[manifestField]);
+    });
+
+    // Admins apply for the Beta through a separate access form for each host. The manifest
+    // description is what Claude shows, and the listing's longDescription is what ChatGPT shows, so
+    // the two descriptions match except for which form they link. This is temporary: when the Beta
+    // ends, drop the links, delete this block and restore the plain longDescription-equals-description
+    // check above.
+    describe('the access form link', () => {
+      const claudeAccessForm = 'https://forms.gle/pz138pmAUE8x92B46';
+      const chatgptAccessForm = 'https://forms.gle/VwG9avJces6m71cq5';
+
+      it('points ChatGPT at the ChatGPT access form', () => {
+        expect(listing.longDescription).toContain(chatgptAccessForm);
+      });
+
+      it('points Claude at the Claude access form', () => {
+        expect(manifest.description).toContain(claudeAccessForm);
+      });
+
+      it('is the only difference between the two descriptions', () => {
+        expect(listing.longDescription).toBe(
+          String(manifest.description).replace(claudeAccessForm, chatgptAccessForm)
+        );
+      });
     });
 
     it('does not mention another host', () => {

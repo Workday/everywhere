@@ -62,6 +62,11 @@ Bump `version` in `plugins/sana/.claude-plugin/plugin.json` when you change the 
 ChatGPT both read that manifest and cache by version, so an unchanged version will not be picked up.
 ChatGPT takes its directory listing from the manifest's `interface` block, which Claude ignores.
 
+The top-level `description` and `interface.longDescription` hold the same text. During the Beta they
+differ only in the access form link, because each host has its own form. When the Beta ends, drop
+the links and make the two fields identical again. The manifest tests check that nothing else
+drifts.
+
 ### Commit Conventions
 
 Use [Conventional Commits](https://www.conventionalcommits.org/) format:
