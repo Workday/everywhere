@@ -288,3 +288,75 @@ describe('the Workday marketplace', () => {
     expect(marketplace.renames?.['everywhere']).toBe('sana');
   });
 });
+
+describe('the Microsoft 365 Copilot package', () => {
+  const manifest = readJson<{
+    agentSkills: { folder: string }[];
+    agentConnectors: {
+      toolSource: {
+        remoteMcpServer: { mcpServerUrl: string; authorization: { referenceId: string } };
+      };
+    }[];
+  }>('plugins/sana-copilot/manifest.json');
+  const connector = manifest.agentConnectors[0]?.toolSource.remoteMcpServer;
+  const skillFolders = manifest.agentSkills.map(({ folder }) => folder);
+
+  it('ships a placeholder MCP URL instead of a tenant gateway', () => {
+    expect(connector?.mcpServerUrl).toBe('https://your-tenant-here.example/mcp');
+  });
+
+  it('ships a placeholder OAuth vault reference', () => {
+    expect(connector?.authorization.referenceId).toBe('replace-me');
+  });
+
+  describe('skills', () => {
+    it('leaves out the onboarding skill', () => {
+      expect(skillFolders).not.toContain('./skills/workday-onboard');
+    });
+
+    it('leaves out the HTML design skill', () => {
+      expect(skillFolders).not.toContain('./skills/using-workday-design');
+    });
+
+    it.each(['workday-agent-ess', 'workday-agent-response-ui', 'workday-agent-routing'])(
+      'fetches %s from the gateway instead of bundling it',
+      (name) => {
+        expect(skillFolders).not.toContain(`./skills/${name}`);
+      }
+    );
+
+    it('lists only skills that exist on disk', () => {
+      expect(
+        skillFolders.filter(
+          (folder) => !existsSync(resolve(repoRoot, 'plugins/sana-copilot', folder))
+        )
+      ).toEqual([]);
+    });
+
+    it('does not point the workday skill at the omitted HTML design skill', () => {
+      expect(readText('plugins/sana-copilot/skills/workday/SKILL.md')).not.toContain(
+        'using-workday-design'
+      );
+    });
+  });
+
+  describe('the tools-only skill', () => {
+    const toolsOnly = readText('plugins/sana-copilot/skills/workday-tools-only/SKILL.md');
+
+    it('does not name the retired send_action verb', () => {
+      expect(toolsOnly).not.toContain('send_action_to_workday_plugin');
+    });
+
+    it('resumes an interrupted run without a ui_intent with send_query', () => {
+      expect(toolsOnly).toMatch(
+        /interrupted[\s\S]*no `ui_intent`[\s\S]*resume with `send_query_to_workday_plugin`/
+      );
+    });
+  });
+
+  describe('packaging', () => {
+    it('ships no eval or smoke tests', () => {
+      expect(existsSync(resolve(repoRoot, 'plugins/sana-copilot/evals'))).toBe(false);
+    });
+  });
+});
